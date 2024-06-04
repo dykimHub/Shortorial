@@ -1,7 +1,6 @@
 package com.sleep.sleep.member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.sleep.sleep.shorts.entity.TryShorts;
 import com.sleep.sleep.shorts.entity.UploadShorts;
 import jakarta.persistence.*;

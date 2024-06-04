@@ -4,29 +4,22 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Data
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class ShortsDto {
+
+    // 쇼츠 테이블 id
     private int shortsNo;
 
-    private String shortsUrl;
+    // 쇼츠 시간
+    private int shortsTime;
 
-    private double shortsTime;
-
+    // 쇼츠 제목
     private String shortsTitle;
 
-    private String shortsDirector;
+    // 쇼츠 챌린저 수
+    private int shortsChallengersNum;
 
-    private int shortsChallengers;
-
+    // 쇼츠 s3 링크
     private String shortsLink;
 
-    private LocalDate shortDate;
-
-    private String musicName;
-
-    private String SingerName;
 }

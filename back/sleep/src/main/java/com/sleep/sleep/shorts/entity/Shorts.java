@@ -1,50 +1,37 @@
 package com.sleep.sleep.shorts.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "shorts")
 public class Shorts {
 
+    // 쇼츠 테이블 id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int shortsNo;
 
-    private String shortsUrl;
-    private int musicNo;
-    private double shortsTime;
+    // 쇼츠 시간
+    @Column(nullable = false)
+    private int shortsTime;
 
+    // 쇼츠 제목
+    @Column(nullable = false)
     private String shortsTitle;
 
-    private String shortsDirector;
+    // 쇼츠 출처
+    private String shortsSource;
 
-    @Column(name = "shorts_challengers", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int shortsChallengers;
-
+    // 쇼츠 s3 링크
     private String shortsLink;
 
-    private LocalDate shortsDate;
-
-
+    // 쇼츠를 시도한
     @OneToMany(mappedBy = "shortsNo", cascade = CascadeType.ALL)
     private List<TryShorts> tryShortsList;
-
-
-    public void addShortsChallengers(int valueToAdd) {
-        this.shortsChallengers += valueToAdd;
-    }
 
 }

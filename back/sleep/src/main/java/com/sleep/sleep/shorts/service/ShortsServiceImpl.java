@@ -1,16 +1,11 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.member.dto.JoinDto;
 import com.sleep.sleep.member.entity.Member;
-import com.sleep.sleep.member.entity.MemberRole;
 import com.sleep.sleep.member.repository.MemberRepository;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.dto.TryShortsDto;
 import com.sleep.sleep.shorts.dto.UploadShortsDto;
 import com.sleep.sleep.shorts.entity.*;
 import com.sleep.sleep.shorts.repository.*;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,9 +26,6 @@ public class ShortsServiceImpl implements ShortsService{
     private final UploadShortsRepository uploadShortsRepository;
     private final MemberRepository memberRepository;
     private final TryShortsRepository tryShortsRepository;
-    private final MusicSingerRepository musicSingerRepository;
-    private final MusicRepository musicRepository;
-    private final SingerRepository singerRepository;
 
     //특정 쇼츠 조회
     public ShortsDto getShortsInfo(int shortsNo) {
@@ -49,16 +41,6 @@ public class ShortsServiceImpl implements ShortsService{
         shortsInfo.setShortsTime(shorts.getShortsTime());
         shortsInfo.setShortsLink(shorts.getShortsLink());
         shortsInfo.setShortDate(shorts.getShortsDate());
-
-        int musicNo = shorts.getMusicNo();
-        Music music = musicRepository.findByMusicNo(musicNo);
-
-        MusicSinger musicSinger= musicSingerRepository.findByMusicNo(musicNo);
-
-        Singer singer = singerRepository.findBySingerNo(musicSinger.getSingerNo());
-
-        shortsInfo.setMusicName(music.getMusicName());
-        shortsInfo.setSingerName(singer.getSingerName());
 
         return shortsInfo;
     }
@@ -82,13 +64,6 @@ public class ShortsServiceImpl implements ShortsService{
             shortsDto.setShortsLink(value.getShortsLink());
             shortsDto.setShortDate(value.getShortsDate());
 
-            int musicNo = value.getMusicNo();
-            Music music = musicRepository.findByMusicNo(musicNo);
-            MusicSinger musicSinger= musicSingerRepository.findByMusicNo(musicNo);
-            Singer singer = singerRepository.findBySingerNo(musicSinger.getSingerNo());
-            shortsDto.setMusicName(music.getMusicName());
-            shortsDto.setSingerName(singer.getSingerName());
-
             shortsList.add(shortsDto);
         }
         return shortsList;
@@ -111,15 +86,6 @@ public class ShortsServiceImpl implements ShortsService{
             shortsDto.setShortsChallengers(value.getShortsChallengers());
             shortsDto.setShortsLink(value.getShortsLink());
             shortsDto.setShortDate(value.getShortsDate());
-
-            int musicNo = value.getMusicNo();
-            Music music = musicRepository.findByMusicNo(musicNo);
-            MusicSinger musicSinger= musicSingerRepository.findByMusicNo(musicNo);
-            Singer singer = singerRepository.findBySingerNo(musicSinger.getSingerNo());
-            shortsDto.setMusicName(music.getMusicName());
-            shortsDto.setSingerName(singer.getSingerName());
-
-            shortsList.add(shortsDto);
 
         }
 
@@ -246,13 +212,6 @@ public class ShortsServiceImpl implements ShortsService{
             shortsDto.setShortsChallengers(shorts.getShortsChallengers());
             shortsDto.setShortsLink(shorts.getShortsLink());
             shortsDto.setShortDate(shorts.getShortsDate());
-
-            int musicNo = shorts.getMusicNo();
-            Music music = musicRepository.findByMusicNo(musicNo);
-            MusicSinger musicSinger= musicSingerRepository.findByMusicNo(musicNo);
-            Singer singer = singerRepository.findBySingerNo(musicSinger.getSingerNo());
-            shortsDto.setMusicName(music.getMusicName());
-            shortsDto.setSingerName(singer.getSingerName());
 
             // DTO 리스트에 DTO 추가
             shortsDtoList.add(shortsDto);

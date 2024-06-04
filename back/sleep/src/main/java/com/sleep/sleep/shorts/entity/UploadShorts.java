@@ -31,9 +31,9 @@ public class UploadShorts {
     private String youtubeUrl;
 
 
-    @OneToOne
-    @JoinColumn(name = "sns_no")
-    private UploadSns snsNo;
+//    @OneToOne
+//    @JoinColumn(name = "sns_no")
+//    private UploadSns snsNo;
 
     @Builder
     public UploadShorts(Member memberIndex, String uploadUrl, String uploadTitle) {
