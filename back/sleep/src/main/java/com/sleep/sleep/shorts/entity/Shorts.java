@@ -14,7 +14,7 @@ public class Shorts {
     // 쇼츠 테이블 id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int shortsNo;
+    private int shortsId;
 
     // 쇼츠 시간
     @Column(nullable = false)
@@ -30,7 +30,7 @@ public class Shorts {
     // 쇼츠 s3 링크
     private String shortsLink;
 
-    // 쇼츠를 시도한
+    // 시도한 쇼츠
     @OneToMany(mappedBy = "shortsNo", cascade = CascadeType.ALL)
     private List<TryShorts> tryShortsList;
 

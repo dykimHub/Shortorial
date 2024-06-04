@@ -4,11 +4,12 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortsDto {
 
     // 쇼츠 테이블 id
-    private int shortsNo;
+    private int shortsId;
 
     // 쇼츠 시간
     private int shortsTime;
