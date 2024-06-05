@@ -3,7 +3,7 @@ package com.sleep.sleep.shorts.service;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.repository.MemberRepository;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.dto.UploadShortsDto;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.entity.*;
 import com.sleep.sleep.shorts.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -93,29 +93,29 @@ public class ShortsServiceImpl implements ShortsService{
 
     }
 
-    public List<UploadShortsDto> getUploadShortsList(String username){
+    public List<RecordedShortsDto> getUploadShortsList(String username){
         int memberNo = memberRepository.findByMemberId(username)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found")).getMemberIndex();
 
         List<RecordedShorts> shorts = uploadShortsRepository.findUploadShortList(memberNo);
 
-        List<UploadShortsDto> uploadShorts = new ArrayList<>();
+        List<RecordedShortsDto> uploadShorts = new ArrayList<>();
 
         for(RecordedShorts value : shorts){
-            UploadShortsDto UploadShortsDto = new UploadShortsDto();
-            UploadShortsDto.setUploadNo(value.getUploadNo());
-            UploadShortsDto.setMemberNo(memberNo);
-            UploadShortsDto.setUploadUrl(value.getUploadUrl());
-            UploadShortsDto.setUploadTitle(value.getUploadTitle());
-            UploadShortsDto.setUploadDate(value.getUploadDate().toString());
-            UploadShortsDto.setYoutubeUrl(value.getYoutubeUrl());
+            RecordedShortsDto RecordedShortsDto = new RecordedShortsDto();
+            RecordedShortsDto.setUploadNo(value.getUploadNo());
+            RecordedShortsDto.setMemberNo(memberNo);
+            RecordedShortsDto.setUploadUrl(value.getUploadUrl());
+            RecordedShortsDto.setUploadTitle(value.getUploadTitle());
+            RecordedShortsDto.setUploadDate(value.getUploadDate().toString());
+            RecordedShortsDto.setYoutubeUrl(value.getYoutubeUrl());
 
-            uploadShorts.add(UploadShortsDto);
+            uploadShorts.add(RecordedShortsDto);
         }
         return uploadShorts;
     }
 
-    public void upload(UploadShortsDto dto, String username) {
+    public void upload(RecordedShortsDto dto, String username) {
         Member member = memberRepository.findByMemberId(username)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
         uploadShortsRepository.save(RecordedShorts.builder()

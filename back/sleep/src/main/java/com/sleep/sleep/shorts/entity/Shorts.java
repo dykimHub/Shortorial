@@ -24,10 +24,18 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsTitle;
 
+    @Column(nullable = false)
+    private String shortsMusic;
+
+    @Column(nullable = false)
+    private String shortsSinger;
+
     // 쇼츠 출처
+    @Column(nullable = false)
     private String shortsSource;
 
     // 쇼츠 s3 링크
+    @Column(nullable = false)
     private String shortsLink;
 
     // 시도한 쇼츠

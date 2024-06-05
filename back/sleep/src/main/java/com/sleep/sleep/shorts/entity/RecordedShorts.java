@@ -32,7 +32,7 @@ public class RecordedShorts {
     private LocalDateTime recordedShortsDate;
 
     // 유튜브 업로드 url
-    private String youtubeUrl;
+    private String recordedShortsYoutubeUrl;
 
     // 녹화한 멤버 객체
     @ManyToOne
@@ -44,10 +44,10 @@ public class RecordedShorts {
     private Shorts shorts;
 
     @Builder
-    public RecordedShorts(String recordedShortsLink, String recordedShortsTitle, String youtubeUrl, Member member, Shorts shorts) {
+    public RecordedShorts(String recordedShortsLink, String recordedShortsTitle, String recordedShortsYoutubeUrl, Member member, Shorts shorts) {
         this.recordedShortsLink = recordedShortsLink;
         this.recordedShortsTitle = recordedShortsTitle;
-        this.youtubeUrl = youtubeUrl;
+        this.recordedShortsYoutubeUrl = recordedShortsYoutubeUrl;
         this.member = member;
         this.shorts = shorts;
     }

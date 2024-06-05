@@ -2,9 +2,8 @@ package com.sleep.sleep.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
-import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.repository.MemberRepository;
-import com.sleep.sleep.shorts.dto.UploadShortsDto;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.service.ShortsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +38,7 @@ public class S3Service {
         amazonS3.putObject(new PutObjectRequest(bucketName, inputFileName, file));
 
         String s3Url = amazonS3.getUrl(bucketName, inputFileName).toString();
-        UploadShortsDto dto = new UploadShortsDto(s3Url,inputFileName);
+        RecordedShortsDto dto = new RecordedShortsDto(s3Url,inputFileName);
         shortsService.upload(dto,username);
 
         file.delete();

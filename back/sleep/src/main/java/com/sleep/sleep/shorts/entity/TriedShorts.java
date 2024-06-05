@@ -24,7 +24,7 @@ public class TriedShorts {
     // 시도한 시간
     @CreationTimestamp
     @Column(nullable = false)
-    private LocalDateTime triedDate;
+    private LocalDateTime triedShortsDate;
 
     // 시도한 쇼츠 객체
     @ManyToOne
