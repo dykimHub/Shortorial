@@ -6,15 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ShortsRepository extends JpaRepository<Shorts,Integer> {
 
-    Shorts findByShortsNo(int shortNo);
+    @Query("SELECT s FROM Shorts s ORDER BY s.shortsChallengersNum DESC LIMIT 3")
+    List<Shorts> findPopularShorts();
 
-    @Query(nativeQuery = true, value = "select * from shorts")
-    List<Shorts> findShortList();
-
-    @Query(nativeQuery = true, value = "select * from shorts order by shorts_challengers DESC limit 3")
-    List<Shorts> findShortTopRanking();
 }
