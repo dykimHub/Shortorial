@@ -1,10 +1,9 @@
 package com.sleep.sleep.member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sleep.sleep.shorts.entity.TryShorts;
-import com.sleep.sleep.shorts.entity.UploadShorts;
+import com.sleep.sleep.shorts.entity.RecordedShorts;
+import com.sleep.sleep.shorts.entity.TriedShorts;
 import jakarta.persistence.*;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +26,7 @@ import java.util.List;
 @DynamicInsert
 @DynamicUpdate
 public class Member implements UserDetails {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_no", updatable = false)
@@ -45,8 +44,12 @@ public class Member implements UserDetails {
     @Enumerated(EnumType.STRING)
     private MemberRole memberRole;
 
+    @OneToMany(mappedBy = "member")
+    private List<TriedShorts> tryShorts;
+    @OneToMany(mappedBy = "member")
+    private List<RecordedShorts> recordedShorts;
 
-    public static UserDetails of(Member member){
+    public static UserDetails of(Member member) {
         return Member.builder()
                 .memberId(member.getMemberId())
                 .memberPass(member.getMemberPass())
@@ -99,10 +102,4 @@ public class Member implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
-    private String  memberTiktokLink;
-    @OneToMany(fetch = FetchType.EAGER, mappedBy="tryNo")
-    private List<TryShorts> tryShorts;
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "uploadNo")
-    private List<UploadShorts> uploadShorts;
 }

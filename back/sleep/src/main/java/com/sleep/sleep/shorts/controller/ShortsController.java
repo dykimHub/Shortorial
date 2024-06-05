@@ -2,8 +2,6 @@ package com.sleep.sleep.shorts.controller;
 
 import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.dto.UploadShortsDto;
-import com.sleep.sleep.shorts.entity.UploadShorts;
 import com.sleep.sleep.shorts.repository.UploadShortsRepository;
 import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;

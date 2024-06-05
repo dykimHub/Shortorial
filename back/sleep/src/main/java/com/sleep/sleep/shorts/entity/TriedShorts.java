@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -13,12 +14,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "try_shorts")
 @Entity
-public class TryShorts {
+public class TriedShorts {
 
     // 시도한 쇼츠 테이블 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int tryShortsNo;
+    private int tryShortsId;
+
+    // 시도한 시간
+    @CreationTimestamp
+    @Column(nullable = false)
+    private LocalDateTime triedDate;
 
     // 시도한 쇼츠 객체
     @ManyToOne
@@ -30,12 +36,14 @@ public class TryShorts {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    // 시도한 멤버 수
     @Column(nullable = false)
-    private LocalDateTime uploadDate = LocalDateTime.now();
+    private int challengerNum;
 
     @Builder
-    public TryShorts(Shorts shorts, Member member) {
+    public TriedShorts(Shorts shorts, Member member, int challengerNum) {
         this.shorts = shorts;
         this.member = member;
+        this.challengerNum = challengerNum;
     }
 }

@@ -1,12 +1,11 @@
 package com.sleep.sleep.s3;
 
 import com.sleep.sleep.common.JWT.JwtTokenUtil;
-import com.sleep.sleep.shorts.entity.UploadShorts;
+import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.repository.UploadShortsRepository;
 import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpStatus;
@@ -152,10 +151,10 @@ public class S3Controller {
             //String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
             System.out.println(username);
 
-            UploadShorts uploadShorts = uploadShortsRepository.findByUploadNo(uploadNo);
+            RecordedShorts recordedShorts = uploadShortsRepository.findByUploadNo(uploadNo);
 
             // S3에서 파일 다운로드
-            InputStream inputStream = s3Service.downloadFile(uploadShorts.getUploadTitle());
+            InputStream inputStream = s3Service.downloadFile(recordedShorts.getUploadTitle());
 
             // 임시 파일 생성
             File tempFile = File.createTempFile("downloaded-", ".mp4", new File(System.getProperty("java.io.tmpdir")));
@@ -205,10 +204,10 @@ public class S3Controller {
             //String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
 
             // 업로드 쇼츠 db에서 찾기
-            UploadShorts uploadShorts = uploadShortsRepository.findByUploadNo(uploadNo);
+            RecordedShorts recordedShorts = uploadShortsRepository.findByUploadNo(uploadNo);
 
             // S3에서 파일 다운로드
-            InputStream inputStream = s3Service.downloadFile(uploadShorts.getUploadTitle());
+            InputStream inputStream = s3Service.downloadFile(recordedShorts.getUploadTitle());
 
             // InputStream을 바이트 배열로 변환
             byte[] fileContent = IOUtils.toByteArray(inputStream);

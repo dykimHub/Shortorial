@@ -97,11 +97,11 @@ public class ShortsServiceImpl implements ShortsService{
         int memberNo = memberRepository.findByMemberId(username)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found")).getMemberIndex();
 
-        List<UploadShorts> shorts = uploadShortsRepository.findUploadShortList(memberNo);
+        List<RecordedShorts> shorts = uploadShortsRepository.findUploadShortList(memberNo);
 
         List<UploadShortsDto> uploadShorts = new ArrayList<>();
 
-        for(UploadShorts value : shorts){
+        for(RecordedShorts value : shorts){
             UploadShortsDto UploadShortsDto = new UploadShortsDto();
             UploadShortsDto.setUploadNo(value.getUploadNo());
             UploadShortsDto.setMemberNo(memberNo);
@@ -118,7 +118,7 @@ public class ShortsServiceImpl implements ShortsService{
     public void upload(UploadShortsDto dto, String username) {
         Member member = memberRepository.findByMemberId(username)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
-        uploadShortsRepository.save(UploadShorts.builder()
+        uploadShortsRepository.save(RecordedShorts.builder()
                 .memberIndex(member)
                 .uploadUrl(dto.getUploadUrl())
                 .uploadTitle(dto.getUploadTitle())
@@ -126,13 +126,13 @@ public class ShortsServiceImpl implements ShortsService{
     }
 
     public void putTitle(int uploadNo, String oldTitle, String newTitle, String newURL){
-        UploadShorts uploadShorts = uploadShortsRepository.findByUploadTitle(uploadNo, oldTitle);
+        RecordedShorts recordedShorts = uploadShortsRepository.findByUploadTitle(uploadNo, oldTitle);
 
-        if (uploadShorts != null) {
+        if (recordedShorts != null) {
 
-            uploadShorts.update(newTitle, newURL);
+            recordedShorts.update(newTitle, newURL);
 
-            uploadShortsRepository.save(uploadShorts);
+            uploadShortsRepository.save(recordedShorts);
         }
 
     }
@@ -142,9 +142,9 @@ public class ShortsServiceImpl implements ShortsService{
     }
 
     public void deleteUploadShorts(int uploadNo, String fileName){
-        UploadShorts uploadShorts = uploadShortsRepository.findByUploadTitle(uploadNo, fileName);
-        if (uploadShorts != null) {
-            uploadShortsRepository.delete(uploadShorts);
+        RecordedShorts recordedShorts = uploadShortsRepository.findByUploadTitle(uploadNo, fileName);
+        if (recordedShorts != null) {
+            uploadShortsRepository.delete(recordedShorts);
         }
     }
 
@@ -221,13 +221,13 @@ public class ShortsServiceImpl implements ShortsService{
     }
 
     public void putYoutubeUrl(int uploadNo,String url){
-        UploadShorts uploadShorts = uploadShortsRepository.findByUploadNo(uploadNo);
+        RecordedShorts recordedShorts = uploadShortsRepository.findByUploadNo(uploadNo);
 
-        if (uploadShorts != null) {
+        if (recordedShorts != null) {
 
-            uploadShorts.putYoutubeUrl(url);
+            recordedShorts.putYoutubeUrl(url);
 
-            uploadShortsRepository.save(uploadShorts);
+            uploadShortsRepository.save(recordedShorts);
         }
     }
 

@@ -31,7 +31,11 @@ public class Shorts {
     private String shortsLink;
 
     // 시도한 쇼츠
-    @OneToMany(mappedBy = "shortsNo", cascade = CascadeType.ALL)
-    private List<TryShorts> tryShortsList;
+    @OneToMany(mappedBy = "shorts")
+    private List<TriedShorts> tryShortsList;
+
+    // 녹화된 쇼츠
+    @OneToMany(mappedBy = "shorts")
+    private List<TriedShorts> recordedShortsList;
 
 }
