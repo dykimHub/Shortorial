@@ -24,9 +24,11 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsTitle;
 
+    // 쇼츠 음악 제목
     @Column(nullable = false)
-    private String shortsMusic;
+    private String shortsMusicTitle;
 
+    // 쇼츠 가수
     @Column(nullable = false)
     private String shortsSinger;
 
@@ -41,6 +43,9 @@ public class Shorts {
     // 시도한 쇼츠
     @OneToMany(mappedBy = "shorts")
     private List<TriedShorts> tryShortsList;
+
+    // 쇼츠 챌린저 수
+    private int shortsChallengersNum;
 
     // 녹화된 쇼츠
     @OneToMany(mappedBy = "shorts")
