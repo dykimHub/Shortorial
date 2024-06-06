@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "try_shorts")
+@Table(name = "tried_shorts")
 @Entity
 public class TriedShorts {
 
@@ -36,14 +36,4 @@ public class TriedShorts {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    // 시도한 멤버 수
-    @Column(nullable = false)
-    private int challengerNum;
-
-    @Builder
-    public TriedShorts(Shorts shorts, Member member, int challengerNum) {
-        this.shorts = shorts;
-        this.member = member;
-        this.challengerNum = challengerNum;
-    }
 }

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "recorded _shorts")
+@Table(name = "recorded_shorts")
 @Entity
 public class RecordedShorts {
 
@@ -17,10 +17,6 @@ public class RecordedShorts {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int recordedShortsId;
-
-    // 녹화한 쇼츠 s3 링크
-    @Column(nullable = false)
-    private String recordedShortsLink;
 
     // 녹화한 쇼츠 제목
     @Column(nullable = false)
@@ -44,10 +40,8 @@ public class RecordedShorts {
     private Shorts shorts;
 
     @Builder
-    public RecordedShorts(String recordedShortsLink, String recordedShortsTitle, String recordedShortsYoutubeUrl, Member member, Shorts shorts) {
-        this.recordedShortsLink = recordedShortsLink;
+    public RecordedShorts(String recordedShortsTitle, Member member, Shorts shorts) {
         this.recordedShortsTitle = recordedShortsTitle;
-        this.recordedShortsYoutubeUrl = recordedShortsYoutubeUrl;
         this.member = member;
         this.shorts = shorts;
     }

@@ -19,25 +19,29 @@ public class ShortsDto {
     private String shortsTitle;
 
     // 쇼츠 음악
-    private String shortsMusic;
+    private String shortsMusicTitle;
 
     // 쇼츠 가수
-    private String shortsSinger;
+    private String shortsMusicSinger;
 
-    // 쇼츠 챌린저 수
-    private int shortsChallengersNum;
+    // 쇼츠 출처
+    private String shortsSource;
 
     // 쇼츠 s3 링크
-    private String shortsLink;
+    private String shortsS3Link;
+
+    // 쇼츠 시도한 사람 수
+    private int shortsChallengerNum;
 
     @Builder
-    public ShortsDto(int shortsId, int shortsTime, String shortsTitle, String shortsMusic, String shortsSinger, int shortsChallengersNum, String shortsLink) {
+    public ShortsDto(int shortsId, int shortsTime, String shortsTitle, String shortsMusicTitle, String shortsMusicSinger, String shortsSource, String shortsS3Link, int shortsChallengerNum) {
         this.shortsId = shortsId;
         this.shortsTime = shortsTime;
         this.shortsTitle = shortsTitle;
-        this.shortsMusic = shortsMusic;
-        this.shortsSinger = shortsSinger;
-        this.shortsChallengersNum = shortsChallengersNum;
-        this.shortsLink = shortsLink;
+        this.shortsMusicTitle = shortsMusicTitle;
+        this.shortsMusicSinger = shortsMusicSinger;
+        this.shortsSource = shortsSource;
+        this.shortsS3Link = shortsS3Link;
+        this.shortsChallengerNum = shortsChallengerNum;
     }
 }

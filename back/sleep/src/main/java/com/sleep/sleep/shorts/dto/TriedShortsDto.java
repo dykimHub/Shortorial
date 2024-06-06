@@ -1,6 +1,7 @@
 package com.sleep.sleep.shorts.dto;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,10 +18,10 @@ public class TriedShortsDto {
     private LocalDateTime triedShortsDate;
 
     // 원본 쇼츠 음악
-    private String shortsMusic;
+    private String shortsMusicTitle;
 
     // 원본 쇼츠 가수
-    private String shortsSigner;
+    private String shortsMusicSigner;
 
     // 쇼츠 시간
     private int shortsTime;
@@ -32,6 +33,17 @@ public class TriedShortsDto {
     private int shortsChallengersNum;
 
     // 쇼츠 s3 링크
-    private String shortsLink;
+    private String shortsS3Link;
 
+    @Builder
+    public TriedShortsDto(int tryShortsId, LocalDateTime triedShortsDate, String shortsMusicTitle, String shortsMusicSigner, int shortsTime, String shortsTitle, int shortsChallengersNum, String shortsS3Link) {
+        this.tryShortsId = tryShortsId;
+        this.triedShortsDate = triedShortsDate;
+        this.shortsMusicTitle = shortsMusicTitle;
+        this.shortsMusicSigner = shortsMusicSigner;
+        this.shortsTime = shortsTime;
+        this.shortsTitle = shortsTitle;
+        this.shortsChallengersNum = shortsChallengersNum;
+        this.shortsS3Link = shortsS3Link;
+    }
 }
