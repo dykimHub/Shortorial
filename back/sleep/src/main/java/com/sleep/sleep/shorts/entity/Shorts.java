@@ -30,22 +30,18 @@ public class Shorts {
 
     // 쇼츠 가수
     @Column(nullable = false)
-    private String shortsSinger;
+    private String shortsMusicSinger;
 
     // 쇼츠 출처
     @Column(nullable = false)
     private String shortsSource;
 
-    // 쇼츠 s3 링크
     @Column(nullable = false)
-    private String shortsLink;
+    private int shortsChallengerNum;
 
     // 시도한 쇼츠
     @OneToMany(mappedBy = "shorts")
     private List<TriedShorts> tryShortsList;
-
-    // 쇼츠 챌린저 수
-    private int shortsChallengersNum;
 
     // 녹화된 쇼츠
     @OneToMany(mappedBy = "shorts")

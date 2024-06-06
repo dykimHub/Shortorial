@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.service;
 
+import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.entity.Shorts;

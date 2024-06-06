@@ -1,8 +1,7 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.shorts.dto.RecordedShortsDto;
+import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +17,7 @@ import java.util.List;
 @Service
 public class ShortsServiceImpl implements ShortsService {
 
+    private final S3Service s3Service;
     private final ShortsRepository shortsRepository;
 //    private final RecordedShortsRepository recordedShortsRepository;
 //    private final MemberRepository memberRepository;
@@ -30,15 +30,17 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public ShortsDto convertToShortsDto(Shorts shorts) {
+        String folderName = "shortsList/";
 
         ShortsDto shortsDto = ShortsDto.builder()
                 .shortsId(shorts.getShortsId())
                 .shortsTime(shorts.getShortsTime())
                 .shortsTitle(shorts.getShortsTitle())
-                .shortsMusic(shorts.getShortsMusicTitle())
-                .shortsSinger(shorts.getShortsSinger())
-                .shortsLink(shorts.getShortsLink())
-                .shortsChallengersNum(shorts.getShortsChallengersNum())
+                .shortsMusicTitle(shorts.getShortsMusicTitle())
+                .shortsMusicSinger(shorts.getShortsMusicSinger())
+                .shortsS3Link(s3Service.getPath(folderName + shorts.getShortsTitle()))
+                .shortsSource(shorts.getShortsSource())
+                .shortsChallengerNum(shorts.getShortsChallengerNum())
                 .build();
 
         return shortsDto;
