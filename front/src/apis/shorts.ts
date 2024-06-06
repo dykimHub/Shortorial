@@ -4,16 +4,15 @@ const REST_SHORTS_URL = "/api/s3";
 const REST_SHORTS_LIST_URL = "/api/shorts";
 
 export interface shorts {
-  shortsNo: number;
-  shortsUrl: string;
+  shortsId: number;
   shortsTitle: string;
-  shortsDirector: string;
+  shortsSource: string;
   shortsTime: number;
-  shortsChallengers: number;
-  shortsLink: string;
-  shortsDate: string;
-  musicName: string;
-  singerName: string;
+  shortsChallengerNum: number;
+  shortsS3Link: string;
+  //shortsDate: string;
+  shortsMusicName: string;
+  shortsSingerName: string;
 }
 
 export interface UploadShorts {

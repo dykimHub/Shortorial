@@ -93,7 +93,7 @@ const MainPage = () => {
             <SectionConents className="nowrap">
               {recommendedShorts?.map((shorts) => (
                 <ShortsVideoItem
-                  key={shorts.shortsNo}
+                  key={shorts.shortsId}
                   shortsInfo={shorts}
                   isLoading={isLoading}
                   isSerise
@@ -111,7 +111,7 @@ const MainPage = () => {
           <SectionConents className="nowrap">
             {popularShortsList?.map((shorts) => (
               <ShortsVideoItem
-                key={shorts.shortsNo}
+                key={shorts.shortsId}
                 shortsInfo={shorts}
                 isLoading={isLoading}
                 isSerise
@@ -125,7 +125,7 @@ const MainPage = () => {
           <SectionConents>
             {allShortsList?.map((shorts) => (
               <ShortsVideoItem
-                key={shorts.shortsNo}
+                key={shorts.shortsId}
                 shortsInfo={shorts}
                 isLoading={isLoading}
                 onClick={openModal(shorts)}
@@ -144,7 +144,7 @@ const MainPage = () => {
             <div>
               <Detail
                 icon={<MusicNote />}
-                text={`${selectedShorts.musicName}`}
+                text={`${selectedShorts.shortsMusicTitle}`}
                 fontSize="18px"
               ></Detail>
 
@@ -155,22 +155,22 @@ const MainPage = () => {
               ></Detail>
               <Detail
                 icon={<EmojiPeople />}
-                text={`${selectedShorts.shortsChallengers}명의 챌린저`}
+                text={`${selectedShorts.shortsChallengerNum}명의 챌린저`}
                 fontSize="18px"
               ></Detail>
-              <Detail
-                icon={<Copyright />}
-                text={selectedShorts.shortsDirector}
-                fontSize="18px"
-              ></Detail>
+              <Detail icon={<Copyright />} fontSize="18px">
+                <a href={selectedShorts.shortsSource} target="_blank">
+                  원본 영상 보기
+                </a>
+              </Detail>
             </div>
           </Details>
 
           <ButtonContainer>
-            <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsNo)}>
+            <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsId)}>
               연습모드
             </RouteButton>
-            <RouteButton onClick={() => goToChallengeMode(selectedShorts.shortsNo)}>
+            <RouteButton onClick={() => goToChallengeMode(selectedShorts.shortsId)}>
               챌린지모드
             </RouteButton>
           </ButtonContainer>
@@ -294,12 +294,13 @@ interface DetailType {
   fontSize?: string;
   fontWeight?: string;
   icon?: JSX.Element;
+  children?: React.ReactNode;
 }
 
-const Detail = ({ icon, text, fontSize, fontWeight }: DetailType) => {
+const Detail = ({ icon, text, fontSize, fontWeight, children }: DetailType) => {
   return (
-    <div style={{ fontSize: fontSize, fontWeight: fontWeight, margin: "5px 0px" }}>
-      {icon} {text}
+    <div style={{ fontSize, fontWeight, margin: "5px 0px", display: "flex", alignItems: "center" }}>
+      {icon} &nbsp; {text || children}
     </div>
   );
 };

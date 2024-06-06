@@ -14,28 +14,26 @@ export default interface Member {
   memberProfile: string;
 }
 export interface Shorts {
-  shortsNo: number;
-  shortsUrl: string;
+  shortsId: number;
+  shortsSource: string;
   shortsTitle: string;
-  shortsDirector: string;
   shortsTime: number;
-  shortsChallengers: number;
-  shortsLink: string;
-  shortsDate: string;
-  musicName: string;
-  singerName: string;
+  shortsChallengerNum: number;
+  shortsS3Link: string;
+  //shortsDate: string;
+  shortsMusicTitle: string;
+  shortsMusicSinger: string;
 }
 
 export interface RecomShorts {
   musicNo: number;
-  shortsChallengers: number;
-  shortsDate: string;
-  shortsDirector: string;
-  shortsLink: string;
-  shortsNo: number;
+  shortsChallengerNum: number;
+  //shortsDate: string;
+  shortsS3Link: string;
+  shortsId: number;
   shortsTime: number;
   shortsTitle: string;
-  shortsUrl: string;
-  singerName: string;
-  musicName: string;
+  shortsSource: string;
+  shortsMusicTitle: string;
+  shortsMusicSinger: string;
 }
