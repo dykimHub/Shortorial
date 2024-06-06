@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         System.out.println("유저 로드 시작");
         Member member = memberRepository.findByMemberId(username)
                 .orElseThrow(() -> new NoSuchElementException("없는 회원입니다."));
-        System.out.println("member 정보: "+ member.toString());
+        //System.out.println("member 정보: "+ member.toString());
         return Member.of(member);
     }
 }

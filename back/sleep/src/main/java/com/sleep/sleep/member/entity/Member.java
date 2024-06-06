@@ -45,7 +45,7 @@ public class Member implements UserDetails {
     private MemberRole memberRole;
 
     @OneToMany(mappedBy = "member")
-    private List<TriedShorts> tryShorts;
+    private List<TriedShorts> triedShorts;
     @OneToMany(mappedBy = "member")
     private List<RecordedShorts> recordedShorts;
 

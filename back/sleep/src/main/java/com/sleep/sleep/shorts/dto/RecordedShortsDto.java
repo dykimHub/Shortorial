@@ -12,7 +12,7 @@ public class RecordedShortsDto {
     private int recordedShortsId;
 
     // 녹화한 쇼츠 s3 링크
-    private String recordedShortsLink;
+    private String recordedShortsS3Link;
 
     // 녹화한 쇼츠 제목
     private String recordedShortsTitle;
@@ -24,8 +24,19 @@ public class RecordedShortsDto {
     private String recordedShortsYoutubeUrl;
 
     // 원본 쇼츠 음악
-    private String shortsMusic;
+    private String shortsMusicTitle;
 
     // 원본 쇼츠 가수
-    private String shortsSigner;
+    private String shortsMusicSigner;
+
+    @Builder
+    public RecordedShortsDto(int recordedShortsId, String recordedShortsS3Link, String recordedShortsTitle, LocalDateTime recordedShortsDate, String recordedShortsYoutubeUrl, String shortsMusicTitle, String shortsMusicSigner) {
+        this.recordedShortsId = recordedShortsId;
+        this.recordedShortsS3Link = recordedShortsS3Link;
+        this.recordedShortsTitle = recordedShortsTitle;
+        this.recordedShortsDate = recordedShortsDate;
+        this.recordedShortsYoutubeUrl = recordedShortsYoutubeUrl;
+        this.shortsMusicTitle = shortsMusicTitle;
+        this.shortsMusicSigner = shortsMusicSigner;
+    }
 }
