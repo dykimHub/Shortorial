@@ -7,12 +7,14 @@ import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,17 +28,20 @@ public class ShortsController {
 
     @Operation(summary = "쇼츠 목록 조회")
     @GetMapping
-    public ResponseEntity<List<ShortsDto>> selectShortList() {
+    public ResponseEntity<List<ShortsDto>> findShortList() {
+        List<ShortsDto> shortsDtoList = shortsService.findShortsList();
+        return ResponseEntity.ok()
+                .body(shortsDtoList);
 
-        List<ShortsDto> shortsList = shortsService.findShortsList();
-
-        return ResponseEntity.ok(shortsList);
     }
 
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
-    public ResponseEntity<ShortsDto> selectUserPrediction(@PathVariable int shortsId) {
-        return ResponseEntity.ok(shortsService.findShorts(shortsId));
+    public ResponseEntity<ShortsDto> findShorts(@PathVariable int shortsId) {
+        ShortsDto shortsDto = shortsService.findShorts(shortsId);
+        return ResponseEntity.ok()
+                .body(shortsDto);
+
     }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
@@ -102,13 +107,10 @@ public class ShortsController {
     }
 
 
-
-
     private String resolveToken(String accessToken) {
-        log.info("resolveToken, AccessToken: "+ accessToken.toString());
+        log.info("resolveToken, AccessToken: " + accessToken);
         return accessToken.substring(7);
     }
-
 
 
 }

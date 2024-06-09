@@ -1,10 +1,10 @@
 package com.sleep.sleep.shorts.service;
 
+import com.sleep.sleep.exception.*;
 import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,13 +24,13 @@ public class ShortsServiceImpl implements ShortsService {
 //    private final TriedShortsRepository triedShortsRepository;
 
     /**
-     * 쇼츠 객체를 쇼츠dto 객체로 반환함
-     * @param shorts 쇼츠 객체
-     * @return 변환된 쇼츠 dto 객체
+     * shorts 객체를  ShostsDto 객체로 변환함
+     * @param shorts Shorts 객체
+     * @return ShortsDto로 변환된 객체
      */
     @Override
-    public ShortsDto convertToShortsDto(Shorts shorts) {
-        String folderName = "shortsList/";
+    public ShortsDto convertToShortsDto(Shorts shorts, String folderName) {
+        String S3key = folderName + shorts.getShortsTitle();
 
         ShortsDto shortsDto = ShortsDto.builder()
                 .shortsId(shorts.getShortsId())
@@ -38,7 +38,7 @@ public class ShortsServiceImpl implements ShortsService {
                 .shortsTitle(shorts.getShortsTitle())
                 .shortsMusicTitle(shorts.getShortsMusicTitle())
                 .shortsMusicSinger(shorts.getShortsMusicSinger())
-                .shortsS3Link(s3Service.getPath(folderName + shorts.getShortsTitle()))
+                .shortsS3Link(s3Service.getPath(S3key))
                 .shortsSource(shorts.getShortsSource())
                 .shortsChallengerNum(shorts.getShortsChallengerNum())
                 .build();
@@ -48,30 +48,32 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 쇼츠 아이디에 해당하는 쇼츠 정보를 가져옴
-     * @param shortsId 쇼츠 아이디
-     * @return 쇼츠 정보를 담은 쇼츠 dto 객체
-     * @throws EntityNotFoundException 쇼츠 엔티티를 찾을 수 없는 오류
+     * 특정 Shorts ID에 해당하는 Shorts 객체를 ShortsDto 객체로 반환
+     * @param shortsId Shorts ID
+     * @return ShortsDto로 변환된 객체
+     * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
      */
     @Override
     public ShortsDto findShorts(int shortsId) {
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new EntityNotFoundException("Shorts Entity Not Found"));
-        ShortsDto shortsDto = convertToShortsDto(shorts);
+        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
+        ShortsDto shortsDto = convertToShortsDto(shorts, "shortsList/");
 
         return shortsDto;
     }
 
+
     /**
-     * 데이터베이스에 있는 모든 쇼츠를 쇼츠 dto 리스트로 반환함
-     * @return 쇼츠dto 객체 리스트
+     * 모든 Shorts 객체를 ShortsDto 리스트로 반환함
+     * @return 변환된 ShortsDto 리스트
+     * @throws CustomException Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findShortsList() {
         List<Shorts> shortsList = shortsRepository.findAll();
-        if(shortsList.isEmpty()) shortsList = new ArrayList<>();
+        if(shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         List<ShortsDto> shortsDtoList = shortsList.stream()
-                        .map(s -> convertToShortsDto(s))
+                        .map(s -> convertToShortsDto(s, "shortsList/"))
                         .toList();
 
         return shortsDtoList;
@@ -79,15 +81,16 @@ public class ShortsServiceImpl implements ShortsService {
 
     /**
      * 쇼츠 영상을 클릭한 수가 많은 순서대로 3개를 나열함
-     * @return 인기있는 쇼츠 dto 3개
+     * @return ShortsDto로 변환된 객체 3개
+     * @throws CustomException 인기 Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
         List<Shorts> popularShortsList = shortsRepository.findPopularShorts();
-        if(popularShortsList.isEmpty()) popularShortsList = new ArrayList<>();
+        if(popularShortsList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
         List<ShortsDto> popularShortsDtoList = popularShortsList.stream()
-                .map(s -> convertToShortsDto(s))
+                .map(s -> convertToShortsDto(s, "shortsList/"))
                 .toList();
 
         return popularShortsDtoList;
