@@ -1,19 +1,14 @@
 package com.sleep.sleep.shorts.controller;
 
-import com.sleep.sleep.common.JWT.JwtTokenUtil;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -23,8 +18,6 @@ import java.util.List;
 public class ShortsController {
 
     private final ShortsService shortsService;
-    private final JwtTokenUtil jwtTokenUtil;
-    private final RecordedShortsRepository recordedShortsRepository;
 
     @Operation(summary = "쇼츠 목록 조회")
     @GetMapping
@@ -42,6 +35,22 @@ public class ShortsController {
         return ResponseEntity.ok()
                 .body(shortsDto);
 
+    }
+
+    @Operation(summary = "인기순 쇼츠 조회")
+    @GetMapping("/topRanking")
+    public ResponseEntity<?> findPopularShorts() {
+        List<ShortsDto> shortRankingList = shortsService.findPopularShortsList();
+        return ResponseEntity.ok()
+                .body(shortRankingList);
+    }
+    
+    @Operation(summary = "사용자가 녹화한 영상 조회")
+    @GetMapping("/upload-shorts")
+    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
+        List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
+        return ResponseEntity.ok()
+                .body(recordedShortsDtoList);
     }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
@@ -96,21 +105,6 @@ public class ShortsController {
 //            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 //        }
 //    }
-
-    @Operation(summary = "인기순 쇼츠 조회", description = "헤더에 accessToken 넣기")
-    @GetMapping("/topRanking")
-    public ResponseEntity<?> shortsGetOrderByChallengers() {
-
-        List<ShortsDto> shortRankingList = shortsService.findPopularShortsList();
-
-        return ResponseEntity.ok(shortRankingList);
-    }
-
-
-    private String resolveToken(String accessToken) {
-        log.info("resolveToken, AccessToken: " + accessToken);
-        return accessToken.substring(7);
-    }
 
 
 }

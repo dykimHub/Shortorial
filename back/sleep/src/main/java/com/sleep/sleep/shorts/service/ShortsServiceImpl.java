@@ -1,9 +1,14 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.exception.*;
+import com.sleep.sleep.common.JWT.JwtTokenUtil;
+import com.sleep.sleep.exception.CustomException;
+import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.s3.S3Service;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
+import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,18 +22,30 @@ import java.util.List;
 @Service
 public class ShortsServiceImpl implements ShortsService {
 
+    private final JwtTokenUtil jwtTokenUtil;
     private final S3Service s3Service;
     private final ShortsRepository shortsRepository;
-//    private final RecordedShortsRepository recordedShortsRepository;
+    private final RecordedShortsRepository recordedShortsRepository;
 //    private final MemberRepository memberRepository;
 //    private final TriedShortsRepository triedShortsRepository;
 
     /**
+     * token에서 memberId를 찾아서 반환함
+     *
+     * @param accessToken 해당 회원의 token
+     * @return memberId
+     */
+    public String getMemberId(String accessToken) {
+        return jwtTokenUtil.getUsername(accessToken.substring(7));
+    }
+
+    /**
      * shorts 객체를  ShostsDto 객체로 변환함
+     *
      * @param shorts Shorts 객체
+     * @param folderName s3 버킷 내 폴더 이름(shortsList)
      * @return ShortsDto로 변환된 객체
      */
-    @Override
     public ShortsDto convertToShortsDto(Shorts shorts, String folderName) {
         String S3key = folderName + shorts.getShortsTitle();
 
@@ -48,7 +65,32 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
+     * recordedShorts 객체를 recordedShortsDto 객체로 반환
+     * 
+     * @param recordedShorts recordedShorts객체
+     * @param folderName S3 버킷 내 폴더 이름(memberId)
+     * @return recordedShortsDto로 변환된 객체
+     */
+    public RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts, String folderName) {
+        String S3key = folderName + recordedShorts.getRecordedShortsTitle();
+
+        RecordedShortsDto recordedShortsDto = RecordedShortsDto.builder()
+                .recordedShortsId(recordedShorts.getRecordedShortsId())
+                .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
+                .recordedShortsS3Link(s3Service.getPath(S3key))
+                .shortsMusicTitle(recordedShorts.getShorts().getShortsMusicTitle())
+                .shortsMusicSigner(recordedShorts.getShorts().getShortsMusicSinger())
+                .recordedShortsDate(recordedShorts.getRecordedShortsDate())
+                .recordedShortsYoutubeUrl(recordedShorts.getRecordedShortsYoutubeUrl())
+                .build();
+
+        return recordedShortsDto;
+
+    }
+
+    /**
      * 특정 Shorts ID에 해당하는 Shorts 객체를 ShortsDto 객체로 반환
+     *
      * @param shortsId Shorts ID
      * @return ShortsDto로 변환된 객체
      * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
@@ -64,30 +106,32 @@ public class ShortsServiceImpl implements ShortsService {
 
     /**
      * 모든 Shorts 객체를 ShortsDto 리스트로 반환함
+     *
      * @return 변환된 ShortsDto 리스트
      * @throws CustomException Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findShortsList() {
         List<Shorts> shortsList = shortsRepository.findAll();
-        if(shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
+        if (shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         List<ShortsDto> shortsDtoList = shortsList.stream()
-                        .map(s -> convertToShortsDto(s, "shortsList/"))
-                        .toList();
+                .map(s -> convertToShortsDto(s, "shortsList/"))
+                .toList();
 
         return shortsDtoList;
     }
 
     /**
-     * 쇼츠 영상을 클릭한 수가 많은 순서대로 3개를 나열함
+     * shortsDto 객체를 클릭한 수가 많은 순서대로 3개 반환함
+     *
      * @return ShortsDto로 변환된 객체 3개
      * @throws CustomException 인기 Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
         List<Shorts> popularShortsList = shortsRepository.findPopularShorts();
-        if(popularShortsList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
+        if (popularShortsList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
         List<ShortsDto> popularShortsDtoList = popularShortsList.stream()
                 .map(s -> convertToShortsDto(s, "shortsList/"))
@@ -95,6 +139,26 @@ public class ShortsServiceImpl implements ShortsService {
 
         return popularShortsDtoList;
 
+    }
+
+    /**
+     * 특정 memberId에 해당하는 recordedShortsDto 리스트를 반환함
+     *
+     * @param accessToken 회원의 token
+     * @return 변환된 recordedShortsDto 리스트
+     */
+    @Override
+    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
+        String memberId = getMemberId(accessToken);
+
+        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByMemberId(memberId);
+        if(recordedShortsList.isEmpty()) return new ArrayList<>();
+
+        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
+                .map(r -> convertToRecordedShortsDto(r, memberId + "/"))
+                .toList();
+
+        return recordedShortsDtoList;
     }
 
 //    @Override

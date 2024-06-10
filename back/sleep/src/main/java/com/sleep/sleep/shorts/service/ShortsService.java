@@ -1,9 +1,7 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.entity.Shorts;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,13 +9,13 @@ import java.util.List;
 @Service
 public interface ShortsService {
 
-    ShortsDto convertToShortsDto(Shorts shorts, String folderName);
-
     ShortsDto findShorts(int shortsId);
 
     List<ShortsDto> findShortsList();
 
     List<ShortsDto> findPopularShortsList();
+
+    List<RecordedShortsDto> findRecordedShortsList(String accessToken);
 
 //    List<RecordedShortsDto> findRecordedShortsList(String memberId);
 
