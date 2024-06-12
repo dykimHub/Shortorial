@@ -1,6 +1,6 @@
 import { axios } from "../utils/axios";
 
-const REST_MYPAGE_URL = "/api/mypage";
+const REST_MYPAGE_URL = "/api/shorts";
 
 export interface Countings {
   tryShortsCount: number;
@@ -13,7 +13,7 @@ export async function getUploadedShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const data = await axios.get(`${REST_MYPAGE_URL}/upload-shorts`, {
+    const data = await axios.get(`${REST_MYPAGE_URL}/recoreded-shorts`, {
       headers: {
         Authorization: token,
       },
@@ -53,12 +53,12 @@ export async function getTryShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const data = await axios.get(`${REST_MYPAGE_URL}/try-shorts`, {
+    const data = await axios.get(`${REST_MYPAGE_URL}/tried-shorts`, {
       headers: {
         Authorization: token,
       },
     });
-
+    
     return data.data;
   } catch (error) {
     console.error("Error fetching data:", error);

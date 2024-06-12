@@ -22,9 +22,9 @@ export default function MyPage() {
       <StarEffect numStars={80} />
       <Header />
       <MypageContainer>
-        <ProfileContainer>
+        {/* <ProfileContainer>
           <Profile />
-        </ProfileContainer>
+        </ProfileContainer> */}
         <div>
           <TabMenu>
             {menuArr.map((el, index) => (

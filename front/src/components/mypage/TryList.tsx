@@ -11,7 +11,7 @@ import {
   TimerOutlined,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { Shorts } from "../../constants/types";
+import { Shorts, TryShorts } from "../../constants/types";
 
 export default function TryList() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function TryList() {
   const [selectedShorts, setSelectedShorts] = useState<Shorts | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [tryShortsList, settryShortsList] = useState<Shorts[]>([]);
+  const [tryShortsList, settryShortsList] = useState<TryShorts[]>([]);
 
   const openModal = (shorts: Shorts) => {
     return () => {
@@ -67,12 +67,12 @@ export default function TryList() {
             {tryShortsList.length === 0 ? (
               <P>시도한 영상이 없습니다</P>
             ) : (
-              tryShortsList?.map((shorts) => (
+              tryShortsList?.map((tryShorts) => (
                 <ShortsVideoItem
-                  key={shorts.shortsNo}
-                  shortsInfo={shorts}
+                  key={tryShorts.triedShortsId}
+                  shortsInfo={tryShorts.shorts}
                   isLoading={isLoading}
-                  onClick={openModal(shorts)}
+                  onClick={openModal(tryShorts.shorts)}
                 />
               ))
             )}
@@ -90,15 +90,15 @@ export default function TryList() {
           <Details>
             <Detail
               icon={<MusicNote />}
-              text={selectedShorts.shortsTitle}
+              text={selectedShorts.shortsMusicTitle}
               fontWeight="bold"
               fontSize="30px"
             ></Detail>
-            <Detail
-              icon={<Copyright />}
-              text={selectedShorts.shortsDirector}
-              fontSize="20px"
-            ></Detail>
+              <Detail icon={<Copyright />} fontSize="18px">
+                <a href={selectedShorts.shortsSource} target="_blank">
+                  원본 영상 보기
+                </a>
+              </Detail>
             <Detail
               icon={<TimerOutlined />}
               fontSize="18px"
@@ -107,14 +107,14 @@ export default function TryList() {
             <Detail
               icon={<EmojiPeople />}
               fontSize="18px"
-              text={`${selectedShorts.shortsChallengers}명의 챌린저`}
+              text={`${selectedShorts.shortsChallengerNum}명의 챌린저`}
             ></Detail>
           </Details>
           <ButtonContainer>
-            <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsNo)}>
+            <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsId)}>
               연습모드
             </RouteButton>
-            <RouteButton onClick={() => goToChallengeMode(selectedShorts.shortsNo)}>
+            <RouteButton onClick={() => goToChallengeMode(selectedShorts.shortsId)}>
               챌린지모드
             </RouteButton>
           </ButtonContainer>
@@ -198,12 +198,13 @@ interface DetailType {
   fontSize?: string;
   fontWeight?: string;
   icon?: JSX.Element;
+  children?: React.ReactNode;
 }
 
-const Detail = ({ icon, text, fontSize, fontWeight }: DetailType) => {
+const Detail = ({ icon, text, fontSize, fontWeight, children }: DetailType) => {
   return (
-    <div style={{ fontSize: fontSize, fontWeight: fontWeight }}>
-      {icon} {text}
+    <div style={{ fontSize, fontWeight, margin: "5px 0px", display: "flex", alignItems: "center" }}>
+      {icon} &nbsp; {text || children}
     </div>
   );
 };

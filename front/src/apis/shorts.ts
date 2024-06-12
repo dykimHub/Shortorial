@@ -3,34 +3,6 @@ import { axios, pyaxios } from "../utils/axios";
 const REST_SHORTS_URL = "/api/s3";
 const REST_SHORTS_LIST_URL = "/api/shorts";
 
-export interface shorts {
-  shortsId: number;
-  shortsTitle: string;
-  shortsSource: string;
-  shortsTime: number;
-  shortsChallengerNum: number;
-  shortsS3Link: string;
-  //shortsDate: string;
-  shortsMusicName: string;
-  shortsSingerName: string;
-}
-
-export interface UploadShorts {
-  uploadNo: number;
-  memberNo: number;
-  uploadUrl: string;
-  uploadTitle: string;
-  uploadDate: string;
-  youtubeUrl: string;
-}
-
-export interface TryShorts {
-  tryNo: number;
-  shortsNo: number;
-  memberNo: number;
-  tryYn: number;
-}
-
 // S3 동영상 업로드
 export async function postUploadShorts(blob: Blob, fileName: string) {
   try {

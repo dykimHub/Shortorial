@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { UploadShorts } from "../../apis/shorts";
+import { UploadShorts } from "../../constants/types";
 import { getUploadedShorts } from "../../apis/mypage";
 import styled from "styled-components";
 import UploadComponent from "./UploadComponent";
@@ -16,8 +16,8 @@ export default function UploadList() {
     }
   };
 
-  const handleDeleteShort = (uploadNo: number) => {
-    setShortsList((prevList) => prevList.filter((short) => short.uploadNo !== uploadNo));
+  const handleDeleteShort = (recordedShortsId: number) => {
+    setShortsList((prevList) => prevList.filter((short) => short.recordedShortsId!== recordedShortsId));
   };
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function UploadList() {
             ) : (
               shortsList.map((uploadShorts) => (
                 <UploadComponent
-                  key={uploadShorts.uploadNo}
+                  key={uploadShorts.recordedShortsId}
                   uploadShorts={uploadShorts}
                   onDelete={handleDeleteShort}
                 />

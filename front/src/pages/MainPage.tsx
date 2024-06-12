@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { RecomShorts, Shorts } from "../constants/types";
+import { 
+  //RecomShorts, 
+  Shorts } from "../constants/types";
 import {
-  getRecommendedShorts,
+  //getRecommendedShorts,
   getShortsList,
   getTopRankingShorts,
   getTryCount,
@@ -26,7 +28,7 @@ const MainPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [allShortsList, setAllShortsList] = useState<Shorts[]>();
   const [popularShortsList, setPopularShortsList] = useState<Shorts[]>();
-  const [recommendedShorts, setRecommendedShorts] = useState<RecomShorts[]>();
+  //const [recommendedShorts, setRecommendedShorts] = useState<RecomShorts[]>();
 
   const openModal = (shorts: Shorts | RecomShorts) => {
     return () => {
@@ -63,15 +65,15 @@ const MainPage = () => {
   };
 
   // 추천 쇼츠 리스트 가져오기
-  const loadRecommendedShortsList = async () => {
-    const data = await getRecommendedShorts();
-    if (data) setRecommendedShorts(data);
-  };
+  // const loadRecommendedShortsList = async () => {
+  //   const data = await getRecommendedShorts();
+  //   if (data) setRecommendedShorts(data);
+  // };
 
   useEffect(() => {
     loadAllShortsList();
     loadPopularShortsList();
-    loadRecommendedShortsList();
+    //loadRecommendedShortsList();
   }, []);
 
   useEffect(() => {
@@ -84,7 +86,7 @@ const MainPage = () => {
     <Container>
       <Header />
       <SectionWrapper>
-        {recommendedShorts && (
+        {/* {recommendedShorts && (
           <SeriesSection style={{ background: "#fefae0" }}>
             <SectionHeaderContainer>
               <SectionTitle>⭐ 이런 챌린지는 어떠세요?</SectionTitle>
@@ -102,7 +104,7 @@ const MainPage = () => {
               ))}
             </SectionConents>
           </SeriesSection>
-        )}
+        )} */}
         <SeriesSection style={{ background: "#ffe5ec" }}>
           <SectionHeaderContainer>
             <SectionTitle>🔥 요즘 이 챌린지가 가장 인기 있어요</SectionTitle>
