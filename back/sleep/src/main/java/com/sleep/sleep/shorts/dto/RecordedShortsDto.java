@@ -11,14 +11,14 @@ public class RecordedShortsDto {
     // 녹화한 쇼츠 테이블 Id
     private int recordedShortsId;
 
+    // 녹화한 시간
+    private LocalDateTime recordedShortsDate;
+
     // 녹화한 쇼츠 s3 링크
     private String recordedShortsS3Link;
 
     // 녹화한 쇼츠 제목
     private String recordedShortsTitle;
-
-    // 녹화한 시간
-    private LocalDateTime recordedShortsDate;
 
     // 유튜브 업로드 url
     private String recordedShortsYoutubeUrl;

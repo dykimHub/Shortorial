@@ -36,15 +36,12 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsSource;
 
-    @Column(nullable = false)
-    private int shortsChallengerNum;
-
     // 시도한 쇼츠
     @OneToMany(mappedBy = "shorts")
-    private List<TriedShorts> tryShortsList;
+    private List<TriedShorts> triedShortsList;
 
     // 녹화된 쇼츠
     @OneToMany(mappedBy = "shorts")
-    private List<TriedShorts> recordedShortsList;
+    private List<RecordedShorts> recordedShortsList;
 
 }

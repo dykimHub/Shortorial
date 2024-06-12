@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ShortsRepository extends JpaRepository<Shorts,Integer> {
+public interface ShortsRepository extends JpaRepository<Shorts,Integer>, ShortsRepositoryCustom {
 
-    @Query("SELECT s FROM Shorts s ORDER BY s.shortsChallengerNum DESC LIMIT 3")
-    List<Shorts> findPopularShorts();
+//    @Query("SELECT s FROM Shorts s ORDER BY SIZE(s.triedShortsList) DESC LIMIT 3")
+//    List<Shorts> findPopularShorts();
 
 }
