@@ -2,6 +2,7 @@ package com.sleep.sleep.shorts.service;
 
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public interface ShortsService {
     List<ShortsDto> findPopularShortsList();
 
     List<RecordedShortsDto> findRecordedShortsList(String accessToken);
+
+    List<TriedShortsDto> findTriedShortsList(String accessToken);
 
 //    List<RecordedShortsDto> findRecordedShortsList(String memberId);
 

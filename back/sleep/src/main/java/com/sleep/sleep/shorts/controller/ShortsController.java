@@ -2,6 +2,7 @@ package com.sleep.sleep.shorts.controller;
 
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -46,12 +47,36 @@ public class ShortsController {
     }
     
     @Operation(summary = "사용자가 녹화한 영상 조회")
-    @GetMapping("/upload-shorts")
+    @GetMapping("/recorded-shorts")
     public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
         List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
         return ResponseEntity.ok()
                 .body(recordedShortsDtoList);
     }
+
+    @Operation(summary = "사용자가 시도한 영상 리스트")
+    @GetMapping("/tried-shorts")
+    public ResponseEntity<List<TriedShortsDto>> findTryiedhortsList(@RequestHeader("Authorization") String accessToken) {
+        List<TriedShortsDto> shortsList = shortsService.findTriedShortsList(accessToken);
+        return ResponseEntity.ok()
+                .body(shortsList);
+    }
+
+//    @Operation(summary = "시도한 영상 카운트 올리기", description = "헤더에 accessToken 넣기, RequestParam으로 shortsNo ")
+//    @GetMapping("/addTryCount")
+//    public ResponseEntity<?> addTryShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> data) {
+//        try {
+//            int shortsNo = Integer.parseInt(data.get("shortsNo"));
+//
+//            String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
+//            System.out.println("username : "+ username);
+//
+//            shortsService.addTryCount(username,shortsNo);
+//            return new ResponseEntity<>("Successful Try Counting", HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
 //    @GetMapping("/checkName")
