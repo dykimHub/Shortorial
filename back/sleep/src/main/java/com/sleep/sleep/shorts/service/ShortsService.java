@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.service;
 
+import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
@@ -19,6 +20,8 @@ public interface ShortsService {
     List<RecordedShortsDto> findRecordedShortsList(String accessToken);
 
     List<TriedShortsDto> findTriedShortsList(String accessToken);
+
+    SuccessResponse addTriedShorts(String accessToken, int shortsId);
 
 //    List<RecordedShortsDto> findRecordedShortsList(String memberId);
 

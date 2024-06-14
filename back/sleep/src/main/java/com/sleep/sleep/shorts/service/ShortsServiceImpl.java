@@ -3,6 +3,9 @@ package com.sleep.sleep.shorts.service;
 import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
+import com.sleep.sleep.exception.SuccessResponse;
+import com.sleep.sleep.member.entity.Member;
+import com.sleep.sleep.member.repository.MemberRepository;
 import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
@@ -13,10 +16,12 @@ import com.sleep.sleep.shorts.entity.TriedShorts;
 import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import com.sleep.sleep.shorts.repository.TriedShortsRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,24 +35,23 @@ public class ShortsServiceImpl implements ShortsService {
     private final ShortsRepository shortsRepository;
     private final RecordedShortsRepository recordedShortsRepository;
     private final TriedShortsRepository triedShortsRepository;
-//    private final MemberRepository memberRepository;
-//    private final TriedShortsRepository triedShortsRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * token에서 memberId를 찾아서 반환함
      *
-     * @param accessToken 해당 회원의 token
-     * @return memberId
+     * @param accessToken 로그인한 회원의 token
+     * @return 로그인한 회원의 아이디
      */
     public String getMemberId(String accessToken) {
         return jwtTokenUtil.getUsername(accessToken.substring(7));
     }
 
     /**
-     * shorts 객체를  ShostsDto 객체로 변환함
+     * Shorts 객체를  ShostsDto 객체로 변환함
      *
      * @param shorts Shorts 객체
-     * @return ShortsDto로 변환된 객체
+     * @return ShortsDto 형으로 변환된 객체
      */
     public ShortsDto convertToShortsDto(Shorts shorts) {
         String S3key = "shortsList/" + shorts.getShortsTitle();
@@ -68,11 +72,11 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * recordedShorts 객체를 recordedShortsDto 객체로 반환
+     * RecordedShorts 객체를 RecordedShortsDto 객체로 반환
      *
-     * @param recordedShorts recordedShorts객체
+     * @param recordedShorts RecordedShorts 객체
      * @param folderName     S3 버킷 내 폴더 이름(memberId)
-     * @return recordedShortsDto로 변환된 객체
+     * @return RecordedShortsDto 형으로 변환된 객체
      */
     public RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts, String folderName) {
         String S3key = folderName + recordedShorts.getRecordedShortsTitle();
@@ -92,11 +96,11 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * triedShorts 객체를 triedShortsDto 객체로 반환
+     * TriedShorts 객체를 TriedShortsDto 객체로 반환
      *
-     * @param triedShorts triedShorts 객체
+     * @param triedShorts TriedShorts 객체
      * @param folderName  S3 버킷 내 폴더 이름(memberId)
-     * @return triedShortsDto로 변환된 객체
+     * @return TriedShortsDto 형으로 변환된 객체
      */
     public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts, String folderName) {
         TriedShortsDto triedShortsDto = TriedShortsDto.builder()
@@ -110,11 +114,10 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 Shorts ID에 해당하는 Shorts 객체를 ShortsDto 객체로 반환
+     * 특정 id의 Shorts 객체를 ShortsDto 객체로 반환
      *
-     * @param shortsId Shorts ID
+     * @param shortsId Shorts 객체의 id
      * @return ShortsDto 객체
-     * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
      */
     @Override
     public ShortsDto findShorts(int shortsId) {
@@ -126,10 +129,9 @@ public class ShortsServiceImpl implements ShortsService {
 
 
     /**
-     * 모든 Shorts 객체를 ShortsDto 리스트로 반환함
+     * DB의 모든 Shorts 객체를 ShortsDto 리스트로 반환함
      *
      * @return ShortsDto 리스트
-     * @throws CustomException Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findShortsList() {
@@ -144,10 +146,9 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * shortsDto 객체를 클릭한 수가 많은 순서대로 3개 반환함
+     * Shorts 객체의 triedShortsList가 많은 순서대로 ShortDto형으로 바꿔서 3개를 반환함
      *
      * @return ShortsDto 객체 3개
-     * @throws CustomException 인기 Shorts 리스트가 비어있음
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
@@ -163,10 +164,10 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 memberId에 해당하는 회원의 recordedShortsDto 리스트를 반환함
+     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
      *
-     * @param accessToken 회원의 token
-     * @return recordedShortsDto 리스트
+     * @param accessToken 로그인한 회원의 token
+     * @return RecordedShortsDto 리스트
      */
     @Override
     public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
@@ -183,9 +184,9 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 memberId에 해당하는 회원이 클릭한 영상을 triedShortsDto 리스트로 반환함
+     * 특정 id의 회원의 TriedShorts 리스트를 TriedShortsDto 리스트로 반환함
      *
-     * @param accessToken 회원의 토큰
+     * @param accessToken 로그인한 회원의 토큰
      * @return triedShortsDto 리스트
      */
     @Override
@@ -200,6 +201,41 @@ public class ShortsServiceImpl implements ShortsService {
                 .toList();
 
         return triedShortsDtoList;
+    }
+
+    /**
+     * TriedShorts DB에 특정 id의 회원과 특정 id의 쇼츠로 만든 새로운 TriedShorts 객체를 등록함
+     * TriedShorts 객체가 이미 있다면 TriedShorts 객체의 triedShortsDate를 현재 시간으로 업데이트 함
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @param shortsId    Shorts 객체의 id
+     * @return 이미 시도했거나 등록에 성공하면 SuccessResponse 객체를 반환함
+     */
+    @Transactional
+    @Override
+    public SuccessResponse addTriedShorts(String accessToken, int shortsId) {
+        String memberId = getMemberId(accessToken);
+
+        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
+        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
+
+        TriedShorts triedShorts = shortsRepository.findShortsAlreadyTried(member, shorts);
+
+        if (triedShorts != null) {
+            triedShorts.updateTriedShortsDate(LocalDateTime.now());
+            triedShortsRepository.save(triedShorts);
+            return SuccessResponse.of("이미 시도한 쇼츠입니다.");
+
+        }
+
+        TriedShorts newTriedShorts = TriedShorts.builder()
+                .member(member)
+                .shorts(shorts)
+                .build();
+
+        triedShortsRepository.save(newTriedShorts);
+
+        return SuccessResponse.of("회원이 시도한 쇼츠에 성공적으로 추가되었습니다.");
     }
 
 //    @Override
