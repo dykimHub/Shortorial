@@ -23,7 +23,8 @@ public class RecordedShorts {
     private String recordedShortsTitle;
 
     // 녹화한 시간
-    @Column(nullable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false)
     private LocalDateTime recordedShortsDate;
 
     // 유튜브 업로드 url

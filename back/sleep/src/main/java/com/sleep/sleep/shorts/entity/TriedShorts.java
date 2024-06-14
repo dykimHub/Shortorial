@@ -23,7 +23,8 @@ public class TriedShorts {
     private int tryShortsId;
 
     // 시도한 시간
-    @Column(nullable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false)
     private LocalDateTime triedShortsDate;
 
     // 시도한 쇼츠 객체
@@ -32,13 +33,20 @@ public class TriedShorts {
     private Shorts shorts;
 
     // 시도한 멤버 객체
+    // 시도한 쇼츠를 조회할 때 멤버 정보를 출력할 필요가 없어서 Lazy Fetch로 변경
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
     public TriedShorts(Shorts shorts, Member member) {
+        this.triedShortsDate = triedShortsDate;
         this.shorts = shorts;
         this.member = member;
     }
+
+    public void updateTriedShortsDate(LocalDateTime triedShortsDate) {
+        this.triedShortsDate = triedShortsDate;
+    }
+
 }
