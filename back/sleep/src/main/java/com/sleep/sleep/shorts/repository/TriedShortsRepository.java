@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface TriedShortsRepository extends JpaRepository<TriedShorts,Integer> {
 
-    @Query("SELECT t FROM TriedShorts t WHERE t.member.memberId = :memberId")
+    @Query("SELECT t FROM TriedShorts t JOIN FETCH Member m WHERE m.memberId = :memberId")
     List<TriedShorts> findByMemberId(String memberId);
 
 //    Optional<TryShorts> findByMemberIndexAndShortsNo(Member member, Shorts shorts);
