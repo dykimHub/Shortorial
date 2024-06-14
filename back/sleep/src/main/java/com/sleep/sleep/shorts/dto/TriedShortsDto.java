@@ -26,4 +26,5 @@ public class TriedShortsDto {
         this.triedShortsDate = triedShortsDate;
         this.shortsDto = shortsDto;
     }
+
 }
