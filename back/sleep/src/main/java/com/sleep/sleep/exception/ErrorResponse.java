@@ -30,7 +30,7 @@ public class ErrorResponse {
 
     public static ErrorResponse of(HttpStatus status, String message) {
         return ErrorResponse.builder()
-                .code("SYSTEM")
+                .code("COMMMON")
                 .status(status)
                 .message(message)
                 .build();
