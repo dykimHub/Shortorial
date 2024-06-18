@@ -38,13 +38,28 @@ public class ShortsServiceImpl implements ShortsService {
     private final MemberRepository memberRepository;
 
     /**
-     * token에서 memberId를 찾아서 반환함
+     * 특정 id의 Shorts 객체를 반환
+     *
+     * @param shortsId Shorts 객체의 id
+     * @return Shorts 객체
+     * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
+     */
+    public Shorts findShortsEntity(int shortsId) {
+        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
+        return shorts;
+    }
+
+    /**
+     * token에서 memberId를 찾아서 Member 객체를 반환함
      *
      * @param accessToken 로그인한 회원의 token
-     * @return 로그인한 회원의 아이디
+     * @return 로그인한 Member 객체
+     * @throws CustomException 해당 Member 객체를 찾을 수 없음
      */
-    public String getMemberId(String accessToken) {
-        return jwtTokenUtil.getUsername(accessToken.substring(7));
+    public Member findMemberEntity(String accessToken) {
+        String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
+        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
+        return member;
     }
 
     /**
@@ -103,6 +118,8 @@ public class ShortsServiceImpl implements ShortsService {
      * @return TriedShortsDto 형으로 변환된 객체
      */
     public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts, String folderName) {
+        Shorts shorts = triedShorts.getShorts();
+
         TriedShortsDto triedShortsDto = TriedShortsDto.builder()
                 .triedShortsId(triedShorts.getTryShortsId())
                 .triedShortsDate(triedShorts.getTriedShortsDate())
@@ -113,6 +130,7 @@ public class ShortsServiceImpl implements ShortsService {
 
     }
 
+
     /**
      * 특정 id의 Shorts 객체를 ShortsDto 객체로 반환
      *
@@ -121,7 +139,7 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public ShortsDto findShorts(int shortsId) {
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
+        Shorts shorts = findShortsEntity(shortsId);
         ShortsDto shortsDto = convertToShortsDto(shorts);
 
         return shortsDto;
@@ -129,13 +147,14 @@ public class ShortsServiceImpl implements ShortsService {
 
 
     /**
-     * DB의 모든 Shorts 객체를 ShortsDto 리스트로 반환함
+     * Shorts DB의 모든 Shorts 객체를 ShortsDto 리스트로 반환함
      *
      * @return ShortsDto 리스트
+     * @throws CustomException Shorts DB를 조회할 수 없음
      */
     @Override
     public List<ShortsDto> findShortsList() {
-        List<Shorts> shortsList = shortsRepository.findAll();
+        List<Shorts> shortsList = shortsRepository.findShortsList();
         if (shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         List<ShortsDto> shortsDtoList = shortsList.stream()
@@ -149,6 +168,7 @@ public class ShortsServiceImpl implements ShortsService {
      * Shorts 객체의 triedShortsList가 많은 순서대로 ShortDto형으로 바꿔서 3개를 반환함
      *
      * @return ShortsDto 객체 3개
+     * @throws CustomException 인기 쇼츠 리스트를 불러올 수 없음
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
@@ -164,26 +184,6 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
-     *
-     * @param accessToken 로그인한 회원의 token
-     * @return RecordedShortsDto 리스트
-     */
-    @Override
-    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
-        String memberId = getMemberId(accessToken);
-
-        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByMemberId(memberId);
-        if (recordedShortsList.isEmpty()) return new ArrayList<>();
-
-        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
-                .map(r -> convertToRecordedShortsDto(r, memberId + "/"))
-                .toList();
-
-        return recordedShortsDtoList;
-    }
-
-    /**
      * 특정 id의 회원의 TriedShorts 리스트를 TriedShortsDto 리스트로 반환함
      *
      * @param accessToken 로그인한 회원의 토큰
@@ -191,13 +191,13 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<TriedShortsDto> findTriedShortsList(String accessToken) {
-        String memberId = getMemberId(accessToken);
+        Member member = findMemberEntity(accessToken);
 
-        List<TriedShorts> triedShortsList = triedShortsRepository.findByMemberId(memberId);
+        List<TriedShorts> triedShortsList = shortsRepository.findTriedShortsList(member);
         if (triedShortsList.isEmpty()) return new ArrayList<>();
 
         List<TriedShortsDto> triedShortsDtoList = triedShortsList.stream()
-                .map(t -> convertToTriedShortsDto(t, memberId + "/"))
+                .map(t -> convertToTriedShortsDto(t, member.getMemberId() + "/"))
                 .toList();
 
         return triedShortsDtoList;
@@ -214,17 +214,15 @@ public class ShortsServiceImpl implements ShortsService {
     @Transactional
     @Override
     public SuccessResponse addTriedShorts(String accessToken, int shortsId) {
-        String memberId = getMemberId(accessToken);
+        Member member = findMemberEntity(accessToken);
+        Shorts shorts = findShortsEntity(shortsId);
 
-        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
-
-        TriedShorts triedShorts = shortsRepository.findShortsAlreadyTried(member, shorts);
+        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
 
         if (triedShorts != null) {
             triedShorts.updateTriedShortsDate(LocalDateTime.now());
             triedShortsRepository.save(triedShorts);
-            return SuccessResponse.of("이미 시도한 쇼츠입니다.");
+            return SuccessResponse.of("이미 시도한 쇼츠입니다. 시도한 날짜를 변경합니다.");
 
         }
 
@@ -235,7 +233,44 @@ public class ShortsServiceImpl implements ShortsService {
 
         triedShortsRepository.save(newTriedShorts);
 
-        return SuccessResponse.of("회원이 시도한 쇼츠에 성공적으로 추가되었습니다.");
+        return SuccessResponse.of("회원이 시도한 쇼츠에 추가되었습니다.");
+    }
+
+//    @Override
+//    public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
+//        String memberId = memberService.getMemberId(accessToken);
+//
+//
+//        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
+//        Shorts shorts = shortsRepository.findById(shortsId);
+//        if(shorts == null) throw new CustomException(ExceptionCode.SHORTS_NOT_FOUND);
+//
+//        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
+//        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
+//
+//        triedShortsRepository.delete(triedShorts);
+//
+//        return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
+//    }
+
+    /**
+     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @return RecordedShortsDto 리스트
+     */
+    @Override
+    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
+        Member member = findMemberEntity(accessToken);
+
+        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
+        if (recordedShortsList.isEmpty()) return new ArrayList<>();
+
+        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
+                .map(r -> convertToRecordedShortsDto(r, member.getMemberId() + "/"))
+                .toList();
+
+        return recordedShortsDtoList;
     }
 
 //    @Override
