@@ -49,7 +49,7 @@ public class ShortsController {
     }
 
     @Operation(summary = "회원이 녹화한 영상 조회")
-    @GetMapping("/recorded-shorts")
+    @GetMapping("/recorded")
     public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
         List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
         return ResponseEntity.ok()
@@ -58,7 +58,7 @@ public class ShortsController {
     }
 
     @Operation(summary = "회원이 시도한 영상 조회")
-    @GetMapping("/tried-shorts")
+    @GetMapping("/tried")
     public ResponseEntity<List<TriedShortsDto>> findTriedshortsList(@RequestHeader("Authorization") String accessToken) {
         List<TriedShortsDto> shortsList = shortsService.findTriedShortsList(accessToken);
         return ResponseEntity.ok()
@@ -67,13 +67,22 @@ public class ShortsController {
     }
 
     @Operation(summary = "회원이 시도한 영상에 추가")
-    @PostMapping("/tried-shorts/add/{shortsId}")
+    @PostMapping("/tried/{shortsId}")
     public ResponseEntity<SuccessResponse> addTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
         SuccessResponse successResponse = shortsService.addTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 
     }
+
+//    @Operation(summary = "회원이 시도한 영상에 삭제")
+//    @DeleteMapping("/tried/{shortsId}")
+//    public ResponseEntity<SuccessResponse> deleteTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
+//        SuccessResponse successResponse = shortsService.deleteTriedShorts(accessToken, shortsId);
+//        return ResponseEntity.ok()
+//                .body(successResponse);
+//
+//    }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
 //    @GetMapping("/checkName")

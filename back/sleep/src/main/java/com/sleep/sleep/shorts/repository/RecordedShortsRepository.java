@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.repository;
 
+import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,8 +13,8 @@ import java.util.List;
 @Repository
 public interface RecordedShortsRepository extends JpaRepository<RecordedShorts,Integer> {
 
-    @Query("SELECT r From RecordedShorts r WHERE r.member.memberId = :memberId")
-    List<RecordedShorts> findByMemberId(String memberId);
+    @Query("SELECT r From RecordedShorts r WHERE r.member = :member")
+    List<RecordedShorts> findByRecordedShortsList(Member member);
 
 //    RecordedShorts findByUploadNo(int uploadNo);
 
