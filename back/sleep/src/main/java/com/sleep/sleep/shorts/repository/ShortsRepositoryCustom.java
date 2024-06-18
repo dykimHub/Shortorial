@@ -12,6 +12,7 @@ public interface ShortsRepositoryCustom {
 
     List<Shorts> findPopularShorts();
 
-    TriedShorts findShortsAlreadyTried(Member member, Shorts shorts);
+    TriedShorts findTriedShorts(Member member, Shorts shorts);
 
+    List<TriedShorts> findTriedShortsList(Member member);
 }
