@@ -49,22 +49,22 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
 
     }
 
-//    /**
-//     * 1. TriedShorts 리스트를 member로 필터링
-//     * 2. 필터링된 TriedShorts 객체의 shorts를 Shorts와 innerJoin해서 해당 회원이 시도한 쇼츠의 정보만 불러옴
-//     * 3. 조인된 Shorts 객체의 triedShortsList를 triedShorts와 innerJoin해서 조인된 쇼츠가 시도된 횟수까지 한 쿼리에 불러옴
-//     *
-//     * @param member 특정 id의 회원
-//     */
-//    @Override
-//    public List<TriedShorts> findTriedShortsList(Member member) {
-//        // 동일한 객체를 사용할 때 동일한 변수명은 못쓰고 alias를 지정해야 함
-//        QTriedShorts qJoinedTriedShorts = new QTriedShorts("JoinedTriedShorts");
-//
-//        return queryFactory.selectFrom(qTriedShorts)
-//                .where(qTriedShorts.member.eq(member))
-//                .innerJoin(qTriedShorts.shorts, qShorts).fetchJoin()
-//                .innerJoin(qShorts.triedShortsList, qJoinedTriedShorts).fetchJoin()
-//                .fetch();
-//    }
+    /**
+     * 1. TriedShorts 리스트를 member로 필터링
+     * 2. 필터링된 TriedShorts 객체의 shorts를 Shorts와 innerJoin해서 해당 회원이 시도한 쇼츠의 정보만 불러옴
+     * 3. 조인된 Shorts 객체의 triedShortsList를 triedShorts와 innerJoin해서 조인된 쇼츠가 시도된 횟수까지 한 쿼리에 불러옴
+     *
+     * @param member 특정 id의 회원
+     */
+    @Override
+    public List<TriedShorts> findTriedShortsList(Member member) {
+        // 동일한 객체를 사용할 때 동일한 변수명은 못쓰고 alias를 지정해야 함
+        QTriedShorts qJoinedTriedShorts = new QTriedShorts("JoinedTriedShorts");
+
+        return queryFactory.selectFrom(qTriedShorts)
+                .where(qTriedShorts.member.eq(member))
+                .innerJoin(qTriedShorts.shorts, qShorts).fetchJoin()
+                .innerJoin(qShorts.triedShortsList, qJoinedTriedShorts).fetchJoin()
+                .fetch();
+    }
 }
