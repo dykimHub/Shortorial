@@ -65,6 +65,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 .where(qTriedShorts.member.eq(member))
                 .innerJoin(qTriedShorts.shorts, qShorts).fetchJoin()
                 .innerJoin(qShorts.triedShortsList, qJoinedTriedShorts).fetchJoin()
+                .orderBy(qTriedShorts.triedShortsDate.desc())
                 .fetch();
     }
 }

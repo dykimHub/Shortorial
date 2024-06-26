@@ -194,7 +194,7 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = findMemberEntity(accessToken);
 
         List<TriedShorts> triedShortsList = shortsRepository.findTriedShortsList(member);
-        if (triedShortsList.isEmpty()) return new ArrayList<>();
+        //if (triedShortsList.isEmpty()) return new ArrayList<>();
 
         List<TriedShortsDto> triedShortsDtoList = triedShortsList.stream()
                 .map(t -> convertToTriedShortsDto(t, member.getMemberId() + "/"))
@@ -236,22 +236,25 @@ public class ShortsServiceImpl implements ShortsService {
         return SuccessResponse.of("회원이 시도한 쇼츠에 추가되었습니다.");
     }
 
-//    @Override
-//    public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
-//        String memberId = memberService.getMemberId(accessToken);
-//
-//
-//        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
-//        Shorts shorts = shortsRepository.findById(shortsId);
-//        if(shorts == null) throw new CustomException(ExceptionCode.SHORTS_NOT_FOUND);
-//
-//        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
-//        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
-//
-//        triedShortsRepository.delete(triedShorts);
-//
-//        return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
-//    }
+    /**
+     *
+     * @param accessToken
+     * @param shortsId
+     * @return
+     */
+    @Transactional
+    @Override
+    public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
+        Member member = findMemberEntity(accessToken);
+        Shorts shorts = findShortsEntity(shortsId);
+
+        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
+        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
+
+        triedShortsRepository.delete(triedShorts);
+
+        return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
+    }
 
     /**
      * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
@@ -264,7 +267,7 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = findMemberEntity(accessToken);
 
         List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
-        if (recordedShortsList.isEmpty()) return new ArrayList<>();
+        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
 
         List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
                 .map(r -> convertToRecordedShortsDto(r, member.getMemberId() + "/"))
