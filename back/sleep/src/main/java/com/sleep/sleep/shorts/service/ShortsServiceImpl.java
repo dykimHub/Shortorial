@@ -158,7 +158,7 @@ public class ShortsServiceImpl implements ShortsService {
         if (shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         List<ShortsDto> shortsDtoList = shortsList.stream()
-                .map(s -> convertToShortsDto(s))
+                .map(this::convertToShortsDto)
                 .toList();
 
         return shortsDtoList;
@@ -176,7 +176,7 @@ public class ShortsServiceImpl implements ShortsService {
         if (popularShortsList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
         List<ShortsDto> popularShortsDtoList = popularShortsList.stream()
-                .map(s -> convertToShortsDto(s))
+                .map(this::convertToShortsDto)
                 .toList();
 
         return popularShortsDtoList;
@@ -209,7 +209,7 @@ public class ShortsServiceImpl implements ShortsService {
      *
      * @param accessToken 로그인한 회원의 token
      * @param shortsId    Shorts 객체의 id
-     * @return 이미 시도했거나 등록에 성공하면 SuccessResponse 객체를 반환함
+     * @return TriedShorts 객체가 이미 있거나 등록에 성공하면 SuccessResponse 객체를 반환함
      */
     @Transactional
     @Override
@@ -237,44 +237,43 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
+     * 특정 id의 TriedShorts 객체를 삭제함
      *
-     * @param accessToken
-     * @param shortsId
-     * @return
+     * @param accessToken   로그인한 회원의 토큰
+     * @param triedShortsId TriedShorts 객체의 id
+     * @return TriedShorts 삭제에 성공하면 SuccessResponse 객체를 반환함
+     * @throws CustomException 해당 TriedShorts 객체를 찾을 수 없음
      */
     @Transactional
     @Override
-    public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
-        Member member = findMemberEntity(accessToken);
-        Shorts shorts = findShortsEntity(shortsId);
+    public SuccessResponse deleteTriedShorts(String accessToken, int triedShortsId) {
 
-        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
-        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
+        TriedShorts triedShorts = triedShortsRepository.findById(triedShortsId).orElseThrow(() -> new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND));
 
         triedShortsRepository.delete(triedShorts);
 
         return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
     }
 
-    /**
-     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
-     *
-     * @param accessToken 로그인한 회원의 token
-     * @return RecordedShortsDto 리스트
-     */
-    @Override
-    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
-        Member member = findMemberEntity(accessToken);
-
-        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
-        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
-
-        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
-                .map(r -> convertToRecordedShortsDto(r, member.getMemberId() + "/"))
-                .toList();
-
-        return recordedShortsDtoList;
-    }
+//    /**
+//     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
+//     *
+//     * @param accessToken 로그인한 회원의 token
+//     * @return RecordedShortsDto 리스트
+//     */
+//    @Override
+//    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
+//        Member member = findMemberEntity(accessToken);
+//
+//        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
+//        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
+//
+//        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
+//                .map(r -> convertToRecordedShortsDto(r, member.getMemberId() + "/"))
+//                .toList();
+//
+//        return recordedShortsDtoList;
+//    }
 
 //    @Override
 //    public List<RecordedShortsDto> findRecordedShortsList(String memberId) {

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -45,6 +44,11 @@ public class TriedShorts {
         this.member = member;
     }
 
+    /**
+     * 이미 시도한 쇼츠를 다시 시도할 때 시도한 시간을 현재 시간으로 변경함
+     *
+     * @param triedShortsDate 현재 시간
+     */
     public void updateTriedShortsDate(LocalDateTime triedShortsDate) {
         this.triedShortsDate = triedShortsDate;
     }

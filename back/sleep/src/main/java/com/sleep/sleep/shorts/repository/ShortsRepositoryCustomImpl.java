@@ -21,14 +21,14 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     /**
      * triedShortsList가 비어있는 Shorts 객체(TriedShorts에 없는 Shorts)도 가져오기 위해 left join 사용함
      * Shorts 객체의 triedShortsList를 tried_shorts 테이블과 fetch join 하여 shorts, tried_shorts 테이블을 한번의 쿼리로 불러옴
-     * shorts_id로 그룹화하고 try_shorts_id가 많은 순서대로 내림차순 정렬함
+     * Shorts 객체의 triedShortsList의 사이즈가 큰 순서대로 정렬함
+     * triedShortsList의 사이즈를 계산할 때 각 쇼츠 id를 triedShorts 테이블에서 count 하는 서브 쿼리를 날림
      */
     @Override
     public List<Shorts> findPopularShorts() {
         return queryFactory.selectFrom(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts).fetchJoin()
-                .groupBy(qShorts)
-                .orderBy(qTriedShorts.count().desc())
+                .orderBy(qShorts.triedShortsList.size().desc())
                 .limit(3)
                 .fetch();
 

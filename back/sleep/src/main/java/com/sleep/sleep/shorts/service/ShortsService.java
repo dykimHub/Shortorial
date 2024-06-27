@@ -18,13 +18,13 @@ public interface ShortsService {
 
     List<ShortsDto> findPopularShortsList();
 
-    List<RecordedShortsDto> findRecordedShortsList(String accessToken);
+//    List<RecordedShortsDto> findRecordedShortsList(String accessToken);
 
     List<TriedShortsDto> findTriedShortsList(String accessToken);
 
     SuccessResponse addTriedShorts(String accessToken, int shortsId);
 
-    SuccessResponse deleteTriedShorts(String accessToken, int shortsId);
+    SuccessResponse deleteTriedShorts(String accessToken, int triedShortsId);
 
 //    List<RecordedShortsDto> findRecordedShortsList(String memberId);
 
