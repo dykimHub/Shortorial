@@ -39,7 +39,6 @@ public class TriedShorts {
 
     @Builder
     public TriedShorts(Shorts shorts, Member member) {
-        this.triedShortsDate = triedShortsDate;
         this.shorts = shorts;
         this.member = member;
     }

@@ -40,8 +40,4 @@ public class Shorts {
     @OneToMany(mappedBy = "shorts")
     private List<TriedShorts> triedShortsList;
 
-    // 녹화된 쇼츠
-    @OneToMany(mappedBy = "shorts")
-    private List<RecordedShorts> recordedShortsList;
-
 }
