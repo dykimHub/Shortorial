@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.service;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
@@ -22,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -32,10 +32,10 @@ public class ShortsServiceImpl implements ShortsService {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final S3Service s3Service;
-    private final ShortsRepository shortsRepository;
-    private final RecordedShortsRepository recordedShortsRepository;
-    private final TriedShortsRepository triedShortsRepository;
     private final MemberRepository memberRepository;
+    private final ShortsRepository shortsRepository;
+    private final TriedShortsRepository triedShortsRepository;
+    private final RecordedShortsRepository recordedShortsRepository;
 
     /**
      * 특정 id의 Shorts 객체를 반환
@@ -46,6 +46,7 @@ public class ShortsServiceImpl implements ShortsService {
      */
     public Shorts findShortsEntity(int shortsId) {
         Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
+
         return shorts;
     }
 
@@ -59,6 +60,7 @@ public class ShortsServiceImpl implements ShortsService {
     public Member findMemberEntity(String accessToken) {
         String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
         Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
+
         return member;
     }
 
@@ -69,15 +71,13 @@ public class ShortsServiceImpl implements ShortsService {
      * @return ShortsDto 형으로 변환된 객체
      */
     public ShortsDto convertToShortsDto(Shorts shorts) {
-        String S3key = "shortsList/" + shorts.getShortsTitle();
-
         ShortsDto shortsDto = ShortsDto.builder()
                 .shortsId(shorts.getShortsId())
                 .shortsTime(shorts.getShortsTime())
                 .shortsTitle(shorts.getShortsTitle())
                 .shortsMusicTitle(shorts.getShortsMusicTitle())
                 .shortsMusicSinger(shorts.getShortsMusicSinger())
-                .shortsS3Link(s3Service.getPath(S3key))
+                .shortsS3Link(s3Service.getPath("shortsList", shorts.getShortsTitle()))
                 .shortsSource(shorts.getShortsSource())
                 .shortsChallengerNum(shorts.getTriedShortsList().size())
                 .build();
@@ -90,18 +90,13 @@ public class ShortsServiceImpl implements ShortsService {
      * RecordedShorts 객체를 RecordedShortsDto 객체로 반환
      *
      * @param recordedShorts RecordedShorts 객체
-     * @param folderName     S3 버킷 내 폴더 이름(memberId)
      * @return RecordedShortsDto 형으로 변환된 객체
      */
-    public RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts, String folderName) {
-        String S3key = folderName + recordedShorts.getRecordedShortsTitle();
-
+    public RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts) {
         RecordedShortsDto recordedShortsDto = RecordedShortsDto.builder()
                 .recordedShortsId(recordedShorts.getRecordedShortsId())
                 .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
-                .recordedShortsS3Link(s3Service.getPath(S3key))
-                .shortsMusicTitle(recordedShorts.getShorts().getShortsMusicTitle())
-                .shortsMusicSigner(recordedShorts.getShorts().getShortsMusicSinger())
+                .recordedShortsS3Link(recordedShorts.getRecordedShortsS3Link())
                 .recordedShortsDate(recordedShorts.getRecordedShortsDate())
                 .recordedShortsYoutubeUrl(recordedShorts.getRecordedShortsYoutubeUrl())
                 .build();
@@ -114,12 +109,9 @@ public class ShortsServiceImpl implements ShortsService {
      * TriedShorts 객체를 TriedShortsDto 객체로 반환
      *
      * @param triedShorts TriedShorts 객체
-     * @param folderName  S3 버킷 내 폴더 이름(memberId)
      * @return TriedShortsDto 형으로 변환된 객체
      */
-    public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts, String folderName) {
-        Shorts shorts = triedShorts.getShorts();
-
+    public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts) {
         TriedShortsDto triedShortsDto = TriedShortsDto.builder()
                 .triedShortsId(triedShorts.getTryShortsId())
                 .triedShortsDate(triedShorts.getTriedShortsDate())
@@ -197,14 +189,14 @@ public class ShortsServiceImpl implements ShortsService {
         //if (triedShortsList.isEmpty()) return new ArrayList<>();
 
         List<TriedShortsDto> triedShortsDtoList = triedShortsList.stream()
-                .map(t -> convertToTriedShortsDto(t, member.getMemberId() + "/"))
+                .map(this::convertToTriedShortsDto)
                 .toList();
 
         return triedShortsDtoList;
     }
 
     /**
-     * TriedShorts DB에 특정 id의 회원과 특정 id의 쇼츠로 만든 새로운 TriedShorts 객체를 등록함
+     * 특정 id의 회원과 특정 id의 쇼츠로 만든 새로운 TriedShorts 객체를 tried_shorts 테이블에 등록함
      * TriedShorts 객체가 이미 있다면 TriedShorts 객체의 triedShortsDate를 현재 시간으로 업데이트 함
      *
      * @param accessToken 로그인한 회원의 token
@@ -255,25 +247,53 @@ public class ShortsServiceImpl implements ShortsService {
         return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
     }
 
-//    /**
-//     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
-//     *
-//     * @param accessToken 로그인한 회원의 token
-//     * @return RecordedShortsDto 리스트
-//     */
-//    @Override
-//    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
-//        Member member = findMemberEntity(accessToken);
-//
-//        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
-//        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
-//
-//        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
-//                .map(r -> convertToRecordedShortsDto(r, member.getMemberId() + "/"))
-//                .toList();
-//
-//        return recordedShortsDtoList;
-//    }
+    /**
+     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @return RecordedShortsDto 리스트
+     */
+    @Override
+    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
+        Member member = findMemberEntity(accessToken);
+
+        List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
+        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
+
+        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
+                .map(this::convertToRecordedShortsDto)
+                .toList();
+
+        return recordedShortsDtoList;
+    }
+
+    /**
+     * 특정 id의 회원이 녹화한 쇼츠를 recorded_shorts에 등록함
+     * 녹화된 쇼츠의 제목을 활용하여 S3 링크를 얻고 메타데이터에서 S3에 저장된 시간을 얻음
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @param recordedShortsTitle 녹화된 쇼츠의 제목
+     * @return RecordedShorts 등록에 성공하면 SuccessResponse 객체를 반환함
+     */
+    @Transactional
+    @Override
+    public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsTitle) {
+        Member member = findMemberEntity(accessToken);
+
+        String recordedShortsS3Link = s3Service.getPath(member.getMemberId(), recordedShortsTitle);
+        ObjectMetadata objectMetaData = s3Service.getObjectMetaData(member.getMemberId(), recordedShortsTitle);
+
+        RecordedShorts recordedShorts = RecordedShorts.builder()
+                .recordedShortsTitle(recordedShortsTitle)
+                .recordedShortsS3Link(recordedShortsS3Link)
+                .recordedShortsDate(objectMetaData.getLastModified())
+                .member(member)
+                .build();
+
+        recordedShortsRepository.save(recordedShorts);
+
+        return SuccessResponse.of("녹화된 쇼츠가 저장되었습니다.");
+    }
 
 //    @Override
 //    public List<RecordedShortsDto> findRecordedShortsList(String memberId) {

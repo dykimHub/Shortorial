@@ -75,14 +75,23 @@ public class ShortsController {
 
     }
 
-//    @Operation(summary = "회원이 녹화한 쇼츠 조회")
-//    @GetMapping("/recorded")
-//    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
-//        List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
-//        return ResponseEntity.ok()
-//                .body(recordedShortsDtoList);
-//
-//    }
+    @Operation(summary = "회원이 녹화한 쇼츠 조회")
+    @GetMapping("/recorded")
+    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
+        List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
+        return ResponseEntity.ok()
+                .body(recordedShortsDtoList);
+
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠 등록")
+    @PostMapping("/recorded")
+    public ResponseEntity<SuccessResponse> addRecoredShorts(@RequestHeader("Authorization") String accessToken, @RequestParam("fileName") String recordedShortsTitle) {
+        SuccessResponse successResponse = shortsService.addRecordedShorts(accessToken, recordedShortsTitle);
+        return ResponseEntity.ok()
+                .body(successResponse);
+
+    }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
 //    @GetMapping("/checkName")
