@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Pause, PlayArrow } from "@mui/icons-material";
+import { Pause, PlayArrow, Close } from "@mui/icons-material";
 import { Skeleton } from "@mui/material";
 import { RecomShorts, Shorts } from "../../constants/types";
 import { MouseEvent, useRef, useState } from "react";
@@ -9,9 +9,18 @@ interface ShortsVideoPrpos {
   isLoading?: boolean;
   isSerise?: boolean;
   onClick?: () => void;
+  triedShortsId?: number;
+  onDelete?: (id: number) => void;
 }
 
-const ShortsVideoItem = ({ shortsInfo, isLoading, isSerise, onClick }: ShortsVideoPrpos) => {
+const ShortsVideoItem = ({
+  shortsInfo,
+  isLoading,
+  isSerise,
+  onClick,
+  triedShortsId,
+  onDelete,
+}: ShortsVideoPrpos) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -50,10 +59,20 @@ const ShortsVideoItem = ({ shortsInfo, isLoading, isSerise, onClick }: ShortsVid
                   <Pause sx={{ color: "white" }} />
                 )}
               </PlayButton>
+              {triedShortsId && (
+                <CloseButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onDelete && triedShortsId !== undefined) {
+                      onDelete(triedShortsId);
+                    }
+                  }}
+                />
+              )}
             </VideoBox>
             <DetailsContainer>
               <div className="title">{shortsInfo.shortsTitle}</div>
-              <div className="detail">챌린저 {shortsInfo.shortsChallengerNum}명</div>
+              {/* <div className="detail">챌린저 {shortsInfo.shortsChallengerNum}명</div> */}
             </DetailsContainer>
           </VideoContainer>
         )
@@ -152,6 +171,13 @@ const SkeletonContainer = styled.div`
   .video {
     height: 100%;
   }
+`;
+
+const CloseButton = styled(Close)`
+  position: absolute;
+  right: 5px;
+  top: 8px;
+  cursor: pointer;
 `;
 
 export default ShortsVideoItem;

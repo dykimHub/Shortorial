@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTryCount } from "../../apis/shorts";
-import { getTryShorts } from "../../apis/mypage";
+import { getTryShorts, deleteTriedShorts } from "../../apis/mypage";
 import styled, { keyframes } from "styled-components";
 import ShortsVideoItem from "../shorts/ShortsVideoItem";
 import {
@@ -34,12 +33,10 @@ export default function TryList() {
   };
 
   const goToLearnMode = (shortsNo: number) => {
-    getTryCount(shortsNo);
     navigate(`/learn/${shortsNo}`);
   };
 
   const goToChallengeMode = (shortsNo: number) => {
-    getTryCount(shortsNo);
     navigate(`/challenge/${shortsNo}`);
   };
 
@@ -47,6 +44,11 @@ export default function TryList() {
   const loadtryShortsList = async () => {
     const data = await getTryShorts();
     if (data) settryShortsList(data);
+  };
+
+  const handleDeleteButton = async (triedShortsId: number) => {
+    await deleteTriedShorts(triedShortsId);
+    loadtryShortsList();
   };
 
   useEffect(() => {
@@ -70,9 +72,11 @@ export default function TryList() {
               tryShortsList?.map((tryShorts) => (
                 <ShortsVideoItem
                   key={tryShorts.triedShortsId}
-                  shortsInfo={tryShorts.shorts}
+                  shortsInfo={tryShorts.shortsDto}
                   isLoading={isLoading}
-                  onClick={openModal(tryShorts.shorts)}
+                  onClick={openModal(tryShorts.shortsDto)}
+                  triedShortsId={tryShorts.triedShortsId}
+                  onDelete={handleDeleteButton}
                 />
               ))
             )}
@@ -82,34 +86,35 @@ export default function TryList() {
       {showDetails && selectedShorts && (
         <Modal>
           <CancelIcon>
-            <CancelPresentation
-              onClick={closeModal}
-              fontSize="large"
-            />
+            <CancelPresentation onClick={closeModal} fontSize="large" />
           </CancelIcon>
           <Details>
-            <Detail
-              icon={<MusicNote />}
-              text={selectedShorts.shortsMusicTitle}
-              fontWeight="bold"
-              fontSize="30px"
-            ></Detail>
+            <Detail text={selectedShorts.shortsTitle} fontWeight="bold" fontSize="23px"></Detail>
+            <div>
+              <Detail
+                icon={<MusicNote />}
+                text={`${selectedShorts.shortsMusicTitle}`}
+                fontSize="18px"
+              ></Detail>
+
+              <Detail
+                icon={<TimerOutlined />}
+                text={`${selectedShorts.shortsTime}초`}
+                fontSize="18px"
+              ></Detail>
+              <Detail
+                icon={<EmojiPeople />}
+                text={`${selectedShorts.shortsChallengerNum}명의 챌린저`}
+                fontSize="18px"
+              ></Detail>
               <Detail icon={<Copyright />} fontSize="18px">
                 <a href={selectedShorts.shortsSource} target="_blank">
-                  원본 영상 보기
+                  쇼츠 출처
                 </a>
               </Detail>
-            <Detail
-              icon={<TimerOutlined />}
-              fontSize="18px"
-              text={`${selectedShorts.shortsTime}초`}
-            ></Detail>
-            <Detail
-              icon={<EmojiPeople />}
-              fontSize="18px"
-              text={`${selectedShorts.shortsChallengerNum}명의 챌린저`}
-            ></Detail>
+            </div>
           </Details>
+
           <ButtonContainer>
             <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsId)}>
               연습모드
@@ -172,17 +177,21 @@ const Modal = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(240, 240, 240, 0.8);
   z-index: 1;
-  padding: 10px;
+  padding: 20px;
   width: 50%;
-  height: 50%;
   animation: ${pulse} 0.5s ease-in-out;
+
+  @media (max-width: 700px) {
+    width: 60%;
+  }
 `;
 
 const CancelIcon = styled.div`
   display: flex;
   justify-content: flex-end;
+  cursor: pointer;
 `;
 
 const Details = styled.div`
@@ -190,7 +199,7 @@ const Details = styled.div`
   justify-content: space-evenly;
   flex-direction: column;
   align-items: center;
-  height: 60%;
+  margin-bottom: 10px;
 `;
 
 interface DetailType {
@@ -220,16 +229,15 @@ const ButtonContainer = styled.div`
 `;
 
 const RouteButton = styled.button`
-  border: 3px solid black;
-  border-radius: 20px;
-  background-color: #f3f3f3;
+  border: 2px solid #fb2576;
+  border-radius: 10px;
+  background-color: white;
   color: black;
-  padding: 8px;
+  padding: 10px 20px;
   cursor: pointer;
   margin: 5px;
-  font-size: 16px;
 
   &:hover {
-    background-color: #ff7ea0;
+    background-color: #d3d3d3;
   }
 `;

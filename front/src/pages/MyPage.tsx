@@ -4,13 +4,12 @@ import UploadList from "../components/mypage/UploadList";
 import styled from "styled-components";
 import TryList from "../components/mypage/TryList";
 import Header from "../components/header/Header";
-import StarEffect from "../components/style/StarEffect";
 
 export default function MyPage() {
   const [currentTab, clickTab] = useState(0);
 
   const menuArr = [
-    { name: "업로드", content: <UploadList /> },
+    //{ name: "업로드", content: <UploadList /> },
     { name: "참여", content: <TryList /> },
   ];
 
@@ -19,7 +18,6 @@ export default function MyPage() {
   };
   return (
     <OutSide>
-      <StarEffect numStars={80} />
       <Header />
       <MypageContainer>
         {/* <ProfileContainer>
@@ -29,6 +27,7 @@ export default function MyPage() {
           <TabMenu>
             {menuArr.map((el, index) => (
               <li
+                key={index}
                 className={index === currentTab ? "submenu focused" : "submenu"}
                 onClick={() => selectMenuHandler(index)}
               >
@@ -45,12 +44,12 @@ export default function MyPage() {
 const OutSide = styled.div`
   position: relative;
   /* height: 100%; */
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(48, 13, 45, 1) 80%,
-    rgba(112, 0, 102, 1) 100%
-  );
+  // background: linear-gradient(
+  //   180deg,
+  //   rgba(0, 0, 0, 1) 0%,
+  //   rgba(48, 13, 45, 1) 80%,
+  //   rgba(112, 0, 102, 1) 100%
+  // );
 `;
 const MypageContainer = styled.div`
   display: flex;
