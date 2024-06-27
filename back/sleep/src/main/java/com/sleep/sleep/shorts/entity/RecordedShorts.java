@@ -2,10 +2,14 @@ package com.sleep.sleep.shorts.entity;
 
 import com.sleep.sleep.member.entity.Member;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,9 +29,13 @@ public class RecordedShorts {
     // 녹화한 시간
     @CreationTimestamp
     @Column(nullable = false)
-    private LocalDateTime recordedShortsDate;
+    private Date recordedShortsDate;
+
+    @Column(nullable = false)
+    private String recordedShortsS3Link;
 
     // 유튜브 업로드 url
+    @Column
     private String recordedShortsYoutubeUrl;
 
     // 녹화한 멤버 객체
@@ -35,14 +43,12 @@ public class RecordedShorts {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "shorts_id")
-    private Shorts shorts;
-
     @Builder
-    public RecordedShorts(String recordedShortsTitle, Member member, Shorts shorts) {
+    public RecordedShorts(String recordedShortsTitle, Date recordedShortsDate, String recordedShortsS3Link, Member member) {
         this.recordedShortsTitle = recordedShortsTitle;
+        this.recordedShortsDate = recordedShortsDate;
+        this.recordedShortsS3Link = recordedShortsS3Link;
         this.member = member;
-        this.shorts = shorts;
     }
+
 }
