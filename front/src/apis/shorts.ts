@@ -40,7 +40,7 @@ export const getShortsList = async () => {
 export const getShortsInfo = async (shortsNo: string) => {
   try {
     const response = await axios.get(`${REST_SHORTS_LIST_URL}/${shortsNo}`);
-    console.log(response.data);
+    //console.log(response.data);
 
     return response.data;
   } catch (error) {
@@ -49,24 +49,26 @@ export const getShortsInfo = async (shortsNo: string) => {
 };
 
 //영상 시도하면 카운트
-export async function getTryCount(shortsNo: number) {
+export async function getTryCount(shortsId: number) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-    const data = {
-      shortsNo: shortsNo,
-    };
 
-    const response = await axios.put(`${REST_SHORTS_LIST_URL}/addTryCount`, data, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const response = await axios.post(
+      `${REST_SHORTS_LIST_URL}/tried/${shortsId}`,
+      {}, // 빈 객체를 데이터로 전달
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
 
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 }
+
 
 // S3에 있는 파일을 Blob으로 받기
 export async function getS3Blob(shortsNo: number) {
@@ -209,7 +211,7 @@ export async function deleteShorts(deletingShorts: Map<string, string>) {
 // 인기순 쇼츠 조회
 export async function getTopRankingShorts() {
   try {
-    const data = await axios.get(`${REST_SHORTS_LIST_URL}/topRanking`);
+    const data = await axios.get(`${REST_SHORTS_LIST_URL}/rank`);
     return data.data;
   } catch (error) {
     console.error("Error fetching data:", error);

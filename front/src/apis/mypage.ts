@@ -13,7 +13,7 @@ export async function getUploadedShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const data = await axios.get(`${REST_MYPAGE_URL}/recoreded-shorts`, {
+    const data = await axios.get(`${REST_MYPAGE_URL}/recoreded`, {
       headers: {
         Authorization: token,
       },
@@ -53,12 +53,14 @@ export async function getTryShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const data = await axios.get(`${REST_MYPAGE_URL}/tried-shorts`, {
+    const data = await axios.get(`${REST_MYPAGE_URL}/tried`, {
       headers: {
         Authorization: token,
       },
     });
-    
+
+    //console.log(data.data);
+
     return data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -79,6 +81,22 @@ export async function getCounting() {
     const countingsData: Countings = response.data;
 
     return countingsData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+}
+
+export async function deleteTriedShorts(shortsId: number) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+
+    const response = await axios.delete(`${REST_MYPAGE_URL}/tried/${shortsId}`, {
+      headers: {
+        Authorization: token,
+      },
+    });
+
+    return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
   }

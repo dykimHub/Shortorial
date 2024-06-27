@@ -47,6 +47,6 @@ export interface UploadShorts {
 
 export interface TryShorts {
   triedShortsId: number;
-  triedShortsDate: number;
-  shorts: Shorts;
+  triedShortsDate: Date;
+  shortsDto: Shorts;
 }

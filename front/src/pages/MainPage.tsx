@@ -23,14 +23,14 @@ import {
 const MainPage = () => {
   const navigate = useNavigate();
   const [showDetails, setShowDetails] = useState<boolean>(false);
-  const [selectedShorts, setSelectedShorts] = useState<Shorts | RecomShorts | null>(null);
+  const [selectedShorts, setSelectedShorts] = useState<Shorts | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [allShortsList, setAllShortsList] = useState<Shorts[]>();
   const [popularShortsList, setPopularShortsList] = useState<Shorts[]>();
   //const [recommendedShorts, setRecommendedShorts] = useState<RecomShorts[]>();
 
-  const openModal = (shorts: Shorts | RecomShorts) => {
+  const openModal = (shorts: Shorts) => {
     return () => {
       setSelectedShorts(shorts);
       setShowDetails(true);
@@ -42,9 +42,9 @@ const MainPage = () => {
     setSelectedShorts(null);
   };
 
-  const goToLearnMode = (shortsNo: number) => {
-    getTryCount(shortsNo);
-    navigate(`/learn/${shortsNo}`);
+  const goToLearnMode = (shortsId: number) => {
+    getTryCount(shortsId);
+    navigate(`/learn/${shortsId}`);
   };
 
   const goToChallengeMode = (shortsNo: number) => {
@@ -162,7 +162,7 @@ const MainPage = () => {
               ></Detail>
               <Detail icon={<Copyright />} fontSize="18px">
                 <a href={selectedShorts.shortsSource} target="_blank">
-                  원본 영상 보기
+                  쇼츠 출처
                 </a>
               </Detail>
             </div>
@@ -266,7 +266,7 @@ const Modal = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(240, 240, 240, 0.8);
   z-index: 1;
   padding: 20px;
   width: 50%;
