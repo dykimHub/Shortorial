@@ -1,8 +1,7 @@
 package com.sleep.sleep.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.sleep.sleep.member.repository.MemberRepository;
-import com.sleep.sleep.shorts.service.ShortsService;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,14 +12,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class S3ServiceImpl implements S3Service {
     private final AmazonS3 amazonS3;
-    private final MemberRepository memberRepository;
+//    private final MemberRepository memberRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
     @Override
-    public String getPath(String fileName) {
-        return amazonS3.getUrl(bucketName, fileName).toString();
+    public String getPath(String folderName, String fileName) {
+        String S3key = folderName + "/" + fileName;
+
+        return amazonS3.getUrl(bucketName, S3key).toString();
+    }
+
+    @Override
+    public ObjectMetadata getObjectMetaData(String folderName, String fileName) {
+        String S3key = folderName + "/" + fileName;
+
+        return amazonS3.getObjectMetadata(bucketName, S3key);
     }
 //
 //    public String uploadFile(MultipartFile multipartFile, String fileName, String username) throws IOException {
