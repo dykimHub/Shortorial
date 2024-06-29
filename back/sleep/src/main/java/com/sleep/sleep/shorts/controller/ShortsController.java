@@ -3,6 +3,7 @@ package com.sleep.sleep.shorts.controller;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.service.ShortsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -91,6 +93,15 @@ public class ShortsController {
         return ResponseEntity.ok()
                 .body(successResponse);
 
+    }
+
+    @Operation(summary = "회원 쇼츠 통계(시도한 쇼츠, 녹화한 쇼츠, 업로드한 쇼츠)")
+    @GetMapping("/stats")
+    public ResponseEntity<ShortsStatsDto> findShortsInfo(@RequestHeader("Authorization") String accessToken) {
+        ShortsStatsDto shortsStatsDto = shortsService.findShortsStats(accessToken);
+
+        return ResponseEntity.ok()
+                .body(shortsStatsDto);
     }
 
 //    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")

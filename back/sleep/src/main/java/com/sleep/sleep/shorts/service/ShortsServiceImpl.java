@@ -6,10 +6,11 @@ import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
-import com.sleep.sleep.member.repository.MemberRepository;
+import com.sleep.sleep.member.service.MemberService;
 import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
@@ -32,7 +33,7 @@ public class ShortsServiceImpl implements ShortsService {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final S3Service s3Service;
-    private final MemberRepository memberRepository;
+    private final MemberService memberService;
     private final ShortsRepository shortsRepository;
     private final TriedShortsRepository triedShortsRepository;
     private final RecordedShortsRepository recordedShortsRepository;
@@ -48,20 +49,6 @@ public class ShortsServiceImpl implements ShortsService {
         Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
 
         return shorts;
-    }
-
-    /**
-     * token에서 memberId를 찾아서 Member 객체를 반환함
-     *
-     * @param accessToken 로그인한 회원의 token
-     * @return 로그인한 Member 객체
-     * @throws CustomException 해당 Member 객체를 찾을 수 없음
-     */
-    public Member findMemberEntity(String accessToken) {
-        String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
-        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
-
-        return member;
     }
 
     /**
@@ -183,7 +170,7 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<TriedShortsDto> findTriedShortsList(String accessToken) {
-        Member member = findMemberEntity(accessToken);
+        Member member = memberService.findMemberEntity(accessToken);
 
         List<TriedShorts> triedShortsList = shortsRepository.findTriedShortsList(member);
         //if (triedShortsList.isEmpty()) return new ArrayList<>();
@@ -206,7 +193,7 @@ public class ShortsServiceImpl implements ShortsService {
     @Transactional
     @Override
     public SuccessResponse addTriedShorts(String accessToken, int shortsId) {
-        Member member = findMemberEntity(accessToken);
+        Member member = memberService.findMemberEntity(accessToken);
         Shorts shorts = findShortsEntity(shortsId);
 
         TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
@@ -255,7 +242,7 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
-        Member member = findMemberEntity(accessToken);
+        Member member = memberService.findMemberEntity(accessToken);
 
         List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
         //if (recordedShortsList.isEmpty()) return new ArrayList<>();
@@ -278,7 +265,7 @@ public class ShortsServiceImpl implements ShortsService {
     @Transactional
     @Override
     public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsTitle) {
-        Member member = findMemberEntity(accessToken);
+        Member member = memberService.findMemberEntity(accessToken);
 
         String recordedShortsS3Link = s3Service.getPath(member.getMemberId(), recordedShortsTitle);
         ObjectMetadata objectMetaData = s3Service.getObjectMetaData(member.getMemberId(), recordedShortsTitle);
@@ -293,6 +280,23 @@ public class ShortsServiceImpl implements ShortsService {
         recordedShortsRepository.save(recordedShorts);
 
         return SuccessResponse.of("녹화된 쇼츠가 저장되었습니다.");
+    }
+
+    /**
+     * 특정 회원의 시도한 쇼츠 개수, 녹화한 쇼츠 개수, 업로드한 쇼츠 개수를 ShortsStatsDto 객체로 반환함
+     *
+     * @param accessToken 로그인한 회원의 토큰
+     * @return ShortsStatsDto 객체
+     */
+    @Transactional
+    @Override
+    public ShortsStatsDto findShortsStats(String accessToken) {
+        Member member = memberService.findMemberEntity(accessToken);
+        ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStats(member);
+
+        if(shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND);
+
+        return shortsStatsDto;
     }
 
 //    @Override
