@@ -1,6 +1,7 @@
 package com.sleep.sleep.shorts.repository;
 
 import com.sleep.sleep.member.entity.Member;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,6 @@ public interface ShortsRepositoryCustom {
     TriedShorts findTriedShorts(Member member, Shorts shorts);
 
     List<TriedShorts> findTriedShortsList(Member member);
+
+    ShortsStatsDto findShortsStats(Member member);
 }

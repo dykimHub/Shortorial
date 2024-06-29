@@ -1,12 +1,13 @@
 package com.sleep.sleep.shorts.repository;
 
+import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.entity.QMember;
-import com.sleep.sleep.shorts.entity.QShorts;
-import com.sleep.sleep.shorts.entity.QTriedShorts;
-import com.sleep.sleep.shorts.entity.Shorts;
-import com.sleep.sleep.shorts.entity.TriedShorts;
+import com.sleep.sleep.shorts.dto.QShortsStatsDto;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
+import com.sleep.sleep.shorts.entity.*;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -17,6 +18,8 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
 
     private final QShorts qShorts = QShorts.shorts;
     private final QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
+    private final QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
+    private final QMember qMember = QMember.member;
 
     /**
      * triedShortsList가 비어있는 Shorts 객체(TriedShorts에 없는 Shorts)도 가져오기 위해 left join 사용함
@@ -68,4 +71,32 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 .orderBy(qTriedShorts.triedShortsDate.desc())
                 .fetch();
     }
+
+    /**
+     * 서브쿼리로 tried_shorts, recorded_shorts의 member_id가 해당 member_id인 행 개수, recorded_shorts에서 youtubeUrl이 있는 행 개수를 불러옴
+     * Q class로 만든 ShortsStateDto 객체에 매핑함; QMemeber가 아닌 다른 객체로 반환할 수 있음
+     *
+     * @param member 특정 id의 회원
+     */
+    @Override
+    public ShortsStatsDto findShortsStats(Member member) {
+        return queryFactory
+                .select(new QShortsStatsDto(
+                        JPAExpressions.select(qTriedShorts.count().intValue())
+                                .from(qTriedShorts)
+                                .where(qTriedShorts.member.eq(member)),
+                        JPAExpressions.select(qRecordedShorts.count().intValue())
+                                .from(qRecordedShorts)
+                                .where(qRecordedShorts.member.eq(member)),
+                        JPAExpressions.select(qRecordedShorts.count().intValue())
+                                .from(qRecordedShorts)
+                                .where(qRecordedShorts.member.eq(member)
+                                        .and(qRecordedShorts.recordedShortsYoutubeUrl.isNotNull()))
+                ))
+                .from(qMember)
+                .fetchOne();
+
+    }
+
+
 }
