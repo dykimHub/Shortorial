@@ -3,9 +3,9 @@ import { axios } from "../utils/axios";
 const REST_MYPAGE_URL = "/api/shorts";
 
 export interface Countings {
-  tryShortsCount: number;
-  uploadShortsCount: number;
-  youtubeUrlCount: number;
+  triedShortsNum: number;
+  recordedShortsNum: number;
+  uploadedShortsNum: number;
 }
 
 //사용자가 저장한 쇼츠 조회
@@ -13,7 +13,7 @@ export async function getUploadedShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const data = await axios.get(`${REST_MYPAGE_URL}/recoreded`, {
+    const data = await axios.get(`${REST_MYPAGE_URL}/recorded`, {
       headers: {
         Authorization: token,
       },
@@ -72,7 +72,7 @@ export async function getCounting() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const response = await axios.get(`${REST_MYPAGE_URL}/counting`, {
+    const response = await axios.get(`${REST_MYPAGE_URL}/stats`, {
       headers: {
         Authorization: token,
       },

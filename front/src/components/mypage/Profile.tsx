@@ -35,24 +35,21 @@ export default function Profile() {
 
   return (
     <ProfileContainer>
-      <ProfileNumContainer
-        key="memberNickname"
-        className="left"
-      >
+      <ProfileNumContainer key="memberNickname" className="left">
         {memberInfo?.memberNickname}
       </ProfileNumContainer>
 
       <ProfilRightContainer>
         <ProfileNumContainer key="tryShorts">
-          <div className="number">{counting?.tryShortsCount}</div>
+          <div className="number">{counting?.triedShortsNum}</div>
           <div>참여</div>
         </ProfileNumContainer>
         <ProfileNumContainer key="uploadShorts">
-          <div className="number">{counting?.uploadShortsCount}</div>
+          <div className="number">{counting?.recordedShortsNum}</div>
           <div>완료</div>
         </ProfileNumContainer>
         <ProfileNumContainer key="youtubeUrl">
-          <div className="number">{counting?.youtubeUrlCount}</div>
+          <div className="number">{counting?.uploadedShortsNum}</div>
           <div>게시</div>
         </ProfileNumContainer>
       </ProfilRightContainer>
@@ -67,7 +64,7 @@ const ProfileContainer = styled.div`
   width: 100%;
   border: 2px solid #fb2576;
   border-radius: 20px;
-  box-shadow: 2px 2px #fb2576;
+  //box-shadow: 2px 2px #fb2576;
   background: white;
 `;
 const ProfilRightContainer = styled.div`

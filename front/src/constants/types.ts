@@ -41,8 +41,6 @@ export interface UploadShorts {
   recordedShortsS3Link: string;
   recordedShortsTitle: string;
   recordedShortsYoutubeUrl: string;
-  shortsMusicTitle: string;
-  shortsMusicSinger: string;
 }
 
 export interface TryShorts {

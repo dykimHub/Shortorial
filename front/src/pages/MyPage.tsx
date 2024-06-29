@@ -9,7 +9,7 @@ export default function MyPage() {
   const [currentTab, clickTab] = useState(0);
 
   const menuArr = [
-    //{ name: "업로드", content: <UploadList /> },
+    { name: "업로드", content: <UploadList /> },
     { name: "참여", content: <TryList /> },
   ];
 
@@ -20,9 +20,9 @@ export default function MyPage() {
     <OutSide>
       <Header />
       <MypageContainer>
-        {/* <ProfileContainer>
+        <ProfileContainer>
           <Profile />
-        </ProfileContainer> */}
+        </ProfileContainer>
         <div>
           <TabMenu>
             {menuArr.map((el, index) => (
@@ -97,7 +97,7 @@ const TabMenu = styled.div`
     transition: 0.5s;
     border-bottom: 2px solid #fb2576;
     border: 2px solid #fb2576;
-    border-radius: 5px 5px 0px 0px;
+    border-radius: 20px 20px 0px 0px;
     background: white;
   }
 

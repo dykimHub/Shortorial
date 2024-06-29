@@ -17,7 +17,9 @@ export default function UploadList() {
   };
 
   const handleDeleteShort = (recordedShortsId: number) => {
-    setShortsList((prevList) => prevList.filter((short) => short.recordedShortsId!== recordedShortsId));
+    setShortsList((prevList) =>
+      prevList.filter((short) => short.recordedShortsId !== recordedShortsId)
+    );
   };
 
   useEffect(() => {
