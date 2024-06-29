@@ -8,12 +8,16 @@ import com.sleep.sleep.common.redis.entity.LogoutAccessToken;
 import com.sleep.sleep.common.redis.entity.RefreshToken;
 import com.sleep.sleep.common.redis.repository.LogoutAccessTokenRedisRepository;
 import com.sleep.sleep.common.redis.repository.RefreshTokenRedisRepository;
+import com.sleep.sleep.exception.CustomException;
+import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.member.dto.JoinDto;
 import com.sleep.sleep.member.dto.MemberInfoDto;
 import com.sleep.sleep.member.dto.OriginLoginRequestDto;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.entity.MemberRole;
 import com.sleep.sleep.member.repository.MemberRepository;
+import com.sleep.sleep.shorts.repository.ShortsRepository;
+import com.sleep.sleep.shorts.service.ShortsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static com.sleep.sleep.common.JWT.JwtExpiration.REFRESH_TOKEN_EXPIRATION_TIME;
@@ -39,7 +45,6 @@ public class MemberService {
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final BCryptPasswordEncoder passwordEncoder;
-
 
     public boolean checkDup(String category, String input) {
         //category로 id, nickname의 값이 넘어오면 해당하는 중복검사 실행
@@ -136,5 +141,19 @@ public class MemberService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         return principal.getUsername();
+    }
+
+    /**
+     * token에서 memberId를 찾아서 Member 객체를 반환함
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @return 로그인한 Member 객체
+     * @throws CustomException 해당 Member 객체를 찾을 수 없음
+     */
+    public Member findMemberEntity(String accessToken) {
+        String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
+        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
+
+        return member;
     }
 }
