@@ -6,24 +6,26 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "tried_shorts")
+@Table(name = "tried_shorts"
+        // member_id를 기준으로 정렬하고 shorts_id를 찾을 수 있도록 복합 인덱스 추가
+        //, indexes = {@Index(name = "idx_tried_shorts_composite", columnList = "shorts_id, member_id")}
+)
 @Entity
 public class TriedShorts {
 
     // 시도한 쇼츠 테이블 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int tryShortsId;
+    private int triedShortsId;
 
     // 시도한 시간
-    @CreationTimestamp
-    @Column(nullable = false)
+    //@CreationTimestamp
+    @Column(insertable = false, updatable = false)
     private LocalDateTime triedShortsDate;
 
     // 시도한 쇼츠 객체
@@ -34,7 +36,7 @@ public class TriedShorts {
     // 시도한 멤버 객체
     // 시도한 쇼츠를 조회할 때 멤버 정보를 출력할 필요가 없어서 Lazy Fetch로 변경
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_no")
     private Member member;
 
     @Builder
