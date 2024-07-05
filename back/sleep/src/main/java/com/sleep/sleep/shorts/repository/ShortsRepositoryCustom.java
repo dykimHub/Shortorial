@@ -17,5 +17,5 @@ public interface ShortsRepositoryCustom {
 
     List<TriedShorts> findTriedShortsList(Member member);
 
-    ShortsStatsDto findShortsStats(Member member);
+    ShortsStatsDto findShortsStatsDto(Member member);
 }

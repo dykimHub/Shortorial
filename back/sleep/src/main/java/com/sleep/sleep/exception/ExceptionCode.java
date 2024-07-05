@@ -13,7 +13,7 @@ public enum ExceptionCode {
     ALL_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_002", "쇼츠 리스트가 비어있습니다."),
     POPULAR_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_003", "인기 쇼츠 리스트가 비어있습니다."),
     TRIED_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_004", "시도한 쇼츠를 찾을 수 없습니다."),
-    SHORTS_STATS_NOT_FOUND(HttpStatus.NOT_FOUND,"SHORTS_005","회원 쇼츠 통계를 찾을 수 없습니다.");
+    SHORTS_STATS_NULL(HttpStatus.NOT_FOUND,"SHORTS_005","회원 쇼츠 통계를 계산할 수 없습니다.");
 
 
     private final HttpStatus status;
