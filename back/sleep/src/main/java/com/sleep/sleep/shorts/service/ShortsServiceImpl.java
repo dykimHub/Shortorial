@@ -85,7 +85,7 @@ public class ShortsServiceImpl implements ShortsService {
                 .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
                 .recordedShortsS3Link(recordedShorts.getRecordedShortsS3Link())
                 .recordedShortsDate(recordedShorts.getRecordedShortsDate())
-                .recordedShortsYoutubeUrl(recordedShorts.getRecordedShortsYoutubeUrl())
+                .recordedShortsYoutubeURL(recordedShorts.getRecordedShortsYoutubeURL())
                 .build();
 
         return recordedShortsDto;
@@ -100,7 +100,7 @@ public class ShortsServiceImpl implements ShortsService {
      */
     public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts) {
         TriedShortsDto triedShortsDto = TriedShortsDto.builder()
-                .triedShortsId(triedShorts.getTryShortsId())
+                .triedShortsId(triedShorts.getTriedShortsId())
                 .triedShortsDate(triedShorts.getTriedShortsDate())
                 .shortsDto(convertToShortsDto(triedShorts.getShorts()))
                 .build();
@@ -199,7 +199,7 @@ public class ShortsServiceImpl implements ShortsService {
         TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
 
         if (triedShorts != null) {
-            triedShorts.updateTriedShortsDate(LocalDateTime.now());
+            //triedShorts.updateTriedShortsDate(LocalDateTime.now());
             triedShortsRepository.save(triedShorts);
             return SuccessResponse.of("이미 시도한 쇼츠입니다. 시도한 날짜를 변경합니다.");
 
@@ -226,7 +226,6 @@ public class ShortsServiceImpl implements ShortsService {
     @Transactional
     @Override
     public SuccessResponse deleteTriedShorts(String accessToken, int triedShortsId) {
-
         TriedShorts triedShorts = triedShortsRepository.findById(triedShortsId).orElseThrow(() -> new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND));
 
         triedShortsRepository.delete(triedShorts);
@@ -268,12 +267,11 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
 
         String recordedShortsS3Link = s3Service.getPath(member.getMemberId(), recordedShortsTitle);
-        ObjectMetadata objectMetaData = s3Service.getObjectMetaData(member.getMemberId(), recordedShortsTitle);
+        //ObjectMetadata objectMetaData = s3Service.getObjectMetaData(member.getMemberId(), recordedShortsTitle);
 
         RecordedShorts recordedShorts = RecordedShorts.builder()
                 .recordedShortsTitle(recordedShortsTitle)
                 .recordedShortsS3Link(recordedShortsS3Link)
-                .recordedShortsDate(objectMetaData.getLastModified())
                 .member(member)
                 .build();
 
@@ -292,9 +290,9 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsStatsDto findShortsStats(String accessToken) {
         Member member = memberService.findMemberEntity(accessToken);
-        ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStats(member);
+        ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStatsDto(member);
 
-        if(shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND);
+        if(shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NULL);
 
         return shortsStatsDto;
     }
