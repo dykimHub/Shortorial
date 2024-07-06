@@ -50,19 +50,6 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * With 어노테이션을 활용하여 QueryDSL에서 반환한 QShortsDto 객체의 값을 복사하고 shortsS3Link만 추가함
-     *
-     * @param qShortsDto QueryDsl에서 반환한 QShortsDto 객체
-     * @return shortsS3Link가 추가된 ShortsDto 객체
-     */
-    public ShortsDto convertToShortsDto(ShortsDto qShortsDto) {
-        ShortsDto shortsDto = qShortsDto.withShortsS3Link(s3Service.getOriginPath(qShortsDto.getShortsTitle()));
-
-        return shortsDto;
-
-    }
-
-    /**
      * RecordedShorts 객체를 RecordedShortsDto 객체로 반환
      *
      * @param recordedShorts RecordedShorts 객체
@@ -91,8 +78,7 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsDto findShorts(int shortsId) {
         Shorts shorts = findShortsEntity(shortsId);
-        ShortsDto qShortsDto = shortsRepository.findShorts(shorts);
-        ShortsDto shortsDto = convertToShortsDto(qShortsDto);
+        ShortsDto shortsDto = shortsRepository.findShorts(shorts);
 
         return shortsDto;
     }
@@ -106,12 +92,8 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findShortsList() {
-        List<ShortsDto> qShortsDtoList = shortsRepository.findShortsList();
-        if (qShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
-
-        List<ShortsDto> shortsDtoList = qShortsDtoList.stream()
-                .map(s -> convertToShortsDto(s))
-                .toList();
+        List<ShortsDto> shortsDtoList = shortsRepository.findShortsList();
+        if (shortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         return shortsDtoList;
     }
@@ -124,12 +106,8 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
-        List<ShortsDto> popularQShortsDtoList = shortsRepository.findPopularShortsList();
-        if (popularQShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
-
-        List<ShortsDto> popularShortsDtoList = popularQShortsDtoList.stream()
-                .map(p -> convertToShortsDto(p))
-                .toList();
+        List<ShortsDto> popularShortsDtoList = shortsRepository.findPopularShortsList();
+        if (popularShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
         return popularShortsDtoList;
 
@@ -137,6 +115,7 @@ public class ShortsServiceImpl implements ShortsService {
 
     /**
      * 특정 id의 회원의 TriedShorts 리스트를 TriedShortsDto 리스트로 반환함
+     * With 어노테이션을 활용하여 triedShortsDate를 제외한 변수들은 기존 변수에서 복사함
      *
      * @param accessToken 로그인한 회원의 토큰
      * @return triedShortsDto 리스트
@@ -148,13 +127,8 @@ public class ShortsServiceImpl implements ShortsService {
         List<TriedShortsDto> qTriedShortsDtoList = shortsRepository.findTriedShortsList(member);
 
         List<TriedShortsDto> triedShortsDtoList = qTriedShortsDtoList.stream()
-                .map(t -> TriedShortsDto.builder()
-                        .triedShortsId(t.getTriedShortsId())
-                        // UST -> KST 변환
-                        .triedShortsDate(t.getTriedShortsDate().plusHours(9))
-                        .shortsDto(convertToShortsDto(t.getShortsDto()))
-                        .build()
-                )
+                // UST -> KST 변경
+                .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
                 .toList();
 
         return triedShortsDtoList;
@@ -196,8 +170,8 @@ public class ShortsServiceImpl implements ShortsService {
     /**
      * 특정 id의 TriedShorts 객체를 삭제함
      *
-     * @param accessToken   로그인한 회원의 토큰
-     * @param shortsId Shorts 객체의 id
+     * @param accessToken 로그인한 회원의 토큰
+     * @param shortsId    Shorts 객체의 id
      * @return TriedShorts 삭제에 성공하면 SuccessResponse 객체를 반환함
      * @throws CustomException 해당 TriedShorts 객체를 찾을 수 없음
      */

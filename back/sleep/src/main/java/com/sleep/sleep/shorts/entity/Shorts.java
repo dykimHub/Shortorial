@@ -1,7 +1,9 @@
 package com.sleep.sleep.shorts.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -35,6 +37,10 @@ public class Shorts {
     // 쇼츠 출처
     @Column(nullable = false)
     private String shortsSource;
+
+    // 쇼츠 s3 링크
+    @Column(nullable = false, name = "shorts_s3link")
+    private String shortsS3Link;
 
     // 시도한 쇼츠
     @OneToMany(mappedBy = "shorts")
