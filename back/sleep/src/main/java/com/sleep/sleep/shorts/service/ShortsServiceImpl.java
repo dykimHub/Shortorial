@@ -1,6 +1,5 @@
 package com.sleep.sleep.shorts.service;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
@@ -23,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -52,22 +50,13 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * Shorts 객체를  ShostsDto 객체로 변환함
+     * With 어노테이션을 활용하여 QueryDSL에서 반환한 QShortsDto 객체의 값을 복사하고 shortsS3Link만 추가함
      *
-     * @param shorts Shorts 객체
-     * @return ShortsDto 형으로 변환된 객체
+     * @param qShortsDto QueryDsl에서 반환한 QShortsDto 객체
+     * @return shortsS3Link가 추가된 ShortsDto 객체
      */
-    public ShortsDto convertToShortsDto(Shorts shorts) {
-        ShortsDto shortsDto = ShortsDto.builder()
-                .shortsId(shorts.getShortsId())
-                .shortsTime(shorts.getShortsTime())
-                .shortsTitle(shorts.getShortsTitle())
-                .shortsMusicTitle(shorts.getShortsMusicTitle())
-                .shortsMusicSinger(shorts.getShortsMusicSinger())
-                .shortsS3Link(s3Service.getPath("shortsList", shorts.getShortsTitle()))
-                .shortsSource(shorts.getShortsSource())
-                .shortsChallengerNum(shorts.getTriedShortsList().size())
-                .build();
+    public ShortsDto convertToShortsDto(ShortsDto qShortsDto) {
+        ShortsDto shortsDto = qShortsDto.withShortsS3Link(s3Service.getOriginPath(qShortsDto.getShortsTitle()));
 
         return shortsDto;
 
@@ -84,31 +73,14 @@ public class ShortsServiceImpl implements ShortsService {
                 .recordedShortsId(recordedShorts.getRecordedShortsId())
                 .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
                 .recordedShortsS3Link(recordedShorts.getRecordedShortsS3Link())
-                .recordedShortsDate(recordedShorts.getRecordedShortsDate())
+                // UST -> KST 변경
+                .recordedShortsDate(recordedShorts.getRecordedShortsDate().plusHours(9))
                 .recordedShortsYoutubeURL(recordedShorts.getRecordedShortsYoutubeURL())
                 .build();
 
         return recordedShortsDto;
 
     }
-
-    /**
-     * TriedShorts 객체를 TriedShortsDto 객체로 반환
-     *
-     * @param triedShorts TriedShorts 객체
-     * @return TriedShortsDto 형으로 변환된 객체
-     */
-    public TriedShortsDto convertToTriedShortsDto(TriedShorts triedShorts) {
-        TriedShortsDto triedShortsDto = TriedShortsDto.builder()
-                .triedShortsId(triedShorts.getTriedShortsId())
-                .triedShortsDate(triedShorts.getTriedShortsDate())
-                .shortsDto(convertToShortsDto(triedShorts.getShorts()))
-                .build();
-
-        return triedShortsDto;
-
-    }
-
 
     /**
      * 특정 id의 Shorts 객체를 ShortsDto 객체로 반환
@@ -119,7 +91,8 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsDto findShorts(int shortsId) {
         Shorts shorts = findShortsEntity(shortsId);
-        ShortsDto shortsDto = convertToShortsDto(shorts);
+        ShortsDto qShortsDto = shortsRepository.findShorts(shorts);
+        ShortsDto shortsDto = convertToShortsDto(qShortsDto);
 
         return shortsDto;
     }
@@ -133,11 +106,11 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findShortsList() {
-        List<Shorts> shortsList = shortsRepository.findShortsList();
-        if (shortsList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
+        List<ShortsDto> qShortsDtoList = shortsRepository.findShortsList();
+        if (qShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
-        List<ShortsDto> shortsDtoList = shortsList.stream()
-                .map(this::convertToShortsDto)
+        List<ShortsDto> shortsDtoList = qShortsDtoList.stream()
+                .map(s -> convertToShortsDto(s))
                 .toList();
 
         return shortsDtoList;
@@ -155,8 +128,7 @@ public class ShortsServiceImpl implements ShortsService {
         if (popularQShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
         List<ShortsDto> popularShortsDtoList = popularQShortsDtoList.stream()
-                // @With의 with~ 메서드를 이용하여 기존의 p 객체를 복사하고 shortsS3Link만 새롭게 설정하여 반환
-                .map(p -> p.withShortsS3Link(s3Service.getPath("shortsList", p.getShortsTitle())))
+                .map(p -> convertToShortsDto(p))
                 .toList();
 
         return popularShortsDtoList;
@@ -173,11 +145,16 @@ public class ShortsServiceImpl implements ShortsService {
     public List<TriedShortsDto> findTriedShortsList(String accessToken) {
         Member member = memberService.findMemberEntity(accessToken);
 
-        List<TriedShorts> triedShortsList = shortsRepository.findTriedShortsList(member);
-        //if (triedShortsList.isEmpty()) return new ArrayList<>();
+        List<TriedShortsDto> qTriedShortsDtoList = shortsRepository.findTriedShortsList(member);
 
-        List<TriedShortsDto> triedShortsDtoList = triedShortsList.stream()
-                .map(this::convertToTriedShortsDto)
+        List<TriedShortsDto> triedShortsDtoList = qTriedShortsDtoList.stream()
+                .map(t -> TriedShortsDto.builder()
+                        .triedShortsId(t.getTriedShortsId())
+                        // UST -> KST 변환
+                        .triedShortsDate(t.getTriedShortsDate().plusHours(9))
+                        .shortsDto(convertToShortsDto(t.getShortsDto()))
+                        .build()
+                )
                 .toList();
 
         return triedShortsDtoList;
@@ -197,10 +174,10 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
         Shorts shorts = findShortsEntity(shortsId);
 
-        TriedShorts triedShorts = shortsRepository.findTriedShorts(member, shorts);
+        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member, shorts);
 
         if (triedShorts != null) {
-            //triedShorts.updateTriedShortsDate(LocalDateTime.now());
+            triedShorts.updateTriedShortsDate();
             triedShortsRepository.save(triedShorts);
             return SuccessResponse.of("이미 시도한 쇼츠입니다. 시도한 날짜를 변경합니다.");
 
@@ -220,14 +197,18 @@ public class ShortsServiceImpl implements ShortsService {
      * 특정 id의 TriedShorts 객체를 삭제함
      *
      * @param accessToken   로그인한 회원의 토큰
-     * @param triedShortsId TriedShorts 객체의 id
+     * @param shortsId Shorts 객체의 id
      * @return TriedShorts 삭제에 성공하면 SuccessResponse 객체를 반환함
      * @throws CustomException 해당 TriedShorts 객체를 찾을 수 없음
      */
     @Transactional
     @Override
-    public SuccessResponse deleteTriedShorts(String accessToken, int triedShortsId) {
-        TriedShorts triedShorts = triedShortsRepository.findById(triedShortsId).orElseThrow(() -> new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND));
+    public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
+        Member member = memberService.findMemberEntity(accessToken);
+        Shorts shorts = findShortsEntity(shortsId);
+
+        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member, shorts);
+        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
 
         triedShortsRepository.delete(triedShorts);
 
@@ -245,7 +226,6 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
 
         List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
-        //if (recordedShortsList.isEmpty()) return new ArrayList<>();
 
         List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
                 .map(this::convertToRecordedShortsDto)

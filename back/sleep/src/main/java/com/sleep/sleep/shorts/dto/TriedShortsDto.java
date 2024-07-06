@@ -1,12 +1,9 @@
 package com.sleep.sleep.shorts.dto;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.querydsl.core.annotations.QueryProjection;
+import lombok.*;
 
 import java.time.OffsetDateTime;
-
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,6 +18,7 @@ public class TriedShortsDto {
     // 쇼츠 정보
     private ShortsDto shortsDto;
 
+    @QueryProjection
     @Builder
     public TriedShortsDto(int triedShortsId, OffsetDateTime triedShortsDate, ShortsDto shortsDto) {
         this.triedShortsId = triedShortsId;
