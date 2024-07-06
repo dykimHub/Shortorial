@@ -1,10 +1,12 @@
 package com.sleep.sleep.shorts.dto;
 
+import com.querydsl.core.annotations.QueryProjection;
 import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.LocalDate;
 
+@With
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortsDto {
@@ -42,6 +44,19 @@ public class ShortsDto {
         this.shortsMusicSinger = shortsMusicSinger;
         this.shortsSource = shortsSource;
         this.shortsS3Link = shortsS3Link;
+        this.shortsChallengerNum = shortsChallengerNum;
+    }
+
+    // shortsS3Link를 매개변수로 받지 않는 생성자
+    @QueryProjection
+    @Builder
+    public ShortsDto(int shortsId, int shortsTime, String shortsTitle, String shortsMusicTitle, String shortsMusicSinger, String shortsSource, int shortsChallengerNum) {
+        this.shortsId = shortsId;
+        this.shortsTime = shortsTime;
+        this.shortsTitle = shortsTitle;
+        this.shortsMusicTitle = shortsMusicTitle;
+        this.shortsMusicSinger = shortsMusicSinger;
+        this.shortsSource = shortsSource;
         this.shortsChallengerNum = shortsChallengerNum;
     }
 }

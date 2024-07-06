@@ -144,18 +144,19 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * Shorts 객체의 triedShortsList가 많은 순서대로 ShortDto형으로 바꿔서 3개를 반환함
+     * Shorts 객체의 triedShortsList가 큰 순서대로 ShortDto형으로 바꿔서 3개를 반환함
      *
      * @return ShortsDto 객체 3개
      * @throws CustomException 인기 쇼츠 리스트를 불러올 수 없음
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
-        List<Shorts> popularShortsList = shortsRepository.findPopularShorts();
-        if (popularShortsList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
+        List<ShortsDto> popularQShortsDtoList = shortsRepository.findPopularShortsList();
+        if (popularQShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
 
-        List<ShortsDto> popularShortsDtoList = popularShortsList.stream()
-                .map(this::convertToShortsDto)
+        List<ShortsDto> popularShortsDtoList = popularQShortsDtoList.stream()
+                // @With의 with~ 메서드를 이용하여 기존의 p 객체를 복사하고 shortsS3Link만 새롭게 설정하여 반환
+                .map(p -> p.withShortsS3Link(s3Service.getPath("shortsList", p.getShortsTitle())))
                 .toList();
 
         return popularShortsDtoList;
@@ -257,7 +258,7 @@ public class ShortsServiceImpl implements ShortsService {
      * 특정 id의 회원이 녹화한 쇼츠를 recorded_shorts에 등록함
      * 녹화된 쇼츠의 제목을 활용하여 S3 링크를 얻고 메타데이터에서 S3에 저장된 시간을 얻음
      *
-     * @param accessToken 로그인한 회원의 token
+     * @param accessToken         로그인한 회원의 token
      * @param recordedShortsTitle 녹화된 쇼츠의 제목
      * @return RecordedShorts 등록에 성공하면 SuccessResponse 객체를 반환함
      */
@@ -292,7 +293,7 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
         ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStatsDto(member);
 
-        if(shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NULL);
+        if (shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NULL);
 
         return shortsStatsDto;
     }

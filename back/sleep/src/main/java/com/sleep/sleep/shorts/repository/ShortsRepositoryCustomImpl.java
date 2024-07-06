@@ -1,9 +1,13 @@
 package com.sleep.sleep.shorts.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sleep.sleep.member.entity.Member;
-import com.sleep.sleep.member.entity.QMember;
+import com.sleep.sleep.s3.S3Service;
+import com.sleep.sleep.shorts.dto.QShortsDto;
+import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.entity.*;
 import lombok.RequiredArgsConstructor;
@@ -13,21 +17,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     private final JPAQueryFactory queryFactory;
+    private final S3Service s3Service;
 
     /**
      * triedShortsList가 비어있는 Shorts 객체(TriedShorts에 없는 Shorts)도 가져오기 위해 left join 사용함
-     * Shorts 객체의 triedShortsList를 tried_shorts 테이블과 fetch join 하여 shorts, tried_shorts 테이블을 한번의 쿼리로 불러옴
-     * Shorts 객체의 triedShortsList의 사이즈가 큰 순서대로 정렬함
-     * triedShortsList의 사이즈를 계산할 때 각 쇼츠 id를 triedShorts 테이블에서 count 하는 서브 쿼리를 날림
+     * Shorts 객체의 triedShortsList의 사이즈가 ShortsDto 객체의 shortsChallengerNum 변수임 -> 각 Shorts에 조인된 TriedShorts를 카운트 함
+     * QueryProjection으로 QShortsDto를 만들어서 FROM(Shorts) 이지만 ShortsDto 매핑할 수 있도록 함
      */
     @Override
-    public List<Shorts> findPopularShorts() {
+    public List<ShortsDto> findPopularShortsList() {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
 
-        return queryFactory.selectFrom(qShorts)
-                .leftJoin(qShorts.triedShortsList, qTriedShorts).fetchJoin()
-                .orderBy(qShorts.triedShortsList.size().desc())
+        // 별칭(alias) 선언
+        NumberPath<Integer> shortsChallengerNum = Expressions.numberPath(Integer.class, "shortsChallengerNum");
+
+        return queryFactory.select(new QShortsDto(qShorts.shortsId, qShorts.shortsTime, qShorts.shortsTitle, qShorts.shortsMusicTitle, qShorts.shortsMusicSinger, qShorts.shortsSource
+                        , qTriedShorts.count().intValue().as(shortsChallengerNum)))
+                .from(qShorts)
+                .leftJoin(qShorts.triedShortsList, qTriedShorts)
+                .groupBy(qShorts.shortsId)
+                .orderBy(shortsChallengerNum.desc())
                 .limit(3)
                 .fetch();
 
