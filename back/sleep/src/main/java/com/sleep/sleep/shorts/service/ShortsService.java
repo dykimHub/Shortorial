@@ -22,7 +22,7 @@ public interface ShortsService {
 
     SuccessResponse addTriedShorts(String accessToken, int shortsId);
 
-    SuccessResponse deleteTriedShorts(String accessToken, int triedShortsId);
+    SuccessResponse deleteTriedShorts(String accessToken, int shortsId);
 
     List<RecordedShortsDto> findRecordedShortsList(String accessToken);
 

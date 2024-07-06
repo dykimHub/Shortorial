@@ -69,9 +69,9 @@ public class ShortsController {
     }
 
     @Operation(summary = "회원이 시도한 쇼츠에서 삭제")
-    @DeleteMapping("/tried/{triedShortsId}")
-    public ResponseEntity<SuccessResponse> deleteTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int triedShortsId) {
-        SuccessResponse successResponse = shortsService.deleteTriedShorts(accessToken, triedShortsId);
+    @DeleteMapping("/tried/{shortsId}")
+    public ResponseEntity<SuccessResponse> deleteTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
+        SuccessResponse successResponse = shortsService.deleteTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 

@@ -1,6 +1,7 @@
 package com.sleep.sleep.shorts.repository;
 
 import com.sleep.sleep.member.entity.Member;
+import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,9 @@ public interface TriedShortsRepository extends JpaRepository<TriedShorts, Intege
     @EntityGraph(attributePaths = {"shorts.triedShortsList"})
     @Query("SELECT t FROM TriedShorts t WHERE t.member = :member")
     List<TriedShorts> findTriedShortsList(Member member);
+
+    @Query("SELECT t FROM TriedShorts t WHERE t.member = :member AND t.shorts = :shorts")
+    TriedShorts findTriedShorts(Member member, Shorts shorts);
 
 //    Optional<TryShorts> findByMemberIndexAndShortsNo(Member member, Shorts shorts);
 //    @Query(nativeQuery = true, value = "select * from try_shorts where member_no = :memberNo and shorts_no=:shortsNo")
