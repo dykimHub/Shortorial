@@ -6,8 +6,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,9 +26,9 @@ public class TriedShorts {
     private int triedShortsId;
 
     // 시도한 시간
-    //@CreationTimestamp
-    @Column(insertable = false, updatable = false)
-    private LocalDateTime triedShortsDate;
+    @CreationTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime triedShortsDate;
 
     // 시도한 쇼츠 객체
     @ManyToOne
@@ -45,13 +47,9 @@ public class TriedShorts {
         this.member = member;
     }
 
-    /**
-     * 이미 시도한 쇼츠를 다시 시도할 때 시도한 시간을 현재 시간으로 변경함
-     *
-     * @param triedShortsDate 현재 시간
-     */
-    public void updateTriedShortsDate(LocalDateTime triedShortsDate) {
-        this.triedShortsDate = triedShortsDate;
+    public void updateTriedShortsDate() {
+        OffsetDateTime updatedTriedShortsDate = OffsetDateTime.now(ZoneOffset.UTC);
+        this.triedShortsDate = updatedTriedShortsDate;
     }
 
 }

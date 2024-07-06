@@ -6,8 +6,9 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,9 +30,9 @@ public class RecordedShorts {
     private String recordedShortsTitle;
 
     // 녹화한 시간
-    //@CreationTimestamp
-    @Column(insertable = false)
-    private LocalDateTime recordedShortsDate;
+    @CreationTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime recordedShortsDate;
 
     @Column(nullable = false, name = "recorded_shorts_s3link")
     private String recordedShortsS3Link;

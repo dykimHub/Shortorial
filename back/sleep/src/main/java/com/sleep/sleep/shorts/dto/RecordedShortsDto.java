@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,7 +18,7 @@ public class RecordedShortsDto {
     private String recordedShortsTitle;
 
     // 녹화한 시간
-    private LocalDateTime recordedShortsDate;
+    private OffsetDateTime recordedShortsDate;
 
     // 녹화한 쇼츠 s3 링크
     private String recordedShortsS3Link;
@@ -27,7 +27,7 @@ public class RecordedShortsDto {
     private String recordedShortsYoutubeUrl;
 
     @Builder
-    public RecordedShortsDto(int recordedShortsId, String recordedShortsS3Link, String recordedShortsTitle, LocalDateTime recordedShortsDate, String recordedShortsYoutubeURL) {
+    public RecordedShortsDto(int recordedShortsId, String recordedShortsS3Link, String recordedShortsTitle, OffsetDateTime recordedShortsDate, String recordedShortsYoutubeURL) {
         this.recordedShortsId = recordedShortsId;
         this.recordedShortsS3Link = recordedShortsS3Link;
         this.recordedShortsTitle = recordedShortsTitle;
