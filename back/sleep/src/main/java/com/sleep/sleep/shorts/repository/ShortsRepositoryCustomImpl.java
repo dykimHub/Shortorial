@@ -1,6 +1,7 @@
 package com.sleep.sleep.shorts.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -35,7 +36,8 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
-                        qShorts.shortsS3Link,
+                        qShorts.shortsS3Key,
+                        qShorts.shortsS3URL,
                         qShorts.triedShortsList.size()))
                 .from(qShorts)
                 .where(qShorts.eq(shorts))
@@ -60,7 +62,8 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
-                        qShorts.shortsS3Link,
+                        qShorts.shortsS3Key,
+                        qShorts.shortsS3URL,
                         qTriedShorts.count().intValue()))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
@@ -87,7 +90,8 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
-                        qShorts.shortsS3Link,
+                        qShorts.shortsS3Key,
+                        qShorts.shortsS3URL,
                         qTriedShorts.count().intValue().as(shortsChallengerNum)))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
@@ -123,7 +127,8 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                                 qShorts.shortsMusicTitle,
                                 qShorts.shortsMusicSinger,
                                 qShorts.shortsSource,
-                                qShorts.shortsS3Link,
+                                qShorts.shortsS3Key,
+                                qShorts.shortsS3URL,
                                 qShorts.triedShortsList.size()
                         )
                 ))
@@ -156,7 +161,11 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
 
         Tuple tuple = queryFactory.select(
                         qRecordedShorts.count().intValue(),
-                        qRecordedShorts.recordedShortsYoutubeURL.isNotNull().count().intValue())
+                        new CaseBuilder()
+                                .when(qRecordedShorts.recordedShortsYoutubeURL.isNotNull())
+                                .then(1)
+                                .otherwise(0)
+                                .sum().coalesce(0))
                 .from(qRecordedShorts)
                 .where(qRecordedShorts.member.eq(member))
                 .fetchOne();

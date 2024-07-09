@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface RecordedShortsRepository extends JpaRepository<RecordedShorts,Integer> {
 
-    @Query("SELECT r From RecordedShorts r WHERE r.member = :member")
+    @Query("SELECT r From RecordedShorts r WHERE r.member = :member ORDER BY r.recordedShortsDate DESC")
     List<RecordedShorts> findByRecordedShortsList(Member member);
 
 //    RecordedShorts findByUploadNo(int uploadNo);

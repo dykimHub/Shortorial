@@ -44,9 +44,7 @@ public class ShortsServiceImpl implements ShortsService {
      * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
      */
     public Shorts findShortsEntity(int shortsId) {
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
-
-        return shorts;
+        return shortsRepository.findById(shortsId).orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
     }
 
     /**
@@ -56,16 +54,15 @@ public class ShortsServiceImpl implements ShortsService {
      * @return RecordedShortsDto 형으로 변환된 객체
      */
     public RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts) {
-        RecordedShortsDto recordedShortsDto = RecordedShortsDto.builder()
+        return RecordedShortsDto.builder()
                 .recordedShortsId(recordedShorts.getRecordedShortsId())
                 .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
-                .recordedShortsS3Link(recordedShorts.getRecordedShortsS3Link())
+                .recordedShortsS3key(recordedShorts.getRecordedShortsS3key())
+                .recordedShortsS3URL(recordedShorts.getRecordedShortsS3URL())
                 // UST -> KST 변경
                 .recordedShortsDate(recordedShorts.getRecordedShortsDate().plusHours(9))
                 .recordedShortsYoutubeURL(recordedShorts.getRecordedShortsYoutubeURL())
                 .build();
-
-        return recordedShortsDto;
 
     }
 
@@ -78,9 +75,7 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsDto findShorts(int shortsId) {
         Shorts shorts = findShortsEntity(shortsId);
-        ShortsDto shortsDto = shortsRepository.findShorts(shorts);
-
-        return shortsDto;
+        return shortsRepository.findShorts(shorts);
     }
 
 
@@ -126,12 +121,10 @@ public class ShortsServiceImpl implements ShortsService {
 
         List<TriedShortsDto> qTriedShortsDtoList = shortsRepository.findTriedShortsList(member);
 
-        List<TriedShortsDto> triedShortsDtoList = qTriedShortsDtoList.stream()
+        return qTriedShortsDtoList.stream()
                 // UST -> KST 변경
                 .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
                 .toList();
-
-        return triedShortsDtoList;
     }
 
     /**
@@ -201,38 +194,37 @@ public class ShortsServiceImpl implements ShortsService {
 
         List<RecordedShorts> recordedShortsList = recordedShortsRepository.findByRecordedShortsList(member);
 
-        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsList.stream()
+        return recordedShortsList.stream()
                 .map(this::convertToRecordedShortsDto)
                 .toList();
-
-        return recordedShortsDtoList;
     }
 
     /**
      * 특정 id의 회원이 녹화한 쇼츠를 recorded_shorts에 등록함
      * 녹화된 쇼츠의 제목을 활용하여 S3 링크를 얻고 메타데이터에서 S3에 저장된 시간을 얻음
      *
-     * @param accessToken         로그인한 회원의 token
-     * @param recordedShortsTitle 녹화된 쇼츠의 제목
+     * @param accessToken 로그인한 회원의 token
+     * @param recordedShortsS3Key       녹화하고 S3에 업로드된 쇼츠의 S3key
      * @return RecordedShorts 등록에 성공하면 SuccessResponse 객체를 반환함
      */
     @Transactional
     @Override
-    public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsTitle) {
+    public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key) {
         Member member = memberService.findMemberEntity(accessToken);
 
-        String recordedShortsS3Link = s3Service.getPath(member.getMemberId(), recordedShortsTitle);
-        //ObjectMetadata objectMetaData = s3Service.getObjectMetaData(member.getMemberId(), recordedShortsTitle);
+        String recordedShortsTitle = recordedShortsS3Key.split("/")[1];
+        String recordedShortsS3URL = s3Service.findS3URL(recordedShortsS3Key);
 
         RecordedShorts recordedShorts = RecordedShorts.builder()
                 .recordedShortsTitle(recordedShortsTitle)
-                .recordedShortsS3Link(recordedShortsS3Link)
+                .recordedShortsS3key(recordedShortsS3Key)
+                .recordedShortsS3URL(recordedShortsS3URL)
                 .member(member)
                 .build();
 
         recordedShortsRepository.save(recordedShorts);
 
-        return SuccessResponse.of("녹화된 쇼츠가 저장되었습니다.");
+        return SuccessResponse.of("회원이 녹화한 쇼츠가 저장되었습니다.");
     }
 
     /**
@@ -240,6 +232,7 @@ public class ShortsServiceImpl implements ShortsService {
      *
      * @param accessToken 로그인한 회원의 토큰
      * @return ShortsStatsDto 객체
+     * @throws CustomException 회원의 쇼츠 통계를 불러올 수 없음
      */
     @Transactional
     @Override
@@ -247,7 +240,7 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
         ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStatsDto(member);
 
-        if (shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NULL);
+        if (shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND);
 
         return shortsStatsDto;
     }

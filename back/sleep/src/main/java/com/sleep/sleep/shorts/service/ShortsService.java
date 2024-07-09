@@ -26,7 +26,7 @@ public interface ShortsService {
 
     List<RecordedShortsDto> findRecordedShortsList(String accessToken);
 
-    SuccessResponse addRecordedShorts(String accessToken, String recordedShortsTitle);
+    SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key);
 
     ShortsStatsDto findShortsStats(String accessToken);
 

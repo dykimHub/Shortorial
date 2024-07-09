@@ -43,7 +43,7 @@ public class ShortsController {
 
     @Operation(summary = "쇼츠를 인기순으로 조회")
     @GetMapping("/rank")
-    public ResponseEntity<?> findPopularShorts() {
+    public ResponseEntity<List<ShortsDto>> findPopularShorts() {
         List<ShortsDto> shortRankingList = shortsService.findPopularShortsList();
         return ResponseEntity.ok()
                 .body(shortRankingList);
@@ -88,8 +88,8 @@ public class ShortsController {
 
     @Operation(summary = "회원이 녹화한 쇼츠 등록")
     @PostMapping("/recorded")
-    public ResponseEntity<SuccessResponse> addRecoredShorts(@RequestHeader("Authorization") String accessToken, @RequestParam("fileName") String recordedShortsTitle) {
-        SuccessResponse successResponse = shortsService.addRecordedShorts(accessToken, recordedShortsTitle);
+    public ResponseEntity<SuccessResponse> addRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
+        SuccessResponse successResponse = shortsService.addRecordedShorts(accessToken, map.get("s3key"));
         return ResponseEntity.ok()
                 .body(successResponse);
 
@@ -99,7 +99,6 @@ public class ShortsController {
     @GetMapping("/stats")
     public ResponseEntity<ShortsStatsDto> findShortsInfo(@RequestHeader("Authorization") String accessToken) {
         ShortsStatsDto shortsStatsDto = shortsService.findShortsStats(accessToken);
-
         return ResponseEntity.ok()
                 .body(shortsStatsDto);
     }
