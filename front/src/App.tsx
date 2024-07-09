@@ -21,18 +21,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route
-            path="/main"
-            element={<PrivateRoute component={<MainPage />} />}
-          />
+          <Route path="/main" element={<PrivateRoute component={<MainPage />} />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/learn/:shortsId" element={<PrivateRoute component={<LearnPage />} />} />
           <Route
-            path="/learn/:shortsNo"
-            element={<PrivateRoute component={<LearnPage />} />}
-          />
-          <Route
-            path="/challenge/:shortsNo"
+            path="/challenge/:shortsId"
             element={<PrivateRoute component={<ChallengePage />} />}
           />
           <Route

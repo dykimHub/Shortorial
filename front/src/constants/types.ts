@@ -19,7 +19,8 @@ export interface Shorts {
   shortsTitle: string;
   shortsTime: number;
   shortsChallengerNum: number;
-  shortsS3Link: string;
+  shortsS3Key: string;
+  shortsS3URL: string;
   shortsMusicTitle: string;
   shortsMusicSinger: string;
 }
@@ -27,7 +28,7 @@ export interface Shorts {
 export interface RecomShorts {
   musicNo: number;
   shortsChallengerNum: number;
-  shortsS3Link: string;
+  shortsS3URL: string;
   shortsId: number;
   shortsTime: number;
   shortsTitle: string;
@@ -38,7 +39,8 @@ export interface RecomShorts {
 
 export interface UploadShorts {
   recordedShortsId: number;
-  recordedShortsS3Link: string;
+  recordedShortS3Key: string;
+  recordedShortsS3URL: string;
   recordedShortsTitle: string;
   recordedShortsYoutubeUrl: string;
 }
@@ -47,4 +49,10 @@ export interface TryShorts {
   triedShortsId: number;
   triedShortsDate: Date;
   shortsDto: Shorts;
+}
+
+export interface Countings {
+  triedShortsNum: number;
+  recordedShortsNum: number;
+  uploadedShortsNum: number;
 }
