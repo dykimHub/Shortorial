@@ -20,18 +20,22 @@ public class RecordedShortsDto {
     // 녹화한 시간
     private OffsetDateTime recordedShortsDate;
 
-    // 녹화한 쇼츠 s3 링크
-    private String recordedShortsS3Link;
+    // 녹화한 쇼츠 S3 key
+    private String recordedShortsS3key;
 
-    // 유튜브 업로드 url
-    private String recordedShortsYoutubeUrl;
+    // 녹화한 쇼츠 S3 URL
+    private String recordedShortsS3URL;
+
+    // 유튜브 업로드 URL
+    private String recordedShortsYoutubeURL;
 
     @Builder
-    public RecordedShortsDto(int recordedShortsId, String recordedShortsS3Link, String recordedShortsTitle, OffsetDateTime recordedShortsDate, String recordedShortsYoutubeURL) {
+    public RecordedShortsDto(int recordedShortsId, String recordedShortsTitle, OffsetDateTime recordedShortsDate, String recordedShortsS3key, String recordedShortsS3URL, String recordedShortsYoutubeURL) {
         this.recordedShortsId = recordedShortsId;
-        this.recordedShortsS3Link = recordedShortsS3Link;
         this.recordedShortsTitle = recordedShortsTitle;
         this.recordedShortsDate = recordedShortsDate;
-        this.recordedShortsYoutubeUrl = recordedShortsYoutubeURL;
+        this.recordedShortsS3key = recordedShortsS3key;
+        this.recordedShortsS3URL = recordedShortsS3URL;
+        this.recordedShortsYoutubeURL = recordedShortsYoutubeURL;
     }
 }
