@@ -7,9 +7,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
 
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "update recorded_shorts set is_deleted = true where recorded_shorts_id = ?")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "recorded_shorts",
@@ -48,6 +53,9 @@ public class RecordedShorts {
     @ManyToOne
     @JoinColumn(name = "member_no")
     private Member member;
+
+    @Column
+    private boolean isDeleted;
 
     @Builder
     public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, String recordedShortsS3URL, Member member) {

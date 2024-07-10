@@ -2,6 +2,8 @@ package com.sleep.sleep.shorts.service;
 
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.shorts.dto.*;
+import com.sleep.sleep.shorts.entity.RecordedShorts;
+import com.sleep.sleep.shorts.entity.Shorts;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.List;
 @Service
 public interface ShortsService {
 
-    ShortsDto findShorts(int shortsId);
+    ShortsDto findShortsDto(int shortsId);
 
     List<ShortsDto> findShortsList();
 
@@ -27,7 +29,17 @@ public interface ShortsService {
 
     SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key);
 
-    SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifyingShortsDto modifyingShortsDto);
+    SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifiedShortsDto modifiedShortsDto);
+
+    SuccessResponse deleteRecordedShorts(int recordedShortsId);
+
+    Shorts findShorts(int shortsId);
+
+    RecordedShorts findRecordedShorts(int recordedShortsId);
+
+    ShortsDto convertToShortsDto(Shorts shorts);
+
+    RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts);
 
     //사용자가 업로드한 영상 DB에 넣기
 //    public void upload(RecordedShortsDto dto, String username);

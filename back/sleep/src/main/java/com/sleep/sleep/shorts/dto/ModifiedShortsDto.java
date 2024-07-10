@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ModifyingShortsDto {
+public class ModifiedShortsDto {
     int recordedShortsId;
     String newRecordedShortsTitle;
 }
