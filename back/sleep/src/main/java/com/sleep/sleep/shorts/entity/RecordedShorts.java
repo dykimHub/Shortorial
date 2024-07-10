@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Table(name = "recorded_shorts",
          //member_no, recorded_shorts_youtubeurl로 복합 인덱스를 만듦
          //member_no, recorded_shorst_youtubeurl 순으로 정렬해서 youtubeurl이 null이 아닌 행을 빠르게 조회 가능
-         //recorded_shorts_id, member_no는 각 테이블에서 primary key, recorded_shorts_title은 unique한 값이라 인덱스 설정 되어있음
+         //recorded_shorts_id, member_no, recordedShortsS3Key는 각 테이블에서 primary key, recorded_shorts_title은 unique한 값이라 인덱스 설정 되어있음
         indexes = {@Index(name = "idx_member_youtube", columnList = "member_no, recorded_shorts_youtubeurl")})
 @Entity
 public class RecordedShorts {

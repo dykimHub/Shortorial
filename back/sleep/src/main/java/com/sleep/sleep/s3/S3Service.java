@@ -15,11 +15,4 @@ public interface S3Service {
 
     String addRecordedShortsToS3(String accessToken, MultipartFile file) throws IOException;
 
-    //void deleteFile(int uploadNo, String fileName);
-
-    //File convertMultiPartFileToFile(MultipartFile multipartFile) throws IOException;
-
-    //InputStream downloadFile(String filePath);
-
-    //void reaname(int uploadNo, String oldTitle, String newTitle);
 }

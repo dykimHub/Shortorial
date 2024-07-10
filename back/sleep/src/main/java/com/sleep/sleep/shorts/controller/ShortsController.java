@@ -116,58 +116,5 @@ public class ShortsController {
                 .body(successResponse);
     }
 
-//    @Operation(summary = "동영상 파일 이름 중복검사", description = "헤더에 accessToken 넣기, RequestParam으로 title 받기. true면 이미 있는 이름; false면 사용 가능한 이름 ")
-//    @GetMapping("/checkName")
-//    public ResponseEntity<?> checkName(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> data) {
-//        try {
-//            String title = data.get("title");
-//
-//            String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
-//            System.out.println("username : "+ username);
-//
-//            Boolean possible = shortsService.isNameExists(username+"/"+title);
-//
-//            if (possible) {
-//                log.info("사용 가능 여부 : "+ possible);
-//                return new ResponseEntity<>("Name is available.", HttpStatus.OK);
-//            } else {
-//                return new ResponseEntity<>("Name already exists. Please choose another one.", HttpStatus.BAD_REQUEST);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-//    @Operation(summary = "시도한 영상 카운트 올리기", description = "헤더에 accessToken 넣기, RequestParam으로 shortsNo ")
-//    @PutMapping("/addTryCount")
-//    public ResponseEntity<?> addTryShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> data) {
-//        try {
-//            int shortsNo = Integer.parseInt(data.get("shortsNo"));
-//
-//            String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
-//            System.out.println("username : "+ username);
-//
-//            shortsService.addTryCount(username,shortsNo);
-//            return new ResponseEntity<>("Successful Try Counting", HttpStatus.OK);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-//    @Operation(summary = "DB에 유튜브 url 올리기", description = "헤더에 accessToken 넣기, RequestParam으로 uploadNo,youtubeUrl ")
-//    @PutMapping("/youtubeUrl/{uploadNo}/{videoId}")
-//    public ResponseEntity<?> putYoutubeUrl(@PathVariable int uploadNo, @PathVariable String videoId) {
-//        try {
-//            System.out.println(uploadNo + " " +videoId);
-//            String url = "https://www.youtube.com/watch?v=" + videoId;
-//            shortsService.putYoutubeUrl(uploadNo,url);
-//
-//            return new ResponseEntity<>("Sucessful save DB!", HttpStatus.OK);
-//
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
 
 }

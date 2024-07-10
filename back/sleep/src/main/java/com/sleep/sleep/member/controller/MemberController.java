@@ -92,9 +92,9 @@ public class MemberController {
         HttpStatus status = HttpStatus.OK;
         MemberInfoDto memberInfoDto = null;
         try {
-            System.out.println(accessToken.toString());
+            //System.out.println(accessToken.toString());
             String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
-            System.out.println("username : "+ username);
+            //System.out.println("username : "+ username);
             memberInfoDto = memberService.getMemberInfo(username);
 //            System.out.println("memberInfo : "+ memberInfoDto.getMemberNickname());
 //            resultMap.put("memberInfo", memberInfoDto);

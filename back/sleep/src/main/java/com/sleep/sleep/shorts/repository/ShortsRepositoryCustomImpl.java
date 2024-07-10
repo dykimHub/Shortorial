@@ -5,12 +5,10 @@ import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.QRecordedShorts;
 import com.sleep.sleep.shorts.entity.QShorts;
 import com.sleep.sleep.shorts.entity.QTriedShorts;
-import com.sleep.sleep.shorts.entity.Shorts;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -18,32 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     private final JPAQueryFactory queryFactory;
-
-    /**
-     * QueryProjection으로 QShortsDto를 만들어서 FROM(Shorts) 이지만 ShortsDto 객체에 매핑함
-     * triedShortsList의 크기를 조회하는 서브 쿼리를 보내고(tried_shorts 테이블에서 shorts_id를 count) ShortsDto의 shortsChallengerNum을 계산함
-     *
-     * @param shorts 특정 id의 쇼츠
-     */
-    @Override
-    public ShortsDto findShorts(Shorts shorts) {
-        QShorts qShorts = QShorts.shorts;
-
-        return queryFactory.select(new QShortsDto(
-                        qShorts.shortsId,
-                        qShorts.shortsTime,
-                        qShorts.shortsTitle,
-                        qShorts.shortsMusicTitle,
-                        qShorts.shortsMusicSinger,
-                        qShorts.shortsSource,
-                        qShorts.shortsS3Key,
-                        qShorts.shortsS3URL,
-                        qShorts.triedShortsList.size()))
-                .from(qShorts)
-                .where(qShorts.eq(shorts))
-                .fetchOne();
-
-    }
 
     /**
      * triedShortsList가 비어있는 Shorts 객체(TriedShorts에 없는 Shorts)도 가져오기 위해 left join 사용함
@@ -108,10 +80,10 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * 3. 쇼츠 정보 중 shortsChallengerNum을 구할 때 tried_shorts 테이블에서 shorts_id를 count하는 서브 쿼리를 보냄(qShorts.triedShortsList.size())
      * qShorts.triedShortsList와 새롭게 정의한 qTriedShorts를 한번 더 join해서 계산할 수도 있으나 서브 쿼리를 보내는 쪽이 성능이 좋았음
      *
-     * @param member 특정 id의 회원
+     * @param memberIndex 특정 회원의 id
      */
     @Override
-    public List<TriedShortsDto> findTriedShortsList(Member member) {
+    public List<TriedShortsDto> findTriedShortsList(int memberIndex) {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
         // From절과 동일한 객체를 사용할 때 동일한 변수명은 못쓰고 alias를 지정해야 함
@@ -134,7 +106,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 ))
                 .from(qTriedShorts)
                 .innerJoin(qTriedShorts.shorts, qShorts)
-                .where(qTriedShorts.member.eq(member))
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
                 .orderBy(qTriedShorts.triedShortsDate.desc())
                 .fetch();
 
@@ -147,16 +119,16 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * 복수 쿼리라서 일관성이 부족할 수 있음
      * 서브 쿼리 방식과 달리 member DB를 조회하지 않아도 되고, 녹화된 쇼츠 DB를 2번 조회하지 않아도 됨
      *
-     * @param member 특정 id의 회원
+     * @param memberIndex 특정 id의 회원
      */
     @Override
-    public ShortsStatsDto findShortsStatsDto(Member member) {
+    public ShortsStatsDto findShortsStatsDto(int memberIndex) {
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
         QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
 
         int triedShortsNum = queryFactory.select(qTriedShorts.count().intValue())
                 .from(qTriedShorts)
-                .where(qTriedShorts.member.eq(member))
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
                 .fetchOne();
 
         Tuple tuple = queryFactory.select(
@@ -167,7 +139,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                                 .otherwise(0)
                                 .sum().coalesce(0))
                 .from(qRecordedShorts)
-                .where(qRecordedShorts.member.eq(member))
+                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
                 .fetchOne();
 
         return ShortsStatsDto.builder()

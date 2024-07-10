@@ -102,34 +102,4 @@ public class S3ServiceImpl implements S3Service {
     }
 
 
-//    @Override
-//    public void deleteFile(int uploadNo, String fileName) {
-//        amazonS3.deleteObject(new DeleteObjectRequest(bucketName,fileName));
-//        shortsService.deleteUploadShorts(uploadNo,fileName);
-//    }
-
-//    @Override
-//    public File convertMultiPartFileToFile(MultipartFile multipartFile) throws IOException {
-//        File file = new File(multipartFile.getOriginalFilename());
-//        try (FileOutputStream fos = new FileOutputStream(file)) {
-//            fos.write(multipartFile.getBytes());
-//        }
-//        return file;
-//    }
-
-//
-//    @Override
-//    public void reaname(int uploadNo, String oldTitle, String newTitle) {
-//        // 객체 복사 요청 생성
-//        CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, oldTitle, bucketName, newTitle);
-//        // 객체 복사 수행
-//        amazonS3.copyObject(copyObjectRequest);
-//        // 기존 객체 삭제
-//        amazonS3.deleteObject(new DeleteObjectRequest(bucketName, oldTitle));
-//        // 새로운 URL 반환
-//        String newURL =  getPath(newTitle);
-//
-//        shortsService.putTitle(uploadNo,oldTitle, newTitle, newURL);
-//
-//    }
 }
