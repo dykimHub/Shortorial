@@ -14,9 +14,7 @@ import java.time.ZoneOffset;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "tried_shorts",
-        // member_no, tried_shorts_date를 포함하는 복합 인덱스를 만듦
-        // member_no, tried_shorts_date 순으로 정렬해서 where절, orderby 절에서 성능 향상
-        // tried_shorts_id, member_no, shorts_id는 각 테이블에서 primary key라 이미 인덱스 설정이 되어 있음
+        // 회원이 시도한 쇼츠를 조회할 때 where, orderby 절에서 사용하는 두 컬럼을 복합 인덱스로 형성
         indexes = {@Index(name = "idx_member_date", columnList = "member_no, tried_shorts_date")}
 )
 @Entity

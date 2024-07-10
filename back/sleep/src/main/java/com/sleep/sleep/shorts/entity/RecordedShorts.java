@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -18,10 +17,12 @@ import java.time.OffsetDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "recorded_shorts",
-         //member_no, recorded_shorts_youtubeurl로 복합 인덱스를 만듦
-         //member_no, recorded_shorst_youtubeurl 순으로 정렬해서 youtubeurl이 null이 아닌 행을 빠르게 조회 가능
-         //recorded_shorts_id, member_no, recordedShortsS3Key는 각 테이블에서 primary key, recorded_shorts_title은 unique한 값이라 인덱스 설정 되어있음
-        indexes = {@Index(name = "idx_member_youtube", columnList = "member_no, recorded_shorts_youtubeurl")})
+        indexes = {
+                // 회원 쇼츠 통계에서 유튜브에 업로드한 쇼츠의 수를 조회할 때 where 절에서 사용하는 두 컬럼을 복합 인덱스로 형성
+                @Index(name = "idx_member_youtube", columnList = "member_no, recorded_shorts_youtubeurl"),
+                // 회원이 녹화한 쇼츠를 조회할 때 where, orderby 절에서 사용하는 세 컬럼을 복합 인덱스로 형성
+                @Index(name = "idx_deleted_member_date", columnList = "is_deleted, member_no, recorded_shorts_date")
+        })
 @Entity
 public class RecordedShorts {
 
