@@ -38,11 +38,11 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsSource;
 
-    @Column(nullable = false, unique = true, name = "shorts_s3key")
+    @Column(nullable = false, unique = true, name = "shorts_s3key", columnDefinition = "TEXT")
     private String shortsS3Key;
 
     // 쇼츠 s3 링크
-    @Column(nullable = false, name = "shorts_s3url")
+    @Column(nullable = false, name = "shorts_s3url", columnDefinition = "TEXT")
     private String shortsS3URL;
 
     // 시도한 쇼츠
