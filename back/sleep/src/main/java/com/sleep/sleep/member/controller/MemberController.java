@@ -87,7 +87,7 @@ public class MemberController {
     @Operation(summary = "회원정보조회")
     @GetMapping("/info")
     public ResponseEntity<MemberInfoDto> memberFind(@RequestHeader("Authorization") String accessToken) {
-        log.info("멤버 정보 조회");
+        //log.info("멤버 정보 조회");
         Map<String, Object> resultMap = new HashMap<>();
         HttpStatus status = HttpStatus.OK;
         MemberInfoDto memberInfoDto = null;
@@ -146,7 +146,7 @@ public class MemberController {
 
 
     private String resolveToken(String accessToken) {
-        log.info("resolveToken, AccessToken: "+ accessToken.toString());
+        //log.info("resolveToken, AccessToken: "+ accessToken.toString());
         return accessToken.substring(7);
     }
 }

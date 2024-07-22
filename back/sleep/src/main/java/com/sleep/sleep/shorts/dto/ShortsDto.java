@@ -1,11 +1,9 @@
 package com.sleep.sleep.shorts.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortsDto {

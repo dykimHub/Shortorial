@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.dto;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.*;
 
 @ToString
@@ -11,7 +12,7 @@ public class ShortsStatsDto {
     int recordedShortsNum;
     int uploadedShortsNum;
 
-    // @QueryProjection
+    @QueryProjection
     @Builder
     public ShortsStatsDto(int triedShortsNum, int recordedShortsNum, int uploadedShortsNum) {
         this.triedShortsNum = triedShortsNum;

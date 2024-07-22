@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
+@ToString
 @With
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

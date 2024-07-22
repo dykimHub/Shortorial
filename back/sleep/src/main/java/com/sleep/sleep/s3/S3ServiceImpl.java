@@ -1,13 +1,11 @@
 package com.sleep.sleep.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
+import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
 import jakarta.transaction.Transactional;
@@ -99,6 +97,19 @@ public class S3ServiceImpl implements S3Service {
 
         // 업로드된 S3 객체(파일)의 Key
         return findS3Object(fileName).getKey();
+    }
+
+    /**
+     * 해당 key에 해당하는 S3 객체를 삭제
+     *
+     * @param s3key S3 객체의 key
+     * @return 삭제에 성공하면 SuccessResponse 객체를 반환함
+     */
+    @Override
+    public SuccessResponse deleteRecordedShortsFromS3(String s3key) {
+        findS3Object(s3key);
+        amazonS3.deleteObject(new DeleteObjectRequest(bucketName, s3key));
+        return SuccessResponse.of("회원이 녹화한 쇼츠가 S3에서 삭제되었습니다.");
     }
 
 

@@ -31,7 +31,7 @@ public interface ShortsService {
 
     SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifiedShortsDto modifiedShortsDto);
 
-    SuccessResponse deleteRecordedShorts(int recordedShortsId);
+    SuccessResponse deleteRecordedShorts(String S3key);
 
     Shorts findShorts(int shortsId);
 

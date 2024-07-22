@@ -23,7 +23,7 @@ public class Shorts {
     private int shortsTime;
 
     // 쇼츠 제목
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String shortsTitle;
 
     // 쇼츠 음악 제목
@@ -38,11 +38,11 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsSource;
 
-    @Column(nullable = false, unique = true, name = "shorts_s3key")
+    @Column(name = "shorts_s3key", length = 1024, nullable = false)
     private String shortsS3Key;
 
     // 쇼츠 s3 링크
-    @Column(nullable = false, name = "shorts_s3url")
+    @Column(name = "shorts_s3url", length = 1024, nullable = false)
     private String shortsS3URL;
 
     // 시도한 쇼츠

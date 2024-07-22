@@ -1,10 +1,10 @@
 package com.sleep.sleep.shorts.repository;
 
-import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sleep.sleep.member.entity.QMember;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.QRecordedShorts;
 import com.sleep.sleep.shorts.entity.QShorts;
@@ -113,63 +113,28 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     }
 
     /**
-     * 1. TriedShorts 리스트를 member로 필터링하여 카운트 함
-     * 2. RecordedShorts 리스트를 member로 필터링하여 카운트하고, YoutubeURL이 있는 객체는 별도로 카운트하여 튜플로 반환함
-     * 3. ShortsStatsDto 객체를 생성할 때 반영함
-     * 복수 쿼리라서 일관성이 부족할 수 있음
-     * 서브 쿼리 방식과 달리 member DB를 조회하지 않아도 되고, 녹화된 쇼츠 DB를 2번 조회하지 않아도 됨
+     * 1. tried_shorts에서 해당 member index를 조회하고 count하는 서브쿼리를 보냄
+     * 2. recorded_shorts에서 해당 member index를 조회하고 count하는 서브쿼리를 보냄
+     * 3. recorded_shorts에서 해당 member index에 youtubeURL이 null이 아닌 행을 조회하고 count하는 서브쿼리를 보냄
      *
      * @param memberIndex 특정 id의 회원
      */
     @Override
     public ShortsStatsDto findShortsStatsDto(int memberIndex) {
-        QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
+        QMember qMember = QMember.member;
         QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
 
-        int triedShortsNum = queryFactory.select(qTriedShorts.count().intValue())
-                .from(qTriedShorts)
-                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
+        return queryFactory.select(new QShortsStatsDto(
+                        qMember.triedShortsList.size(),
+                        qMember.recordedShortsList.size(),
+                        JPAExpressions.select(qRecordedShorts.count().intValue())
+                                .from(qRecordedShorts)
+                                .where(qRecordedShorts.member.memberIndex.eq(memberIndex)
+                                        .and(qRecordedShorts.recordedShortsYoutubeURL.isNotNull()))))
+                .from(qMember)
+                .where(qMember.memberIndex.eq(memberIndex))
                 .fetchOne();
-
-        Tuple tuple = queryFactory.select(
-                        qRecordedShorts.count().intValue(),
-                        new CaseBuilder()
-                                .when(qRecordedShorts.recordedShortsYoutubeURL.isNotNull())
-                                .then(1)
-                                .otherwise(0)
-                                .sum().coalesce(0))
-                .from(qRecordedShorts)
-                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
-                .fetchOne();
-
-        return ShortsStatsDto.builder()
-                .triedShortsNum(triedShortsNum)
-                .recordedShortsNum(tuple.get(0, Integer.class))
-                .uploadedShortsNum(tuple.get(1, Integer.class))
-                .build();
-
-//        각 테이블을 서브 쿼리로 조회해서 단일 쿼리로 불러오는 방식으로 일관성을 유지
-//        SQL 문법 상으로는 from, where 절이 필요없는데 QueryDSL 문법 상 필요해서 불필요한 로직을 수행함
-
-//        return queryFactory
-//                .select(new QShortsStatsDto(
-//                        JPAExpressions.select(qTriedShorts.count().intValue())
-//                                .from(qTriedShorts)
-//                                .where(qTriedShorts.member.eq(member)),
-//                        JPAExpressions.select(qRecordedShorts.count().intValue())
-//                                .from(qRecordedShorts)
-//                                .where(qRecordedShorts.member.eq(member)),
-//                        JPAExpressions.select(qRecordedShorts.count().intValue())
-//                                .from(qRecordedShorts)
-//                                .where(qRecordedShorts.member.eq(member)
-//                                        .and(qRecordedShorts.recordedShortsYoutubeURL.isNotNull()))
-//                ))
-//                .from(qMember)
-//                .where(qMember.eq(member))
-//                .fetchOne();
-
 
     }
-
 
 }

@@ -40,6 +40,7 @@ out/
 *.properties
 *.yaml
 *.node_modules
+*.sql
 
 back/upload/node_modules/
 
