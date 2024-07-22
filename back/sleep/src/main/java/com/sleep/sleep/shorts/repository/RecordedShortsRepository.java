@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, Integer> {
@@ -20,5 +21,8 @@ public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, 
     @Modifying
     @Query("UPDATE RecordedShorts r SET r.recordedShortsTitle = :newRecordedShortsTitle WHERE r.recordedShortsId = :recordedShortsId")
     void modifyRecordedShortsTitle(int recordedShortsId, String newRecordedShortsTitle);
+
+    @Query("SELECT r FROM RecordedShorts r WHERE r.recordedShortsS3key = :S3key")
+    Optional<RecordedShorts> findByRecordedShortsByS3key(String S3key);
 
 }

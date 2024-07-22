@@ -109,9 +109,9 @@ public class ShortsController {
     }
 
     @Operation(summary = "회원이 녹화한 쇼츠 삭제")
-    @DeleteMapping("/recorded/{recordedShortsId}")
-    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int recordedShortsId) {
-        SuccessResponse successResponse = shortsService.deleteRecordedShorts(recordedShortsId);
+    @DeleteMapping("/recorded")
+    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
+        SuccessResponse successResponse = shortsService.deleteRecordedShorts(map.get("s3key"));
         return ResponseEntity.ok()
                 .body(successResponse);
     }

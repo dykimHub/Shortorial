@@ -53,7 +53,7 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public List<ShortsDto> findShortsList() {
         List<ShortsDto> shortsDtoList = shortsRepository.findShortsList();
-        if (shortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
+        if (shortsDtoList == null || shortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
 
         return shortsDtoList;
     }
@@ -233,16 +233,17 @@ public class ShortsServiceImpl implements ShortsService {
     /**
      * RecordedShorts 객체의 삭제를 시도하면 is_deleted 열을 1로 변환함
      *
-     * @param recordedShortsId 삭제할 RecordedShorts 객체의 id
+     * @param S3key 삭제할 RecordedShorts 객체의 S3 key
      * @return 삭제에 성공하면 SuccessResponse 객체를 반환함
      */
     @Transactional
     @Override
-    public SuccessResponse deleteRecordedShorts(int recordedShortsId) {
-        RecordedShorts recordedShorts = findRecordedShorts(recordedShortsId);
+    public SuccessResponse deleteRecordedShorts(String S3key) {
+        RecordedShorts recordedShorts = recordedShortsRepository.findByRecordedShortsByS3key(S3key)
+                .orElseThrow(() -> new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND));
         recordedShortsRepository.deleteById(recordedShorts.getRecordedShortsId());
 
-        return SuccessResponse.of("녹화된 쇼츠가 삭제되었습니다.");
+        return SuccessResponse.of("회원이 녹화한 쇼츠가 삭제되었습니다.");
     }
 
     /**
