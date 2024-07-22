@@ -6,15 +6,16 @@ import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ShortsRepositoryCustom {
 
-    List<ShortsDto> findShortsList();
+    Optional<List<ShortsDto>> findShortsList();
 
-    List<ShortsDto> findPopularShortsList();
+    Optional<List<ShortsDto>> findPopularShortsList();
 
-    List<TriedShortsDto> findTriedShortsList(int memberIndex);
+    Optional<List<TriedShortsDto>> findTriedShortsList(int memberIndex);
 
-    ShortsStatsDto findShortsStatsDto(int memberIndex);
+    Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex);
 }

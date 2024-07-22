@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface TriedShortsRepository extends JpaRepository<TriedShorts, Integer> {
 
@@ -17,7 +19,14 @@ public interface TriedShortsRepository extends JpaRepository<TriedShorts, Intege
 //    @EntityGraph(attributePaths = {"shorts.triedShortsList"})
 //    @Query("SELECT t FROM TriedShorts t WHERE t.member = :member")
 //    List<TriedShorts> findTriedShortsList(Member member);
+
+    /**
+     * 회원 id, 쇼츠 id 복합 unique key를 이용하여 회원이 시도한 쇼츠 객체를 반환
+     *
+     * @param memberIndex 특정 회원의 id
+     * @param shortsId    특정 쇼츠의 id
+     */
     @Query("SELECT t FROM TriedShorts t WHERE t.member.memberIndex = :memberIndex AND t.shorts.shortsId = :shortsId")
-    TriedShorts findTriedShorts(int memberIndex, int shortsId);
+    Optional<TriedShorts> findTriedShorts(int memberIndex, int shortsId);
 
 }

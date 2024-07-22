@@ -18,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class ShortsServiceImpl implements ShortsService {
     public ShortsDto findShortsDto(int shortsId) {
         Shorts shorts = findShorts(shortsId);
         return convertToShortsDto(shorts);
+
     }
 
 
@@ -52,10 +55,8 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findShortsList() {
-        List<ShortsDto> shortsDtoList = shortsRepository.findShortsList();
-        if (shortsDtoList == null || shortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND);
-
-        return shortsDtoList;
+        return shortsRepository.findShortsList()
+                .orElseThrow(() -> new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND));
     }
 
     /**
@@ -66,10 +67,8 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
-        List<ShortsDto> popularShortsDtoList = shortsRepository.findPopularShortsList();
-        if (popularShortsDtoList.isEmpty()) throw new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND);
-
-        return popularShortsDtoList;
+        return shortsRepository.findPopularShortsList()
+                .orElseThrow(() -> new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND));
 
     }
 
@@ -84,11 +83,9 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsStatsDto findShortsStats(String accessToken) {
         Member member = memberService.findMemberEntity(accessToken);
-        ShortsStatsDto shortsStatsDto = shortsRepository.findShortsStatsDto(member.getMemberIndex());
 
-        if (shortsStatsDto == null) throw new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND);
-
-        return shortsStatsDto;
+        return shortsRepository.findShortsStatsDto(member.getMemberIndex())
+                .orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND));
     }
 
     /**
@@ -103,10 +100,13 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
 
         return shortsRepository.findTriedShortsList(member.getMemberIndex())
-                .stream()
-                // UST -> KST 변경
-                .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
-                .toList();
+//                map 메서드는 Optinal 비어있으면 변환 작업을 수행하지 않음
+//                각 시간대별 변환을 프론트 라이브러리가 처리
+//                .map(tlist -> tlist.stream()
+//                        .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
+//                        .toList())
+                .orElse(Collections.emptyList());
+
     }
 
     /**
@@ -123,23 +123,21 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
         Shorts shorts = findShorts(shortsId);
 
-        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId());
-
-        if (triedShorts != null) {
-            triedShorts.updateTriedShortsDate();
-            triedShortsRepository.save(triedShorts);
+        Optional<TriedShorts> triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId());
+        if (triedShorts.isPresent()) {
+            TriedShorts existingTriedShorts = triedShorts.get();
+            existingTriedShorts.updateTriedShortsDate();
+            triedShortsRepository.save(existingTriedShorts);
             return SuccessResponse.of("이미 시도한 쇼츠입니다. 시도한 날짜를 변경합니다.");
+        } else {
+            TriedShorts newTriedShorts = TriedShorts.builder()
+                    .member(member)
+                    .shorts(shorts)
+                    .build();
 
+            triedShortsRepository.save(newTriedShorts);
+            return SuccessResponse.of("회원이 시도한 쇼츠에 추가되었습니다.");
         }
-
-        TriedShorts newTriedShorts = TriedShorts.builder()
-                .member(member)
-                .shorts(shorts)
-                .build();
-
-        triedShortsRepository.save(newTriedShorts);
-
-        return SuccessResponse.of("회원이 시도한 쇼츠에 추가되었습니다.");
     }
 
     /**
@@ -156,8 +154,8 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
         Shorts shorts = findShorts(shortsId);
 
-        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId());
-        if (triedShorts == null) throw new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND);
+        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId())
+                .orElseThrow(() -> new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND));
 
         triedShortsRepository.delete(triedShorts);
 
@@ -175,9 +173,10 @@ public class ShortsServiceImpl implements ShortsService {
         Member member = memberService.findMemberEntity(accessToken);
 
         return recordedShortsRepository.findByRecordedShortsList(member.getMemberIndex())
-                .stream()
-                .map(this::convertToRecordedShortsDto)
-                .toList();
+                .map(rlist -> rlist.stream()
+                        .map(this::convertToRecordedShortsDto)
+                        .toList())
+                .orElse(Collections.emptyList());
     }
 
     /**
@@ -222,8 +221,10 @@ public class ShortsServiceImpl implements ShortsService {
         RecordedShorts recordedShorts = findRecordedShorts(modifiedShortsDto.getRecordedShortsId());
         Member member = memberService.findMemberEntity(accessToken);
 
-        boolean isTitleExists = recordedShortsRepository.existsByRecordedShortsTitle(member.getMemberIndex(), modifiedShortsDto.getNewRecordedShortsTitle());
-        if (isTitleExists) throw new CustomException(ExceptionCode.EXISTED_RECORDED_SHORTS_TITLE);
+        recordedShortsRepository.findByRecordedShortsTitle(member.getMemberIndex(), modifiedShortsDto.getNewRecordedShortsTitle())
+                .ifPresent(r -> {
+                    throw new CustomException(ExceptionCode.EXISTED_RECORDED_SHORTS_TITLE);
+                });
 
         recordedShortsRepository.modifyRecordedShortsTitle(recordedShorts.getRecordedShortsId(), modifiedShortsDto.getNewRecordedShortsTitle());
 
@@ -241,6 +242,7 @@ public class ShortsServiceImpl implements ShortsService {
     public SuccessResponse deleteRecordedShorts(String S3key) {
         RecordedShorts recordedShorts = recordedShortsRepository.findByRecordedShortsByS3key(S3key)
                 .orElseThrow(() -> new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND));
+
         recordedShortsRepository.deleteById(recordedShorts.getRecordedShortsId());
 
         return SuccessResponse.of("회원이 녹화한 쇼츠가 삭제되었습니다.");
@@ -309,9 +311,8 @@ public class ShortsServiceImpl implements ShortsService {
                 .recordedShortsTitle(recordedShorts.getRecordedShortsTitle())
                 .recordedShortsS3key(recordedShorts.getRecordedShortsS3key())
                 .recordedShortsS3URL(recordedShorts.getRecordedShortsS3URL())
-                // UST -> KST 변경을 리액트 moment 라이브러리가 처리
+                // 각 시간대별 변환을 프론트 라이브러리가 처리
                 .recordedShortsDate(recordedShorts.getRecordedShortsDate())
-                // UST -> KST 변경
                 //.recordedShortsDate(recordedShorts.getRecordedShortsDate().plusHours(9))
                 .recordedShortsYoutubeURL(recordedShorts.getRecordedShortsYoutubeURL())
                 .build();

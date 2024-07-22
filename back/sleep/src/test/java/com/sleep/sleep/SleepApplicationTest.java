@@ -14,14 +14,12 @@ import com.sleep.sleep.shorts.service.ShortsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.util.Random;
 import java.util.UUID;
 
-@Sql("/data.sql")
-@ActiveProfiles("test")
+//@Sql("/data.sql")
+//@ActiveProfiles("test")
 @SpringBootTest
 class SleepApplicationTest {
 
@@ -68,7 +66,7 @@ class SleepApplicationTest {
             int shortsId = random.nextInt(shortsNum) + 1;
             Shorts shorts = shortsRepository.findById(shortsId).orElseThrow();
 
-            if (triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId()) != null) continue;
+            if (triedShortsRepository.findTriedShorts(memberIndex, shortsId).isPresent()) continue;
 
             TriedShorts newTriedShorts = TriedShorts.builder()
                     .member(member)
