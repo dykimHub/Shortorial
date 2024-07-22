@@ -24,7 +24,7 @@ public class JwtTokenUtil {
     private String SECRET_KEY;
 
     public Claims extractAllClaims(String token) { // 2
-        log.info("extractAllClasims, token: "+token.toString());
+        //log.info("extractAllClasims, token: "+token.toString());
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey(SECRET_KEY))
                 .build()
