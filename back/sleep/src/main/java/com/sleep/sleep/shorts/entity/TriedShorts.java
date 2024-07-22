@@ -14,6 +14,8 @@ import java.time.ZoneOffset;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "tried_shorts",
+        // 특정 사용자가 시도한 특정 쇼츠는 unique 한 값이므로 복합 unique key 설정
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"member_no", "shorts_id"})},
         // 회원이 시도한 쇼츠를 조회할 때 where, orderby 절에서 사용하는 두 컬럼을 복합 인덱스로 형성
         indexes = {@Index(name = "idx_member_date", columnList = "member_no, tried_shorts_date")}
 )
