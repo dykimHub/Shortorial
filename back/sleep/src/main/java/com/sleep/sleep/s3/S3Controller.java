@@ -1,5 +1,6 @@
 package com.sleep.sleep.s3;
 
+import com.sleep.sleep.exception.SuccessResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +31,20 @@ public class S3Controller {
     }
 
     @Operation(summary = "회원이 녹화한 쇼츠를 S3에 업로드")
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<String> addRecordedShortsToS3(@RequestHeader("Authorization") String accessToken, @RequestParam("file") MultipartFile file) throws IOException {
         String recordedShortsS3Key = s3Service.addRecordedShortsToS3(accessToken, file);
         return ResponseEntity.ok()
                 .body(recordedShortsS3Key);
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠를 S3에서 삭제")
+    @DeleteMapping
+    public ResponseEntity<SuccessResponse> deleteRecordedShortsFromS3(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
+        System.out.println(map);
+        SuccessResponse successResponse = s3Service.deleteRecordedShortsFromS3(map.get("s3key"));
+        return ResponseEntity.ok()
+                .body(successResponse);
     }
 
 }
