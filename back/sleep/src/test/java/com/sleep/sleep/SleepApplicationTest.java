@@ -4,8 +4,10 @@ import com.sleep.sleep.member.dto.JoinDto;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.repository.MemberRepository;
 import com.sleep.sleep.member.service.MemberService;
+import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
+import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import com.sleep.sleep.shorts.service.ShortsService;
@@ -13,13 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.util.Random;
+import java.util.UUID;
 
+@Sql("/data.sql")
 @ActiveProfiles("test")
 @SpringBootTest
 class SleepApplicationTest {
 
+    private final int memberNum = 1000;
+    private final int shortsNum = 15;
+    private final Random random = new Random();
     @Autowired
     MemberService memberService;
     @Autowired
@@ -30,13 +38,18 @@ class SleepApplicationTest {
     ShortsRepository shortsRepository;
     @Autowired
     TriedShortsRepository triedShortsRepository;
+    @Autowired
+    RecordedShortsRepository recordedShortsRepository;
 
     @Test
     void setUp() {
-        /**
-         * 테스트 데이터베이스에 회원 1천 명 추가
-         */
-        for (int i = 1; i <= 1000; i++) {
+        addMembers();
+        addTriedShorts(5000);
+        addRecordedShorts(5000);
+    }
+
+    private void addMembers() {
+        for (int i = 1; i <= memberNum; i++) {
             String memberId = "member" + i;
             String memberPass = "pass" + i;
             String memberNickname = "nickname" + i;
@@ -45,18 +58,17 @@ class SleepApplicationTest {
             memberService.join(joinDto);
         }
 
-        /**
-         * 5,000개의 랜덤한 TriedShorts 객체를 생성하여 테스트 데이터베이스에 추가
-         */
-        Random random;
-        for (int i = 1; i <= 5000; i++) {
-            random = new Random();
+    }
 
-            int memberId = random.nextInt(1000) + 1;
-            int shortsId = random.nextInt(15) + 1;
+    private void addTriedShorts(int count) {
+        for (int i = 1; i <= count; i++) {
+            int memberIndex = random.nextInt(memberNum) + 1;
+            Member member = memberRepository.findById(memberIndex).orElseThrow();
 
-            Member member = memberRepository.findById(memberId).orElseThrow();
+            int shortsId = random.nextInt(shortsNum) + 1;
             Shorts shorts = shortsRepository.findById(shortsId).orElseThrow();
+
+            if (triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId()) != null) continue;
 
             TriedShorts newTriedShorts = TriedShorts.builder()
                     .member(member)
@@ -65,6 +77,25 @@ class SleepApplicationTest {
 
             triedShortsRepository.save(newTriedShorts);
         }
+
+    }
+
+    private void addRecordedShorts(int count) {
+        for (int i = 1; i <= count; i++) {
+            int memberIndex = random.nextInt(memberNum) + 1;
+            Member member = memberRepository.findById(memberIndex).orElseThrow();
+
+            RecordedShorts recordedShorts = RecordedShorts.builder()
+                    .recordedShortsTitle(UUID.randomUUID().toString())
+                    .recordedShortsS3key(UUID.randomUUID().toString())
+                    .recordedShortsS3URL(UUID.randomUUID().toString())
+                    .member(member)
+                    .build();
+
+            recordedShortsRepository.save(recordedShorts);
+
+        }
+
     }
 
 }

@@ -1,17 +1,18 @@
 package com.sleep.sleep.shorts.repository;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sleep.sleep.shorts.dto.QShortsDto;
-import com.sleep.sleep.shorts.dto.QTriedShortsDto;
-import com.sleep.sleep.shorts.dto.TriedShortsDto;
+import com.sleep.sleep.member.entity.QMember;
+import com.sleep.sleep.shorts.dto.*;
+import com.sleep.sleep.shorts.entity.QRecordedShorts;
 import com.sleep.sleep.shorts.entity.QShorts;
 import com.sleep.sleep.shorts.entity.QTriedShorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,7 +22,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Slf4j
-@TestMethodOrder(MethodOrderer.MethodName.class)
 @ActiveProfiles("test")
 @SpringBootTest
 class ShortsRepositoryTest {
@@ -30,6 +30,8 @@ class ShortsRepositoryTest {
 
     @Autowired
     private JPAQueryFactory queryFactory;
+    @Autowired
+    private RecordedShortsRepository recordedShortsRepository;
 
     @DisplayName("특정 회원의 TriedShorts 목록을 DTO 형식으로 조회")
     @Test
@@ -79,6 +81,62 @@ class ShortsRepositoryTest {
 
         assertNotNull(triedShortsList);
         log.info("{}번 회원이 시도한 쇼츠 수: {}개", memberIndex, triedShortsList.size());
+
+    }
+
+    @DisplayName("쇼츠 통계 항목을 단일 쿼리로 계산")
+    @Test
+    void findShortsStatsDto_SingleQueryVer() {
+        QMember qMember = QMember.member;
+        QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
+
+        ShortsStatsDto shortsStatsDto = queryFactory.select(new QShortsStatsDto(
+                        qMember.triedShortsList.size(),
+                        qMember.recordedShortsList.size(),
+                        JPAExpressions.select(qRecordedShorts.count().intValue())
+                                .from(qRecordedShorts)
+                                .where(qRecordedShorts.member.memberIndex.eq(memberIndex)
+                                        .and(qRecordedShorts.recordedShortsYoutubeURL.isNotNull()))))
+                .from(qMember)
+                .where(qMember.memberIndex.eq(memberIndex))
+                .fetchOne();
+
+
+        log.info("{}번 회원의 쇼츠 통계 -> {}", memberIndex, shortsStatsDto);
+
+    }
+
+    @DisplayName("쇼츠 통계 항목을 개별 쿼리로 계산")
+    @Test
+    void findShortsStatsDto_IndividualQueryVer() {
+        QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
+        QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
+
+        int triedShortsNum = queryFactory.select(qTriedShorts
+                        .count().intValue())
+                .from(qTriedShorts)
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
+                .fetchOne();
+
+        Tuple tuple = queryFactory.select(
+                        qRecordedShorts.count().intValue(),
+                        new CaseBuilder()
+                                .when(qRecordedShorts.recordedShortsYoutubeURL.isNotNull())
+                                .then(1)
+                                .otherwise(0)
+                                .sum().coalesce(0))
+                .from(qRecordedShorts)
+                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
+                .fetchOne();
+
+        ShortsStatsDto shortsStatsDto = ShortsStatsDto.builder()
+                .triedShortsNum(triedShortsNum)
+                .recordedShortsNum(tuple.get(0, Integer.class))
+                .uploadedShortsNum(tuple.get(1, Integer.class))
+                .build();
+
+        log.info("{}번 회원의 쇼츠 통계 -> {}", memberIndex, shortsStatsDto);
+
 
     }
 
