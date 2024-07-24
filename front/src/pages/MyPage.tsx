@@ -9,7 +9,7 @@ export default function MyPage() {
   const [currentTab, clickTab] = useState(0);
 
   const menuArr = [
-    { name: "업로드", content: <UploadList /> },
+    { name: "녹화", content: <UploadList /> },
     { name: "참여", content: <TryList /> },
   ];
 
@@ -43,37 +43,20 @@ export default function MyPage() {
 }
 const OutSide = styled.div`
   position: relative;
-  /* height: 100%; */
-  // background: linear-gradient(
-  //   180deg,
-  //   rgba(0, 0, 0, 1) 0%,
-  //   rgba(48, 13, 45, 1) 80%,
-  //   rgba(112, 0, 102, 1) 100%
-  // );
+  padding: 36px;
 `;
 const MypageContainer = styled.div`
   display: flex;
-  margin-right: 20px; /* 오른쪽 마진을 20px로 설정 */
-  margin-left: 20px; /* 왼쪽 마진을 20px로 설정 */
-  padding-top: 80px;
-  height: 100%;
-  flex-direction: column; /* 세로로 나열 */
-
-  @media screen and (orientation: landscape) {
-    margin-right: 15%; /* 오른쪽 마진을 20px로 설정 */
-    margin-left: 15%; /* 왼쪽 마진을 20px로 설정 */
-  }
+  flex-direction: column;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-top: 70px;
 `;
 
 const ProfileContainer = styled.div`
-  height: 96px;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
-
-  @media screen and (orientation: landscape) {
-    padding-right: 15%; /* 오른쪽 마진을 20px로 설정 */
-    padding-left: 15%; /* 왼쪽 마진을 20px로 설정 */
-  }
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
 `;
 
 const TabMenu = styled.div`
@@ -85,12 +68,10 @@ const TabMenu = styled.div`
   text-align: center;
 
   .submenu {
-    // 기본 Tabmenu 에 대한 CSS를 구현
-
     display: flex;
     justify-content: center;
     height: 3rem;
-    align-items: center; /* 수직 가운데 정렬 */
+    align-items: center;
     width: calc(100% / 2);
     padding-bottom: 5px;
     font-size: 15px;
@@ -102,8 +83,6 @@ const TabMenu = styled.div`
   }
 
   .focused {
-    //선택된 Tabmenu 에만 적용되는 CSS를 구현
-
     border: 2px solid #fb2576;
     border-radius: 20px 20px 0px 0px;
     background: #fb2576;
