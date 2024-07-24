@@ -23,7 +23,7 @@ export function getDuplicateCheck(cate: string, input: string) {
 // 회원가입
 export function signUp(id: string, pass: string, nickname: string) {
   try {
-    console.log("signup");
+    //console.log("signup");
     const response = axios
       .post(REST_MEMBER_URL + `/join`, {
         memberId: id,
@@ -31,7 +31,7 @@ export function signUp(id: string, pass: string, nickname: string) {
         memberNickname: nickname,
       })
       .then((res) => {
-        console.log("AA");
+        //console.log("AA");
         return res.data;
       });
     return response;

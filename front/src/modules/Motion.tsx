@@ -5,10 +5,7 @@ import {
   FilesetResolver,
 } from "@mediapipe/tasks-vision";
 import { useDomStore, useMotionDetectionStore } from "../store/useMotionStore";
-import {
-  useMotionLandmarkStore,
-  useVideoLandmarkStore,
-} from "../store/useAccStore";
+import { useMotionLandmarkStore, useVideoLandmarkStore } from "../store/useAccStore";
 // 버튼 모션에 활용되는 함수
 let visible_count = 0;
 let timer_count = 0;
@@ -63,17 +60,12 @@ export function btn_with_landmark_challenge(
     handLandmarkerX >= visibleBtnSize.left &&
     handLandmarker.visibility > 0.5
   ) {
-    if (
-      handLandmarkerY >= visibleBtnSize.top &&
-      handLandmarkerY <= visibleBtnSize.bottom
-    ) {
+    if (handLandmarkerY >= visibleBtnSize.top && handLandmarkerY <= visibleBtnSize.bottom) {
       if (visible_count >= SMALL_COUNT) {
         setBtn("visible");
       } else {
         visible_count++;
-        useMotionDetectionStore
-          .getState()
-          .setVisibleCount((visible_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setVisibleCount((visible_count / SMALL_COUNT) * 100);
         timer_count = 0;
         useMotionDetectionStore.getState().setTimerCount(0);
         record_count = 0;
@@ -96,9 +88,7 @@ export function btn_with_landmark_challenge(
         visible_count = 0;
         useMotionDetectionStore.getState().setVisibleCount(0);
         timer_count++;
-        useMotionDetectionStore
-          .getState()
-          .setTimerCount((timer_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setTimerCount((timer_count / SMALL_COUNT) * 100);
         record_count = 0;
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
@@ -121,9 +111,7 @@ export function btn_with_landmark_challenge(
         timer_count = 0;
         useMotionDetectionStore.getState().setTimerCount(0);
         record_count++;
-        useMotionDetectionStore
-          .getState()
-          .setRecordCount((record_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setRecordCount((record_count / SMALL_COUNT) * 100);
         save_count = 0;
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
@@ -163,9 +151,7 @@ export function btn_with_landmark_challenge(
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
         learn_count++;
-        useMotionDetectionStore
-          .getState()
-          .setLearnCount((learn_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setLearnCount((learn_count / SMALL_COUNT) * 100);
         rslt_count = 0;
         useMotionDetectionStore.getState().setResultCount(0);
       }
@@ -188,9 +174,7 @@ export function btn_with_landmark_challenge(
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
         rslt_count++;
-        useMotionDetectionStore
-          .getState()
-          .setResultCount((rslt_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setResultCount((rslt_count / SMALL_COUNT) * 100);
       }
     }
   } else {
@@ -230,9 +214,7 @@ function btn_with_landmark_learn(
         // console.log("B");
         setBtn("none");
         play_count++;
-        useMotionDetectionStore
-          .getState()
-          .setPlayCount((play_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setPlayCount((play_count / SMALL_COUNT) * 100);
         challenge_count = 0;
         useMotionDetectionStore.getState().setChallengeCount(0);
         repeat_count = 0;
@@ -256,9 +238,7 @@ function btn_with_landmark_learn(
         play_count = 0;
         useMotionDetectionStore.getState().setPlayCount(0);
         challenge_count++;
-        useMotionDetectionStore
-          .getState()
-          .setChallengeCount((challenge_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setChallengeCount((challenge_count / SMALL_COUNT) * 100);
         repeat_count = 0;
         useMotionDetectionStore.getState().setRepeatCount(0);
         flip_count = 0;
@@ -282,9 +262,7 @@ function btn_with_landmark_learn(
         challenge_count = 0;
         useMotionDetectionStore.getState().setChallengeCount(0);
         repeat_count++;
-        useMotionDetectionStore
-          .getState()
-          .setRepeatCount((repeat_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setRepeatCount((repeat_count / SMALL_COUNT) * 100);
         flip_count = 0;
         useMotionDetectionStore.getState().setFlipCount(0);
         speed_count = 0;
@@ -292,11 +270,7 @@ function btn_with_landmark_learn(
         canvas_count = 0;
         useMotionDetectionStore.getState().setCanvasCount(0);
       }
-    } else if (
-      flipSize &&
-      handLandmarkerY >= flipSize.top &&
-      handLandmarkerY <= flipSize.bottom
-    ) {
+    } else if (flipSize && handLandmarkerY >= flipSize.top && handLandmarkerY <= flipSize.bottom) {
       if (flip_count >= SMALL_COUNT) {
         setBtn("flip");
       } else {
@@ -308,9 +282,7 @@ function btn_with_landmark_learn(
         repeat_count = 0;
         useMotionDetectionStore.getState().setRepeatCount(0);
         flip_count++;
-        useMotionDetectionStore
-          .getState()
-          .setFlipCount((flip_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setFlipCount((flip_count / SMALL_COUNT) * 100);
         speed_count = 0;
         useMotionDetectionStore.getState().setSpeedCount(0);
         canvas_count = 0;
@@ -334,9 +306,7 @@ function btn_with_landmark_learn(
         flip_count = 0;
         useMotionDetectionStore.getState().setFlipCount(0);
         speed_count++;
-        useMotionDetectionStore
-          .getState()
-          .setSpeedCount((speed_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setSpeedCount((speed_count / SMALL_COUNT) * 100);
         canvas_count = 0;
         useMotionDetectionStore.getState().setCanvasCount(0);
       }
@@ -360,9 +330,7 @@ function btn_with_landmark_learn(
         speed_count = 0;
         useMotionDetectionStore.getState().setFlipCount(0);
         canvas_count++;
-        useMotionDetectionStore
-          .getState()
-          .setCanvasCount((canvas_count / SMALL_COUNT) * 100);
+        useMotionDetectionStore.getState().setCanvasCount((canvas_count / SMALL_COUNT) * 100);
       }
     }
   } else {
@@ -390,10 +358,7 @@ function action_with_landmark(
   maxY: number,
   setAction: (newAction: string) => void
 ) {
-  if (
-    before_handLandmarker.visibility > 0.5 &&
-    curr_handmarker.visibility > 0.5
-  ) {
+  if (before_handLandmarker.visibility > 0.5 && curr_handmarker.visibility > 0.5) {
     if (
       before_handLandmarker.y > minY &&
       before_handLandmarker.y < maxY &&
@@ -464,14 +429,7 @@ export async function predictWebcam(
   setBtn: (newBtn: string) => void,
   setAction?: (newAction: string) => void
 ) {
-  if (
-    !webcam ||
-    !poseLandmarker ||
-    !canvasCtx ||
-    !canvasElement ||
-    !drawingUtils
-  )
-    return;
+  if (!webcam || !poseLandmarker || !canvasCtx || !canvasElement || !drawingUtils) return;
   const startTimeMs = performance.now();
   if (lastWebcamTime !== webcam.currentTime) {
     lastWebcamTime = webcam.currentTime;
@@ -502,13 +460,7 @@ export async function predictWebcam(
         const minY = landmark[11].y;
         const maxY = (landmark[23].y + landmark[11].y) / 2;
         if (setAction) {
-          action_with_landmark(
-            before_handmarker,
-            curr_handmarker,
-            minY,
-            maxY,
-            setAction
-          );
+          action_with_landmark(before_handmarker, curr_handmarker, minY, maxY, setAction);
         }
         before_handmarker = curr_handmarker;
       }
@@ -576,13 +528,7 @@ export async function predictWebcamChallenge(
         const minY = landmark[11].y;
         const maxY = (landmark[23].y + landmark[11].y) / 2;
         if (setAction) {
-          action_with_landmark(
-            before_handmarker,
-            curr_handmarker,
-            minY,
-            maxY,
-            setAction
-          );
+          action_with_landmark(before_handmarker, curr_handmarker, minY, maxY, setAction);
         }
         before_handmarker = curr_handmarker;
       }
@@ -642,7 +588,7 @@ function btnPlace(id: string): DOMRect | undefined {
   const btnElement = document.getElementById(id);
   const btnRect = btnElement?.getBoundingClientRect();
 
-  console.log(`${id}`, btnRect);
+  //console.log(`${id}`, btnRect);
   return btnRect;
 }
 

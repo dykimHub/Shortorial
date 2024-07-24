@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Pause, PlayArrow, Close } from "@mui/icons-material";
+import { Pause, PlayArrow, Close, MusicNote } from "@mui/icons-material";
 import { Skeleton } from "@mui/material";
 import { RecomShorts, Shorts } from "../../constants/types";
 import { MouseEvent, useRef, useState } from "react";
@@ -9,7 +9,7 @@ interface ShortsVideoPrpos {
   isLoading?: boolean;
   isSerise?: boolean;
   onClick?: () => void;
-  triedShortsId?: number;
+  shortsId?: number;
   onDelete?: (id: number) => void;
 }
 
@@ -18,7 +18,7 @@ const ShortsVideoItem = ({
   isLoading,
   isSerise,
   onClick,
-  triedShortsId,
+  shortsId,
   onDelete,
 }: ShortsVideoPrpos) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -50,7 +50,7 @@ const ShortsVideoItem = ({
         shortsInfo && (
           <VideoContainer className={isSerise ? "serise" : ""} onClick={onClick}>
             <VideoBox>
-              <Video ref={videoRef} src={shortsInfo.shortsS3Link} crossOrigin="anonymous" />
+              <Video ref={videoRef} src={shortsInfo.shortsS3URL} crossOrigin="anonymous" />
               <Gradient className="gradient" />
               <PlayButton onClick={handlePlayButtonClick}>
                 {!isPlaying ? (
@@ -59,12 +59,12 @@ const ShortsVideoItem = ({
                   <Pause sx={{ color: "white" }} />
                 )}
               </PlayButton>
-              {triedShortsId && (
+              {shortsId && (
                 <CloseButton
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onDelete && triedShortsId !== undefined) {
-                      onDelete(triedShortsId);
+                    if (onDelete && shortsId !== undefined) {
+                      onDelete(shortsId);
                     }
                   }}
                 />
@@ -72,6 +72,10 @@ const ShortsVideoItem = ({
             </VideoBox>
             <DetailsContainer>
               <div className="title">{shortsInfo.shortsTitle}</div>
+              <div className="detail">
+                <MusicNote fontSize="small" />
+                {shortsInfo.shortsMusicTitle}
+              </div>
               {/* <div className="detail">챌린저 {shortsInfo.shortsChallengerNum}명</div> */}
             </DetailsContainer>
           </VideoContainer>
