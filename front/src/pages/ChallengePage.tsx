@@ -17,12 +17,14 @@ import {
   Save,
   Movie,
 } from "@mui/icons-material";
-import { postUploadShorts, getShortsInfo, getS3Blob, shorts } from "../apis/shorts";
+import { getShortsInfo } from "../apis/shorts";
+import { uploadShortsToS3, getS3Blob } from "../apis/s3";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
 import StarEffect from "../components/style/StarEffect";
+import { Shorts } from "../constants/types";
 
 const ChallengePage = () => {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ const ChallengePage = () => {
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
 
-  const [short, setShort] = useState<shorts | null>(null);
+  const [short, setShort] = useState<Shorts | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [danceVideoPath, setDanceVideoPath] = useState<string>("");
@@ -55,11 +57,11 @@ const ChallengePage = () => {
 
   const loadDanceVideo = async () => {
     // 댄스비디오 s3 url
-    const thisShort = await getShortsInfo(`${params.shortsNo}`);
+    const thisShort = await getShortsInfo(`${params.shortsId}`);
 
     setShort(thisShort);
     if (thisShort) {
-      setDanceVideoPath(thisShort.shortsLink); // 쇼츠 s3 링크
+      setDanceVideoPath(thisShort.shortsS3URL); // 쇼츠 s3 링크
     } else {
       alert("새로고침 해주세요.");
     }
@@ -75,7 +77,7 @@ const ChallengePage = () => {
 
   const goToLearnMode = () => {
     stream?.getTracks().forEach((track) => track.stop());
-    if (short) navigate(`/learn/${short.shortsNo}`);
+    if (short) navigate(`/learn/${short.shortsId}`);
   };
 
   const goToResult = () => {
@@ -123,8 +125,8 @@ const ChallengePage = () => {
       recorder.onstop = async () => {
         let s3blob: Blob | null = null;
         if (short) {
-          s3blob = await getS3Blob(short.shortsNo); // 쇼츠 블롭화
-          console.log("s3blob:", s3blob);
+          s3blob = await getS3Blob(short.shortsS3Key); // 쇼츠 블롭화
+          //console.log("s3blob:", s3blob);
         }
         if (!ffmpeg.isLoaded()) {
           await ffmpeg.load(); // ffmpeg 로드
@@ -245,9 +247,8 @@ const ChallengePage = () => {
 
   const s3Upload = async (blob: Blob) => {
     try {
-      const title = getCurrentDateTime();
-      await postUploadShorts(blob, title);
-
+      //const title = getCurrentDateTime();
+      await uploadShortsToS3(blob);
       setLoadPath(complete);
       setFfmpegLog("저장 완료");
       //console.log("s3 upload success", uploadResponse.data);
@@ -257,18 +258,6 @@ const ChallengePage = () => {
       setFfmpegLog("저장 실패");
       console.error("s3 upload fail", error);
     }
-  };
-
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // 월은 0부터 시작하므로 1을 더합니다.
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-
-    return `${year}${month}${day}${hours}${minutes}${seconds}`;
   };
 
   // 타이머
@@ -337,13 +326,13 @@ const ChallengePage = () => {
         case "landscape-secondary":
           videoRef.current.height = window.innerHeight;
           videoRef.current.width = Math.floor((window.innerHeight * 9) / 16);
-          console.log(videoRef.current.height, videoRef.current.width);
+          //console.log(videoRef.current.height, videoRef.current.width);
           break;
         case "portrait-primary":
         case "portrait-secondary":
           videoRef.current.width = window.innerWidth;
           videoRef.current.height = Math.floor((window.innerWidth * 16) / 9);
-          console.log(videoRef.current.height, videoRef.current.width);
+        //console.log(videoRef.current.height, videoRef.current.width);
       }
     }
   };
