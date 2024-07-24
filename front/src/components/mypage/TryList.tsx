@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTryShorts, deleteTriedShorts } from "../../apis/mypage";
+import { getTryShorts, deleteTriedShorts, getTryCount } from "../../apis/triedshorts";
 import styled, { keyframes } from "styled-components";
 import ShortsVideoItem from "../shorts/ShortsVideoItem";
 import {
@@ -8,6 +8,7 @@ import {
   EmojiPeople,
   MusicNote,
   TimerOutlined,
+  Mic,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { Shorts, TryShorts } from "../../constants/types";
@@ -33,10 +34,12 @@ export default function TryList() {
   };
 
   const goToLearnMode = (shortsNo: number) => {
+    getTryCount(shortsNo);
     navigate(`/learn/${shortsNo}`);
   };
 
   const goToChallengeMode = (shortsNo: number) => {
+    getTryCount(shortsNo);
     navigate(`/challenge/${shortsNo}`);
   };
 
@@ -46,8 +49,8 @@ export default function TryList() {
     if (data) settryShortsList(data);
   };
 
-  const handleDeleteButton = async (triedShortsId: number) => {
-    await deleteTriedShorts(triedShortsId);
+  const handleDeleteButton = async (shortsId: number) => {
+    await deleteTriedShorts(shortsId);
     loadtryShortsList();
   };
 
@@ -75,7 +78,7 @@ export default function TryList() {
                   shortsInfo={tryShorts.shortsDto}
                   isLoading={isLoading}
                   onClick={openModal(tryShorts.shortsDto)}
-                  triedShortsId={tryShorts.triedShortsId}
+                  shortsId={tryShorts.shortsDto.shortsId}
                   onDelete={handleDeleteButton}
                 />
               ))
@@ -96,7 +99,11 @@ export default function TryList() {
                 text={`${selectedShorts.shortsMusicTitle}`}
                 fontSize="18px"
               ></Detail>
-
+              <Detail
+                icon={<Mic />}
+                text={`${selectedShorts.shortsMusicSinger}`}
+                fontSize="18px"
+              ></Detail>
               <Detail
                 icon={<TimerOutlined />}
                 text={`${selectedShorts.shortsTime}초`}
@@ -114,7 +121,6 @@ export default function TryList() {
               </Detail>
             </div>
           </Details>
-
           <ButtonContainer>
             <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsId)}>
               연습모드
@@ -136,12 +142,12 @@ const Container = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
-  background: white;
+  background-color: rgba(251, 37, 118, 0.1);
 `;
 
 const Section = styled.section`
   position: relative;
-  margin: 16px;
+  margin: 0px 16px;
   box-sizing: border-box;
 `;
 

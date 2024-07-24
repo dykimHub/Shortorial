@@ -26,7 +26,7 @@ const LoadingComponent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 3px solid black;
+  border: 2px solid rgba(251, 37, 118, 0.5);
   padding: 15px;
 `;
 

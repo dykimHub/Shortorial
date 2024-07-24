@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { 
-  //RecomShorts, 
-  Shorts } from "../constants/types";
+import {
+  //RecomShorts,
+  Shorts,
+} from "../constants/types";
 import {
   //getRecommendedShorts,
   getShortsList,
   getTopRankingShorts,
-  getTryCount,
 } from "../apis/shorts";
+import { getTryCount } from "../apis/triedshorts";
 import Header from "../components/header/Header";
 import ShortsVideoItem from "../components/shorts/ShortsVideoItem";
 import {
@@ -18,6 +19,7 @@ import {
   EmojiPeople,
   MusicNote,
   TimerOutlined,
+  Mic,
 } from "@mui/icons-material";
 
 const MainPage = () => {
@@ -149,7 +151,11 @@ const MainPage = () => {
                 text={`${selectedShorts.shortsMusicTitle}`}
                 fontSize="18px"
               ></Detail>
-
+              <Detail
+                icon={<Mic />}
+                text={`${selectedShorts.shortsMusicSinger}`}
+                fontSize="18px"
+              ></Detail>
               <Detail
                 icon={<TimerOutlined />}
                 text={`${selectedShorts.shortsTime}초`}
@@ -167,7 +173,6 @@ const MainPage = () => {
               </Detail>
             </div>
           </Details>
-
           <ButtonContainer>
             <RouteButton onClick={() => goToLearnMode(selectedShorts.shortsId)}>
               연습모드
