@@ -1,19 +1,13 @@
 import { create } from "zustand";
-import { UploadShorts, shorts } from "../apis/shorts";
+import { Countings } from "../constants/types";
 
 interface MyPageStore {
-  uploadedShorts: UploadShorts[];
-  tryShorts: shorts[];
-  setUploadedShorts: (data: UploadShorts[]) => void;
-  setTryShorts: (data: shorts[]) => void;
+  countings: Countings;
+  setCountings: (data: Countings) => void;
 }
 
 const useMypageStore = create<MyPageStore>((set) => ({
-  uploadedShorts: [], // 업로드한 동영상 리스트
-  tryShorts: [], // 시도한 영상 리스트
-  // 업로드한 동영상 리스트 업데이트
-  setUploadedShorts: (data: UploadShorts[]) => set({ uploadedShorts: data }),
-  // 시도한 영상 리스트 업데이트
-  setTryShorts: (data: shorts[]) => set({ tryShorts: data }),
+  countings: { triedShortsNum: 0, recordedShortsNum: 0, uploadedShortsNum: 0 },
+  setCountings: (data: Countings) => set({ countings: data }),
 }));
 export default useMypageStore;

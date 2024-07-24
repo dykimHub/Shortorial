@@ -1,108 +1,92 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Check, Create, Delete, Download, IosShare, YouTube } from "@mui/icons-material";
+import { Edit, EditOff, Close, Download, IosShare, YouTube } from "@mui/icons-material";
 import {
-  UploadShorts,
   updateTitle,
-  getMyS3Blob,
-  shareShorts,
-  getFilePath,
+  //getMyS3Blob,
   deleteShorts,
-  checkTitle,
-} from "../../apis/shorts";
+} from "../../apis/recordedshorts";
+import { getFilePath, shareShorts } from "../../apis/s3";
+import { UploadShorts } from "../../constants/types";
+import moment from "moment";
 
 interface UploadComponentProps {
   uploadShorts: UploadShorts;
-  onDelete: (uploadNo: number) => void;
+  onDelete: () => void;
 }
 
 const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
-  // 제목에서 '/' 이후의 부분을 추출하는 함수
-  const extractTitle = (fullTitle: string): string => {
-    const titleParts = fullTitle.split("/");
-    return titleParts.length > 1 ? titleParts[1] : fullTitle;
-  };
-
-  const [title, setTitle] = useState<string>(extractTitle(uploadShorts.uploadTitle));
+  const [title, setTitle] = useState<string>(uploadShorts.recordedShortsTitle);
   const [modify, setModify] = useState<boolean>(false);
   const [download, setDownload] = useState<boolean>(false);
   const [share, setShare] = useState<boolean>(false);
-  const [link, setLink] = useState<string | null>(uploadShorts.youtubeUrl || null);
-
-  const titleCanbeModified = () => setModify(true);
-  const titleCanNotbeModified = () => setModify(false);
-  const startDownload = () => setDownload(true);
-  const completeDownload = () => setDownload(false);
+  //const [link, setLink] = useState<string | null>(uploadShorts.recordedShortsYoutubeUrl || null);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
-  const deleteUploadedShorts = async () => {
-    const deletingShorts = new Map<string, string>();
-    deletingShorts.set("uploadNo", String(uploadShorts.uploadNo));
-    deletingShorts.set("title", uploadShorts.uploadTitle);
-
-    await deleteShorts(deletingShorts);
-    onDelete(uploadShorts.uploadNo); // 삭제 후 상위 컴포넌트에 uploadNo 전달
+  const deleteUploadedShorts = async (recordedShortsS3key: string) => {
+    alert("복구할 수 없습니다. 그래도 삭제하시겠습니까?");
+    await deleteShorts(recordedShortsS3key);
+    onDelete();
   };
 
-  const saveTitle = async () => {
-    const result = await checkTitle(title);
-    if (!result) {
+  const saveTitle = async (recordedShortsId: number, title: string) => {
+    //const result = await checkTitle(title);
+    if (title.includes("/")) {
+      alert("제목에 슬래시(/)를 포함할 수 없습니다.");
+      return;
+    }
+
+    const modifyingShorts = {
+      recordedShortsId: recordedShortsId,
+      newRecordedShortsTitle: title,
+    };
+
+    const data = await updateTitle(modifyingShorts);
+    if (data) {
       setTitle(title);
-      titleCanNotbeModified();
-
-      const updatingShorts = new Map<string, string>();
-      updatingShorts.set("oldTitle", uploadShorts.uploadTitle);
-      updatingShorts.set("newTitle", title);
-
-      await updateTitle(updatingShorts, uploadShorts.uploadNo);
-    } else {
-      alert("이미 존재하는 타이틀입니다.");
       setModify(false);
-      setTitle(extractTitle(uploadShorts.uploadTitle));
     }
   };
 
-  const downloadVideo = async () => {
-    startDownload();
+  // const downloadVideo = async () => {
+  //   startDownload();
 
-    try {
-      const videoBlob = await getMyS3Blob(uploadShorts.uploadNo);
-      const downloadUrl = URL.createObjectURL(videoBlob);
+  //   try {
+  //     const videoBlob = await getMyS3Blob(uploadShorts.recordedShortsId);
+  //     const downloadUrl = URL.createObjectURL(videoBlob);
 
-      const downloadLink = document.createElement("a");
-      downloadLink.href = downloadUrl;
-      downloadLink.setAttribute("download", `${title}.mp4`);
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
+  //     const downloadLink = document.createElement("a");
+  //     downloadLink.href = downloadUrl;
+  //     downloadLink.setAttribute("download", `${uploadShorts.recordedShortsTitle}.mp4`);
+  //     document.body.appendChild(downloadLink);
+  //     downloadLink.click();
 
-      document.body.removeChild(downloadLink);
-      URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      alert("다운로드에 실패했습니다.");
-      console.log(err);
-    } finally {
-      completeDownload();
-    }
-  };
+  //     document.body.removeChild(downloadLink);
+  //     URL.revokeObjectURL(downloadUrl);
+  //   } catch (err) {
+  //     alert("다운로드에 실패했습니다.");
+  //     console.log(err);
+  //   } finally {
+  //     completeDownload();
+  //   }
+  // };
 
   const shareShortsToYoutube = async () => {
     setShare(true);
 
-    const filePath = await getFilePath(uploadShorts.uploadNo);
-    await shareShorts(filePath, uploadShorts.uploadNo);
+    const filePath = await getFilePath(uploadShorts.recordedShortsId);
+    await shareShorts(filePath, uploadShorts.recordedShortsId);
   };
 
-  useEffect(() => {
-    console.log(uploadShorts);
-
-    if (uploadShorts.youtubeUrl) {
-      setLink(uploadShorts.youtubeUrl);
-      setShare(false);
-    }
-  }, [uploadShorts]);
+  // useEffect(() => {
+  //   if (uploadShorts.recordedShortsYoutubeUrl) {
+  //     setLink(uploadShorts.recordedShortsYoutubeUrl);
+  //     setShare(false);
+  //   }
+  // }, [uploadShorts]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -122,47 +106,43 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     <ResultContainer>
       <VideoContainer>
         <Gradient className="gradient" />
-        <Video crossOrigin="anonymous" src={uploadShorts.uploadUrl} controls></Video>
+        <Video src={uploadShorts.recordedShortsS3URL} controls crossOrigin="anonymous"></Video>
         <MyVideoControlComponent>
-          {!download && <DownloadIcon onClick={downloadVideo} fontSize="large"></DownloadIcon>}
+          <CloseIcon
+            onClick={() => deleteUploadedShorts(uploadShorts.recordedShortsS3key)}
+          ></CloseIcon>
+          {/* {!download && <DownloadIcon onClick={downloadVideo}></DownloadIcon>}
           {download && (
             <DownloadingIcon src="../src/assets/mypage/downloading.gif"></DownloadingIcon>
-          )}
-          {!share && !link && (
-            <IosShareIcon onClick={shareShortsToYoutube} fontSize="large"></IosShareIcon>
-          )}
-          {!share && link && (
+          )} */}
+          <IosShareIcon onClick={shareShortsToYoutube}></IosShareIcon>
+          {uploadShorts.recordedShortsYoutubeURL && (
             <YoutubeIcon
-              fontSize="large"
-              onClick={() => (window.location.href = link)}
+              onClick={() => (window.location.href = uploadShorts.recordedShortsYoutubeURL)}
             ></YoutubeIcon>
           )}
           {share && <SharingIcon src="../src/assets/mypage/downloading.gif"></SharingIcon>}
-          <DeleteIcon fontSize="large" onClick={deleteUploadedShorts}></DeleteIcon>
         </MyVideoControlComponent>
       </VideoContainer>
       {!modify && (
         <TitleContainer>
           <Title>{title}</Title>
-          <ModifyIcon onClick={titleCanbeModified}></ModifyIcon>
+          <ModifyIcon onClick={() => setModify(true)}></ModifyIcon>
         </TitleContainer>
       )}
       {modify && (
         <TitleContainer>
-          <InputBox
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="제목을 입력하세요."
-          />
-          <CheckIcon onClick={saveTitle}></CheckIcon>
+          <InputBox type="text" value={title} onChange={handleTitleChange} />
+          <CheckIcon onClick={() => saveTitle(uploadShorts.recordedShortsId, title)}></CheckIcon>
         </TitleContainer>
       )}
+      <div className="date">{moment(uploadShorts.recordedShortsDate).format("MMM DD, hA")}</div>
     </ResultContainer>
   );
 };
 
 const ResultContainer = styled.div`
+  display: flex;
   flex-direction: column;
 
   position: relative;
@@ -178,12 +158,17 @@ const ResultContainer = styled.div`
   @media screen and (min-width: 600px) {
     max-width: var(--grid-item-max-width);
   }
+
+  .date {
+    margin-right: auto;
+  }
 `;
 
 const VideoContainer = styled.div`
   display: flex;
   position: relative;
 `;
+
 const Gradient = styled.div`
   position: absolute;
   bottom: 5px;
@@ -195,6 +180,7 @@ const Gradient = styled.div`
   opacity: 0;
   transition: opacity 0.2s;
 `;
+
 const Video = styled.video`
   width: 100%;
   border-radius: 12px;
@@ -203,68 +189,80 @@ const Video = styled.video`
 
 const MyVideoControlComponent = styled.div`
   position: absolute;
-  right: 0;
   display: flex;
   flex-direction: column;
+  right: 5px;
+  top: 8px;
 `;
 
-const DownloadIcon = styled(Download)`
-  cursor: pointer;
-`;
+// const DownloadIcon = styled(Download)`
+//   cursor: pointer;
+// `;
 
-const DownloadingIcon = styled.img`
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
-`;
+// const DownloadingIcon = styled.img`
+//   cursor: pointer;
+// `;
 
 const IosShareIcon = styled(IosShare)`
   cursor: pointer;
+  margin-bottom: 5px;
 `;
 
 const SharingIcon = styled.img`
   cursor: pointer;
-  width: 40px;
-  height: 40px;
+  margin-bottom: 5px;
 `;
 
 const YoutubeIcon = styled(YouTube)`
   cursor: pointer;
+  margin-bottom: 5px;
+  color: red;
 `;
 
-const DeleteIcon = styled(Delete)`
+const CloseIcon = styled(Close)`
   cursor: pointer;
+  margin-bottom: 5px;
 `;
 
 const TitleContainer = styled.div`
   display: flex;
-  justify-content: center;
+  //justify-content: center;
   position: relative;
 `;
 
 const Title = styled.div`
-  font-size: 20px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 24px;
+  line-height: 24px;
+  font-size: 16px;
+  font-weight: bold;
+  padding-right: 1.4rem;
 `;
 
-const ModifyIcon = styled(Create)`
+const ModifyIcon = styled(Edit)`
   position: absolute;
   cursor: pointer;
   right: 0;
+  bottom: 0;
 `;
 
 const InputBox = styled.input`
-  width: 100%;
   border: 0;
-  border-radius: 15px;
   outline: none;
-  padding-left: 10px;
-  background-color: rgb(233, 233, 233);
-  font-size: 20px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 16px;
+  overflow: hidden;
+  padding-right: 2rem;
 `;
 
-const CheckIcon = styled(Check)`
+const CheckIcon = styled(EditOff)`
   position: absolute;
-  right: 10px;
+  right: 0px;
+  bottom: 0px;
   cursor: pointer;
 `;
 

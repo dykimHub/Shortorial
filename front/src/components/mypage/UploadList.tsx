@@ -1,40 +1,52 @@
 import { useEffect, useState } from "react";
 import { UploadShorts } from "../../constants/types";
-import { getUploadedShorts } from "../../apis/mypage";
+import { getUploadedShorts } from "../../apis/recordedshorts";
+import { getCounting } from "../../apis/shorts";
+import useMypageStore from "../../store/useMypageStore";
 import styled from "styled-components";
 import UploadComponent from "./UploadComponent";
 
 export default function UploadList() {
-  const [shortsList, setShortsList] = useState<UploadShorts[]>([]);
+  const [uploadedShortsList, setUploadedShortsList] = useState<UploadShorts[]>([]);
+  const { setCountings } = useMypageStore();
 
-  const getShorts = async () => {
-    try {
-      const data = await getUploadedShorts();
-      setShortsList(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
+  // const getRecordedShorts = async () => {
+  //   try {
+  //     const data = await getUploadedShorts();
+  //     setShortsList(data);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   }
+  // };
+
+  const handleDeleteShort = async () => {
+    await loadRecordedShortsList();
+    const countings = await getCounting();
+    setCountings(countings);
   };
 
-  const handleDeleteShort = (recordedShortsId: number) => {
-    setShortsList((prevList) =>
-      prevList.filter((short) => short.recordedShortsId !== recordedShortsId)
-    );
+  const loadRecordedShortsList = async () => {
+    const data = await getUploadedShorts();
+    if (data) setUploadedShortsList(data);
   };
 
   useEffect(() => {
-    getShorts();
+    loadRecordedShortsList();
   }, []);
+
+  // useEffect(() => {
+  //   getRecordedShorts();
+  // }, []);
 
   return (
     <Container>
       <SectionWrapper>
         <Section>
           <SectionConents>
-            {shortsList.length === 0 ? (
+            {uploadedShortsList.length === 0 ? (
               <P>저장한 영상이 없습니다</P>
             ) : (
-              shortsList.map((uploadShorts) => (
+              uploadedShortsList.map((uploadShorts) => (
                 <UploadComponent
                   key={uploadShorts.recordedShortsId}
                   uploadShorts={uploadShorts}
@@ -57,12 +69,12 @@ const Container = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
-  background: white;
+  background-color: rgba(251, 37, 118, 0.1);
 `;
 
 const Section = styled.section`
   position: relative;
-  margin: 16px;
+  margin: 0px 16px;
   box-sizing: border-box;
 `;
 
