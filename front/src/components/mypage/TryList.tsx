@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTryShorts, deleteTriedShorts, getTryCount } from "../../apis/triedshorts";
+import { getCounting } from "../../apis/shorts";
+import useMypageStore from "../../store/useMypageStore";
 import styled, { keyframes } from "styled-components";
 import ShortsVideoItem from "../shorts/ShortsVideoItem";
 import {
@@ -20,6 +22,8 @@ export default function TryList() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [tryShortsList, settryShortsList] = useState<TryShorts[]>([]);
+
+  const { setCountings } = useMypageStore();
 
   const openModal = (shorts: Shorts) => {
     return () => {
@@ -43,7 +47,6 @@ export default function TryList() {
     navigate(`/challenge/${shortsNo}`);
   };
 
-  // 둘러보기 쇼츠 리스트 가져오기
   const loadtryShortsList = async () => {
     const data = await getTryShorts();
     if (data) settryShortsList(data);
@@ -52,17 +55,19 @@ export default function TryList() {
   const handleDeleteButton = async (shortsId: number) => {
     await deleteTriedShorts(shortsId);
     loadtryShortsList();
+    const countings = await getCounting();
+    setCountings(countings);
+  };
+
+  const loadtriedShortsList = async () => {
+    const data = await getTryShorts();
+    if (data) settryShortsList(data);
+    setIsLoading(false);
   };
 
   useEffect(() => {
-    loadtryShortsList();
+    loadtriedShortsList();
   }, []);
-
-  useEffect(() => {
-    if (tryShortsList) {
-      setIsLoading(false);
-    }
-  }, [tryShortsList]);
 
   return (
     <Container>
