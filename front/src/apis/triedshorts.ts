@@ -14,8 +14,8 @@ export async function getTryShorts() {
     });
 
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -24,7 +24,7 @@ export async function getTryCount(shortsId: number) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const response = await axios.post(
+    const res = await axios.post(
       `${REST_TRIED_SHORTS_URL}/${shortsId}`,
       {},
       {
@@ -34,9 +34,9 @@ export async function getTryCount(shortsId: number) {
       }
     );
 
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -52,7 +52,7 @@ export async function deleteTriedShorts(shortsId: number) {
     });
 
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }

@@ -7,8 +7,8 @@ export const getShortsList = async () => {
   try {
     const res = await axios.get(REST_SHORTS_URL);
     return res.data;
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 };
 
@@ -17,8 +17,8 @@ export const getShortsInfo = async (shortsId: string) => {
   try {
     const res = await axios.get(`${REST_SHORTS_URL}/${shortsId}`);
     return res.data;
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 };
 
@@ -27,8 +27,8 @@ export async function getTopRankingShorts() {
   try {
     const res = await axios.get(`${REST_SHORTS_URL}/rank`);
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -43,11 +43,9 @@ export async function getCounting() {
       },
     });
 
-    //const countingsData: Countings = response.data;
-
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 

@@ -1,4 +1,6 @@
+import { ModifyingShorts } from "../constants/types";
 import { axios } from "../utils/axios";
+import { deleteShortsFromS3 } from "./s3.ts";
 
 const REST_RECORDED_SHORTS_URL = "/api/shorts/recorded";
 
@@ -14,8 +16,8 @@ export async function getUploadedShorts() {
     });
 
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -35,90 +37,49 @@ export async function uploadShortsToDB(s3key: string) {
     );
 
     return res.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+// 회원이 녹화한 쇼츠 제목 수정
+export async function updateTitle(modifyingShorts: ModifyingShorts) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+
+    const res = await axios.put(`${REST_RECORDED_SHORTS_URL}`, modifyingShorts, {
+      headers: {
+        Authorization: token,
+      },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    if (error.response.data.code === "SHORTS_006") {
+      alert(`${error.response.data.message}`);
+    }
   }
 }
 
 // 저장된 쇼츠 삭제
-export async function deleteShorts(deletingShorts: Map<string, string>) {
+export async function deleteShorts(s3key: string) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const deletingShortsObj = Object.fromEntries(deletingShorts);
+    console.log(s3key);
 
-    const res = await axios.delete(`${REST_RECORDED_SHORTS_URL}/delete`, {
+    const res = await axios.delete(`${REST_RECORDED_SHORTS_URL}`, {
       headers: {
         Authorization: token,
       },
-      data: deletingShortsObj,
+      data: {
+        s3key: s3key,
+      },
     });
 
-    return res.data;
-  } catch (error) {
-    console.error("Error Deleting data:", error);
+    return deleteShortsFromS3(s3key);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
-
-// 동영상 파일 이름 중복검사
-// export async function checkTitle(title: string) {
-//   try {
-//     const token = "Bearer " + localStorage.getItem("accessToken");
-
-//     const data = {
-//       title: title,
-//     };
-
-//     const response = await axios.post(`${REST_SHORTS_URL}/checkName`, data, {
-//       headers: {
-//         Authorization: token,
-//       },
-//     });
-//     // 이름이 존재하면 true, 존재하지 않으면 false를 반환
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error Renaming data:", error);
-//   }
-// }
-
-// 동영상 파일 이름 업데이트
-// export async function updateTitle(updatingShorts: Map<string, string>, uploadNo: number) {
-//   try {
-//     const token = "Bearer " + localStorage.getItem("accessToken");
-
-//     const updatingShortsObj = Object.fromEntries(updatingShorts);
-
-//     const data = await axios.put(`${REST_SHORTS_URL}/rename/${uploadNo}`, updatingShortsObj, {
-//       headers: {
-//         Authorization: token,
-//       },
-//     });
-
-//     return data.data;
-//   } catch (error) {
-//     console.error("Error Renaming data:", error);
-//   }
-// }
-
-//사용자가 저장한 쇼츠 이름 수정
-// export async function putUpdateTitle(oldTitle: string, newTitle: string, uploadNo: number) {
-//   try {
-//     const token = "Bearer " + localStorage.getItem("accessToken");
-
-//     const data = {
-//       uploadNo: uploadNo,
-//       oldTitle: oldTitle,
-//       newTitle: newTitle,
-//     };
-
-//     const response = await axios.put(`${REST_S3_URL}/rename`, data, {
-//       headers: {
-//         Authorization: token,
-//       },
-//     });
-
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
-//   }
-// }

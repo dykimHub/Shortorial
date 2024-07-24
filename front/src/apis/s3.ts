@@ -20,12 +20,12 @@ export async function getS3Blob(shortsS3Key: string) {
     );
 
     return res.data;
-  } catch (error) {
-    console.error("Error getS3Blob:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
-// S3에 동영상 업로드
+// S3에 녹화 쇼츠 업로드
 export async function uploadShortsToS3(blob: Blob) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
@@ -33,7 +33,7 @@ export async function uploadShortsToS3(blob: Blob) {
     const formData = new FormData();
     formData.append("file", blob, "blob.mp4");
 
-    const res = await axios.post(`${REST_S3_URL}/add`, formData, {
+    const res = await axios.post(`${REST_S3_URL}`, formData, {
       headers: {
         Authorization: token,
         "Content-Type": "multipart/form-data",
@@ -41,8 +41,28 @@ export async function uploadShortsToS3(blob: Blob) {
     });
 
     return uploadShortsToDB(res.data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+// S3에서 녹화 쇼츠 삭제
+export async function deleteShortsFromS3(s3key: string) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+
+    const res = await axios.delete(`${REST_S3_URL}`, {
+      headers: {
+        Authorization: token,
+      },
+      data: {
+        s3key: s3key,
+      },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -57,8 +77,8 @@ export async function shareShorts(filePath: string, uploadNo: number) {
     );
     // 서버에서 응답받은 authUrl로 이동
     window.location.href = response.data.authUrl;
-  } catch (error) {
-    console.error("Upload Error:", error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
 
@@ -98,7 +118,7 @@ export async function getFilePath(uploadNo: number) {
     );
 
     return data.data;
-  } catch (error) {
-    console.log("filePath error:" + error);
+  } catch (error: any) {
+    console.error(error.response.data);
   }
 }
