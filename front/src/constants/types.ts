@@ -39,10 +39,11 @@ export interface RecomShorts {
 
 export interface UploadShorts {
   recordedShortsId: number;
-  recordedShortS3Key: string;
+  recordedShortsS3key: string;
   recordedShortsS3URL: string;
   recordedShortsTitle: string;
-  recordedShortsYoutubeUrl: string;
+  recordedShortsYoutubeURL: string;
+  recordedShortsDate: Date;
 }
 
 export interface TryShorts {
@@ -55,4 +56,15 @@ export interface Countings {
   triedShortsNum: number;
   recordedShortsNum: number;
   uploadedShortsNum: number;
+}
+
+export interface ModifyingShorts {
+  recordedShortsId: number;
+  newRecordedShortsTitle: string;
+}
+
+export interface ErrorResponse {
+  status: string;
+  code: string;
+  message: string;
 }

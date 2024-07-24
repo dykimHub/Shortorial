@@ -55,16 +55,15 @@ const LearnPage = () => {
   const [state, setState] = useState<LearnState>("INIT");
 
   const [videoInfo, setVideoInfo] = useState<Shorts>({
-    shortsNo: 0,
-    shortsUrl: "",
-    shortsTitle: "",
-    shortsDirector: "",
+    shortsId: 0,
     shortsTime: 0,
-    shortsChallengers: 0,
-    shortsLink: "",
-    shortsDate: "",
-    musicName: "",
-    singerName: "",
+    shortsTitle: "",
+    shortsSource: "",
+    shortsChallengerNum: 0,
+    shortsS3Key: "",
+    shortsS3URL: "",
+    shortsMusicSinger: "",
+    shortsMusicTitle: "",
   });
 
   const [sectionList, setSectionList] = useState<VideoSection[]>([]);
@@ -113,8 +112,8 @@ const LearnPage = () => {
 
   // 영상 정보 가져오기
   const loadVideo = useCallback(async () => {
-    if (params.shortsNo) {
-      const data: Shorts = await getShortsInfo(params.shortsNo);
+    if (params.shortsId) {
+      const data: Shorts = await getShortsInfo(params.shortsId);
       if (data) {
         setVideoInfo(data);
         initSectionList(data.shortsTime);
@@ -307,6 +306,7 @@ const LearnPage = () => {
   // 화면의 준비가 모두 완료했을 때 실행
   useEffect(() => {
     if (state === "INIT") {
+      ``;
       if (videoInfo && sectionList && centerSectionRef) {
         initInterval();
       }
@@ -371,7 +371,7 @@ const LearnPage = () => {
         else pauseVideo();
         break;
       case "challenge":
-        if (state === "PAUSE") navigate(`/challenge/${params.shortsNo}`);
+        if (state === "PAUSE") navigate(`/challenge/${params.shortsId}`);
         break;
       case "repeat":
         if (state === "PAUSE") toggleLooping();
@@ -501,7 +501,7 @@ const LearnPage = () => {
               <video
                 width={videoSize.width}
                 height={videoSize.height}
-                src={videoInfo.shortsLink}
+                src={videoInfo.shortsS3URL}
                 ref={videoRef}
                 className={isFlipped ? "flip" : ""}
                 crossOrigin="anonymous"
@@ -574,7 +574,7 @@ const LearnPage = () => {
                     id="challenge"
                     icon={<Videocam />}
                     toolTip="챌린지 모드로 이동"
-                    link={`/challenge/${params.shortsNo}`}
+                    link={`/challenge/${params.shortsId}`}
                     progress={challengeCount}
                     isVisible={state === "PAUSE"}
                   />
