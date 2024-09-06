@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shortorial-pvc
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  # pv를 명시하지 않아도 pvc가 요구사항에 맞춰 pv를 생성
+  # deployment 지웠다가 다시 연결했을 때 이 pvc있으면 자동으로 기존 pv에 연결됨
+  # 즉 이 pvc 지우면 pv에 있는 DB 날아감
