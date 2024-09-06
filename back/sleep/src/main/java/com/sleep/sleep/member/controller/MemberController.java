@@ -8,7 +8,6 @@ import com.sleep.sleep.member.dto.MemberInfoDto;
 import com.sleep.sleep.member.dto.OriginLoginRequestDto;
 import com.sleep.sleep.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/member")

@@ -16,8 +16,6 @@ import com.sleep.sleep.member.dto.OriginLoginRequestDto;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.entity.MemberRole;
 import com.sleep.sleep.member.repository.MemberRepository;
-import com.sleep.sleep.shorts.repository.ShortsRepository;
-import com.sleep.sleep.shorts.service.ShortsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +26,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static com.sleep.sleep.common.JWT.JwtExpiration.REFRESH_TOKEN_EXPIRATION_TIME;
