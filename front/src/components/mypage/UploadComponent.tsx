@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import { Edit, EditOff, Close, Download, IosShare, YouTube } from "@mui/icons-material";
+import { Edit, EditOff, Close, Download } from "@mui/icons-material";
 import { updateTitle, deleteShorts } from "../../apis/recordedshorts";
 import { getS3Blob } from "../../apis/s3";
 import { UploadShorts } from "../../constants/types";

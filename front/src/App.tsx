@@ -8,10 +8,7 @@ import LoginForm from "./pages/LoginForm";
 import SignUp from "./pages/SignUpPage";
 import LearnPage from "./pages/LearnPage";
 import ChallengePage from "./pages/ChallengePage";
-import VideoTrimPage from "./pages/VideoTrimPage";
-import VideoMarkerPage from "./pages/VIdeoMarkerPage";
 import MyPage from "./pages/MyPage";
-import FeedPage from "./pages/FeedPage";
 
 function App() {
   return (
@@ -28,11 +25,8 @@ function App() {
             path="/challenge/:shortsId"
             element={<PrivateRoute component={<ChallengePage />} />}
           />
-          <Route path="/video-trim" element={<VideoTrimPage />} />
-          <Route path="/video-marker" element={<VideoMarkerPage />} />
           {/* <Route path="/video-resize" element={<VideoResizePage />} /> */}
           <Route path="/mypage" element={<MyPage />} />
-          <Route path="/feed" element={<FeedPage />} />
         </Routes>
       </BrowserRouter>
     </>

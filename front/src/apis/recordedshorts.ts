@@ -69,7 +69,7 @@ export async function deleteShorts(s3key: string) {
 
     console.log(s3key);
 
-    const res = await axios.delete(`${REST_RECORDED_SHORTS_URL}`, {
+    await axios.delete(`${REST_RECORDED_SHORTS_URL}`, {
       headers: {
         Authorization: token,
       },

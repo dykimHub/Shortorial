@@ -1,4 +1,4 @@
-import { axios, pyaxios } from "../utils/axios";
+import { axios } from "../utils/axios";
 
 const REST_SHORTS_URL = "/api/shorts";
 
