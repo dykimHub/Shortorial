@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Edit, EditOff, Close, Download, IosShare, YouTube } from "@mui/icons-material";
-import {
-  updateTitle,
-  //getMyS3Blob,
-  deleteShorts,
-} from "../../apis/recordedshorts";
-import { getFilePath, shareShorts } from "../../apis/s3";
+import { updateTitle, deleteShorts } from "../../apis/recordedshorts";
+import { getS3Blob } from "../../apis/s3";
 import { UploadShorts } from "../../constants/types";
 import moment from "moment";
 
@@ -19,7 +15,7 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
   const [title, setTitle] = useState<string>(uploadShorts.recordedShortsTitle);
   const [modify, setModify] = useState<boolean>(false);
   const [download, setDownload] = useState<boolean>(false);
-  const [share, setShare] = useState<boolean>(false);
+  //const [share, setShare] = useState<boolean>(false);
   //const [link, setLink] = useState<string | null>(uploadShorts.recordedShortsYoutubeUrl || null);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +29,6 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
   };
 
   const saveTitle = async (recordedShortsId: number, title: string) => {
-    //const result = await checkTitle(title);
     if (title.includes("/")) {
       alert("제목에 슬래시(/)를 포함할 수 없습니다.");
       return;
@@ -51,56 +46,49 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     }
   };
 
-  // const downloadVideo = async () => {
-  //   startDownload();
+  const downloadVideo = async () => {
+    setDownload(true);
 
-  //   try {
-  //     const videoBlob = await getMyS3Blob(uploadShorts.recordedShortsId);
-  //     const downloadUrl = URL.createObjectURL(videoBlob);
+    try {
+      const videoBlob = await getS3Blob(uploadShorts.recordedShortsS3key);
+      const downloadUrl = URL.createObjectURL(videoBlob);
 
-  //     const downloadLink = document.createElement("a");
-  //     downloadLink.href = downloadUrl;
-  //     downloadLink.setAttribute("download", `${uploadShorts.recordedShortsTitle}.mp4`);
-  //     document.body.appendChild(downloadLink);
-  //     downloadLink.click();
+      const downloadLink = document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.setAttribute("download", `${title}.mp4`);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
 
-  //     document.body.removeChild(downloadLink);
-  //     URL.revokeObjectURL(downloadUrl);
-  //   } catch (err) {
-  //     alert("다운로드에 실패했습니다.");
-  //     console.log(err);
-  //   } finally {
-  //     completeDownload();
-  //   }
-  // };
-
-  const shareShortsToYoutube = async () => {
-    setShare(true);
-
-    const filePath = await getFilePath(uploadShorts.recordedShortsId);
-    await shareShorts(filePath, uploadShorts.recordedShortsId);
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      alert("다운로드에 실패했습니다.");
+      console.log(err);
+    } finally {
+      setDownload(false);
+    }
   };
 
+  // const shareShortsToYoutube = async () => {
+  //   setShare(true);
+
+  //   const filePath = await getFilePath(uploadShorts.recordedShortsId);
+  //   await shareShorts(filePath, uploadShorts.recordedShortsId);
+  // };
+
   // useEffect(() => {
-  //   if (uploadShorts.recordedShortsYoutubeUrl) {
-  //     setLink(uploadShorts.recordedShortsYoutubeUrl);
-  //     setShare(false);
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const alertParam = urlParams.get("auth");
+
+  //   if (alertParam === "true") {
+  //     alert(
+  //       "유튜브 권한 설정이 완료되었습니다.\n공유 버튼을 누르면 채널에 비공개 동영상으로 업로드 됩니다."
+  //     );
+  //     urlParams.delete("auth");
+  //     const newUrl = window.location.pathname;
+  //     window.history.replaceState({}, document.title, newUrl);
   //   }
-  // }, [uploadShorts]);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const alertParam = urlParams.get("auth");
-
-    if (alertParam === "true") {
-      alert(
-        "유튜브 권한 설정이 완료되었습니다.\n공유 버튼을 누르면 채널에 비공개 동영상으로 업로드 됩니다."
-      );
-      urlParams.delete("auth");
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, []);
+  // }, []);
 
   return (
     <ResultContainer>
@@ -111,17 +99,17 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
           <CloseIcon
             onClick={() => deleteUploadedShorts(uploadShorts.recordedShortsS3key)}
           ></CloseIcon>
-          {/* {!download && <DownloadIcon onClick={downloadVideo}></DownloadIcon>}
+          {!download && <DownloadIcon onClick={downloadVideo}></DownloadIcon>}
           {download && (
             <DownloadingIcon src="../src/assets/mypage/downloading.gif"></DownloadingIcon>
-          )} */}
-          <IosShareIcon onClick={shareShortsToYoutube}></IosShareIcon>
+          )}
+          {/* <IosShareIcon onClick={shareShortsToYoutube}></IosShareIcon>
           {uploadShorts.recordedShortsYoutubeURL && (
             <YoutubeIcon
               onClick={() => (window.location.href = uploadShorts.recordedShortsYoutubeURL)}
             ></YoutubeIcon>
           )}
-          {share && <SharingIcon src="../src/assets/mypage/downloading.gif"></SharingIcon>}
+          {share && <SharingIcon src="../src/assets/mypage/downloading.gif"></SharingIcon>} */}
         </MyVideoControlComponent>
       </VideoContainer>
       {!modify && (
@@ -195,29 +183,33 @@ const MyVideoControlComponent = styled.div`
   top: 8px;
 `;
 
-// const DownloadIcon = styled(Download)`
+const DownloadIcon = styled(Download)`
+  cursor: pointer;
+  margin-bottom: 5px;
+`;
+
+const DownloadingIcon = styled.img`
+  cursor: pointer;
+  margin-bottom: 5px;
+  width: 30px;
+  height: 30px;
+`;
+
+// const IosShareIcon = styled(IosShare)`
 //   cursor: pointer;
+//   margin-bottom: 5px;
 // `;
 
-// const DownloadingIcon = styled.img`
+// const SharingIcon = styled.img`
 //   cursor: pointer;
+//   margin-bottom: 5px;
 // `;
 
-const IosShareIcon = styled(IosShare)`
-  cursor: pointer;
-  margin-bottom: 5px;
-`;
-
-const SharingIcon = styled.img`
-  cursor: pointer;
-  margin-bottom: 5px;
-`;
-
-const YoutubeIcon = styled(YouTube)`
-  cursor: pointer;
-  margin-bottom: 5px;
-  color: red;
-`;
+// const YoutubeIcon = styled(YouTube)`
+//   cursor: pointer;
+//   margin-bottom: 5px;
+//   color: red;
+// `;
 
 const CloseIcon = styled(Close)`
   cursor: pointer;
@@ -226,8 +218,8 @@ const CloseIcon = styled(Close)`
 
 const TitleContainer = styled.div`
   display: flex;
-  //justify-content: center;
   position: relative;
+  width: 100%;
 `;
 
 const Title = styled.div`
@@ -257,6 +249,7 @@ const InputBox = styled.input`
   font-size: 16px;
   overflow: hidden;
   padding-right: 2rem;
+  width: 100%;
 `;
 
 const CheckIcon = styled(EditOff)`

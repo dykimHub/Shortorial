@@ -425,8 +425,8 @@ const ChallengePage = () => {
           <Timer>{timer}</Timer>
         ) : (
           <RecordingComponent>
-            <Recording src={recordingImg} />
             <RecordingTEXT>REC</RecordingTEXT>
+            <Recording src={recordingImg} />
           </RecordingComponent>
         )}
         <VideoMotionButtonList>
@@ -562,6 +562,8 @@ const RecordingComponent = styled.div`
   top: 5%;
   left: 5%;
   display: flex;
+  align-items: center;
+  gap: 5px;
 `;
 
 const Recording = styled.img`
@@ -569,18 +571,16 @@ const Recording = styled.img`
   height: 15px;
   z-index: 1;
   animation: ${blinkEffect} 1s step-end infinite;
+  margin-right: 5px;
 `;
 
 const RecordingTEXT = styled.div`
-  width: 15px;
-  height: 15px;
-  z-index: 1;
-  margin-left: 13px;
   font-size: 15px;
   line-height: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 5px;
 `;
 
 const Timer = styled.div`

@@ -67,58 +67,37 @@ export async function deleteShortsFromS3(s3key: string) {
 }
 
 // 유튜브 업로드
-const youtubeUrl = import.meta.env.VITE_YOUTUBE_URL;
-export async function shareShorts(filePath: string, uploadNo: number) {
-  console.log(filePath);
+// const youtubeUrl = import.meta.env.VITE_YOUTUBE_URL;
+// export async function shareShorts(filePath: string, uploadNo: number) {
+//   console.log(filePath);
 
-  try {
-    const response = await axios.get(
-      `${youtubeUrl}/authenticate?filePath=${encodeURIComponent(filePath)}&uploadNo=${uploadNo}`
-    );
-    // 서버에서 응답받은 authUrl로 이동
-    window.location.href = response.data.authUrl;
-  } catch (error: any) {
-    console.error(error.response.data);
-  }
-}
+//   try {
+//     const response = await axios.get(
+//       `${youtubeUrl}/authenticate?filePath=${encodeURIComponent(filePath)}&uploadNo=${uploadNo}`
+//     );
+//     // 서버에서 응답받은 authUrl로 이동
+//     window.location.href = response.data.authUrl;
+//   } catch (error: any) {
+//     console.error(error.response.data);
+//   }
+// }
 
-// export async function getMyS3Blob(uploadNo: number) {
+// 유튜브 업로드용 임시 파일 url
+// export async function getFilePath(uploadNo: number) {
 //   try {
 //     const token = "Bearer " + localStorage.getItem("accessToken");
-
-//     const res = await axios.post(
-//       `${REST_S3_URL}/bring/myblob/${uploadNo}`,
+//     const data = await axios.post(
+//       `${REST_S3_URL}/save/${uploadNo}`,
 //       {},
 //       {
 //         headers: {
 //           Authorization: token,
 //         },
-//         responseType: "blob",
 //       }
 //     );
 
-//     return res.data;
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
+//     return data.data;
+//   } catch (error: any) {
+//     console.error(error.response.data);
 //   }
 // }
-
-// 유튜브 업로드용 임시 파일 url
-export async function getFilePath(uploadNo: number) {
-  try {
-    const token = "Bearer " + localStorage.getItem("accessToken");
-    const data = await axios.post(
-      `${REST_S3_URL}/save/${uploadNo}`,
-      {},
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
-
-    return data.data;
-  } catch (error: any) {
-    console.error(error.response.data);
-  }
-}
