@@ -58,10 +58,15 @@ spec:
             - name: database-config-volume
               mountPath: /etc/mysql/my.cnf # /etc/mysql/my.cnf 파일(mysql 설정파일)을 shortorial-database-config로 설정
               subPath: my.cnf
+            - name: shortorial-volume
+              mountPath: /var/lib/mysql # /var/lib/mysql(mysql이 컨테이너에 데이터를 저장하는 경로)를 외부 pv에 연결하여 영구 저장
       volumes: # my.cnf는 환경변수가 아니라 !파일!이라서 볼륨으로 설정안하면 적용 못함
         - name: database-config-volume
           configMap: # config map으로 설정 파일을 읽음
             name: shortorial-database-config
+        - name: shortorial-volume # pvc를 볼륨으로 설정
+          persistentVolumeClaim:
+            claimName: shortorial-pvc
           # resources:
           #   limits:
           #     memory: "128Mi"
