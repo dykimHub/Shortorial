@@ -17,11 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Clean npm cache # 캐시 정리
-        run: |
-          cd front
-          rm -rf node_modules package-lock.json
-          npm cache clean --force
 
       - name: Install Dependencies # npm install을 가볍게하는 npm ci
         run: |
