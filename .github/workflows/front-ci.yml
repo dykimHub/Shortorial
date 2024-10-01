@@ -18,10 +18,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies # npm install을 가볍게하는 npm ci
+      - name: Install Dependencies
         run: |
           cd front
-          npm ci
+          npm i
 
       - name: Build Project
         run: |
