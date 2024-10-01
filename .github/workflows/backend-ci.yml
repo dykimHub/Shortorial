@@ -25,6 +25,7 @@ jobs:
       - name: Build with Gradle
         run: |
           cd back/sleep
+          chmod +x ./gradlew  # gradlew 파일에 실행 권한 부여
           ./gradlew build
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
