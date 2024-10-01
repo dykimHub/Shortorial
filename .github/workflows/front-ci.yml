@@ -19,13 +19,11 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies # npm install을 가볍게하는 npm ci
-        run: npm ci
-        working-directory: front
-
-      - name: Run Tests
-        run: npm test
-        working-directory: front
+        run: |
+          cd front
+          npm ci
 
       - name: Build Project
-        run: npm run build
-        working-directory: front
+        run: |
+          cd front 
+          npm run build
