@@ -10,18 +10,18 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     hikari:
       idle-timeout: 300000
       max-lifetime: 1800000
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
     show_sql: false
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
   sql:
     init:
-      mode: always
+      mode: false
   output:
     ansi.enabled: always
   servlet:
