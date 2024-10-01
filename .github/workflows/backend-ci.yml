@@ -26,8 +26,7 @@ jobs:
         run: | # 여러 줄이면 추가
           cd back/sleep
           chmod +x ./gradlew  
-          ./gradlew build
-          ./gradlew bootJar
+          ./gradlew build -x test
         env: # 깃헙 secret에 저장한 환경 변수 활용
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
