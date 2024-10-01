@@ -13,9 +13,6 @@ jobs:
       - name: Checkout code # 코드 체크아웃
         uses: actions/checkout@v4
 
-      - name: Move to frontend directory
-        run: cd frontend
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -23,9 +20,12 @@ jobs:
 
       - name: Install Dependencies # npm install을 가볍게하는 npm ci
         run: npm ci
+        working-directory: front
 
       - name: Run Tests
         run: npm test
+        working-directory: front
 
       - name: Build Project
         run: npm run build
+        working-directory: front

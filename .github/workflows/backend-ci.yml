@@ -27,6 +27,7 @@ jobs:
           cd back/sleep
           chmod +x ./gradlew  
           ./gradlew build -x test
+        working-directory: back/sleep # 작업 디렉토리 지정
         env: # 깃헙 secret에 저장한 환경 변수 활용
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
