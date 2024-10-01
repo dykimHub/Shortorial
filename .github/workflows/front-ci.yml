@@ -1,0 +1,28 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: ["develop"]
+    paths-ignore:
+      - "back/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js # Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies # 종속성 설치
+        run: npm ci
+
+      - name: Run Tests # 테스트 실행
+        run: npm test
+
+      - name: Build Project # 프로젝트 빌드
+        run: npm run build
