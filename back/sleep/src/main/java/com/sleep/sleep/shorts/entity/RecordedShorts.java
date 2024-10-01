@@ -13,8 +13,7 @@ import java.time.OffsetDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "recorded_shorts",
-        indexes = {@Index(name = "idx_member_date", columnList = "member_no, recorded_shorts_date"),
-                @Index(name = "idx_member_youtube", columnList = "member_no, recorded_shorts_youtubeurl")}
+        indexes = {@Index(name = "idx_member_date", columnList = "member_no, recorded_shorts_date")}
 )
 @Entity
 public class RecordedShorts {
