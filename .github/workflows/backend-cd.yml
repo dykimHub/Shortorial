@@ -47,6 +47,6 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ap-northeast-2 --name shortorial
 
-      # 최신 이미지 반영
+      #  eks에 최신 이미지 반영
       - name: Deploy
         run: kubectl rollout restart deployment/shortorial-backend-deployment
