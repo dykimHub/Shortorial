@@ -32,7 +32,7 @@ jobs:
       # buildx 방식으로 build하면 더 빠름
       - name: Build and Push Docker Image
         run: |
-          cd back/sleep
+          cd front
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-frontend:${{ github.sha }} --push .
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-frontend:latest --push .
 
