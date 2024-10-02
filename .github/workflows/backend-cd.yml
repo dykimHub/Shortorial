@@ -40,6 +40,7 @@ jobs:
       # 클러스트 access에 github token과 aws oidc 연결한 Role 생성
       # ListAccessEntries, DescribeAccessEntry, UpdateAccessEntry, ListAccessPolicies, AssociateAccessPolicy, DisassociateAccessPolicy
       # ListClusters, ListNodegroups, DescribeCluster, DescribeNodegroup, UpdateClusterConfig, UpdateNodegroupConfig
+      # AmazonEKSClusterAdminPolicy 추가
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
