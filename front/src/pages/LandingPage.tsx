@@ -98,14 +98,14 @@ const LandingPage = () => {
             ))}
           </SectionConents>
         </SeriesSection>
-        <p className="text">당신이 좋아할만한 챌린지도 추천해드릴게요.</p>
+        {/*<p className="text">당신이 좋아할만한 챌린지도 추천해드릴게요.</p>
         <CTAButtonContainer>
           <BasicButton
             text="지금 확인하러 가기"
             style={CTAButtonStyled}
             onClick={() => navigate("/main")}
           />
-        </CTAButtonContainer>
+        </CTAButtonContainer>*/}
       </Section>
       <Section {...ForthSectionScroll}>
         <h1 className="sectionTitle">촬영에서 업로드까지</h1>
