@@ -25,5 +25,5 @@ jobs:
       - name: Build and Push Docker Image # 도커 이미지 빌드 & 푸시
         run: |
           docker build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:4 .
-          docker push ${{ secrets.DOCKER_REPO }}/your-app-name:4
-          docker push ${{ secrets.DOCKER_REPO }}/your-app-name:latest
+          docker push ${{ secrets.DOCKER_REPO }}/shortorial-backend:4
+          docker push ${{ secrets.DOCKER_REPO }}/shortorial-backend:latest
