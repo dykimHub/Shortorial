@@ -22,8 +22,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image # 도커 이미지 빌드 & 푸시
-        run: |
-          docker build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:4 .
-          docker push ${{ secrets.DOCKER_REPO }}/shortorial-backend:4
+      - name: Build and Push Docker Image # Docker 이미지 빌드 및 푸시 # 커밋 번호 이용하면 오류났을 때 그 번호로 쉽게 돌아갈 수 있음
+         run: |
+          cd back/sleep
+          docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:${{ github.sha }} . 
+          docker push ${{ secrets.DOCKER_REPO }}/shortorial-backend:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_REPO }}/shortorial-backend:${{ github.sha }} ${{ secrets.DOCKER_REPO }}/shortorial-backend:latest
           docker push ${{ secrets.DOCKER_REPO }}/shortorial-backend:latest
