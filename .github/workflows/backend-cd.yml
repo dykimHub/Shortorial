@@ -38,6 +38,7 @@ jobs:
 
       # aws에 github actions용 oidc, role 생성
       # ListAccessEntries, DescribeAccessEntry, UpdateAccessEntry, ListAccessPolicies, AssociateAccessPolicy, DisassociateAccessPolicy
+      # ListClusters, ListNodegroups, DescribeCluster, DescribeNodegroup, UpdateClusterConfig, UpdateNodegroupConfig
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
