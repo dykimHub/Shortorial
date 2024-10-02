@@ -51,5 +51,8 @@
         "react-router-dom": "^6.24.0",
         "styled-components": "^6.1.11",
         "zustand": "^4.5.3"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-x64-gnu": "^4.23.0"
     }
 }

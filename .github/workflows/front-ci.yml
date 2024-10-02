@@ -1,0 +1,29 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: ["develop"]
+    paths-ignore:
+      - "back/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          cd front
+          npm i
+
+      - name: Build Project
+        run: |
+          cd front 
+          npm run build
