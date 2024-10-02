@@ -21,7 +21,7 @@ spring:
     defer-datasource-initialization: false
   sql:
     init:
-      mode: false
+      mode: never
   output:
     ansi.enabled: always
   servlet:
