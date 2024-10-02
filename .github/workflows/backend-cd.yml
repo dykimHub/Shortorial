@@ -36,7 +36,8 @@ jobs:
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:${{ github.sha }} --push .
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:latest --push .
 
-      # aws에 github actions용 oidc, role 생성, describe, list정책 추가해서 연결
+      # aws에 github actions용 oidc, role 생성
+      # describe cluster/node, list cluster/node 정책 추가해서 연결
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
