@@ -25,6 +25,5 @@ jobs:
       - name: Build and Push Docker Image # Docker 이미지 빌드 및 푸시 # 커밋 번호 이용하면 오류났을 때 그 번호로 쉽게 돌아갈 수 있음
         run: |
           cd back/sleep
-          cd back/sleep
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:${{ github.sha }} --push .
           docker buildx build -t ${{ secrets.DOCKER_REPO }}/shortorial-backend:latest --push .
