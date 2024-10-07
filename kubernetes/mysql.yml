@@ -47,26 +47,17 @@ spec:
       containers:
         - name: shortorial-database
           image: mysql:8.4
-          envFrom:
-            - secretRef: # mysql 인증 정보 보관
-                name: shortorial-database-secret
           env:
             - name: MYSQL_DATABASE
-              value: dance # 컨테이너 시작 전 데이터베이스 생성
+              value: dance
           volumeMounts:
             - name: database-config-volume
-              mountPath: /etc/mysql/my.cnf # /etc/mysql/my.cnf 파일(mysql 설정파일)을 shortorial-database-config로 설정
+              mountPath: /etc/mysql/my.cnf
               subPath: my.cnf
             - name: shortorial-volume
-              mountPath: /var/lib/mysql # /var/lib/mysql(mysql이 컨테이너에 데이터를 저장하는 경로)를 외부 pv에 연결하여 영구 저장
-      volumes: # my.cnf는 환경변수가 아니라 !파일!이라서 볼륨으로 설정안하면 적용 못함
+              mountPath: /var/lib/mysql
+      volumes:
         - name: database-config-volume
-          configMap: # config map으로 설정 파일을 읽음
-            name: shortorial-database-config
-        - name: shortorial-volume # pvc를 볼륨으로 설정
+        - name: shortorial-volume
           persistentVolumeClaim:
             claimName: shortorial-pvc
-          # resources:
-          #   limits:
-          #     memory: "128Mi"
-          #     cpu: "500m"
