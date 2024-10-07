@@ -1,10 +1,9 @@
-# mysql init data 삽입할 때 한글 깨져서 초기 설정 필요
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: shortorial-database-config
 data:
-  my.cnf: | # 줄바꿈을 유지하는 기호 -> 멀티라인 문자열 입력
+  my.cnf: |
     [client]
     default-character-set = utf8mb4
 
@@ -24,7 +23,7 @@ spec:
     app: shortorial
     tier: database
   ports:
-    - port: 3306 # 동일 포트 사용
+    - port: 3306
       targetPort: 3306
   type: ClusterIP
 ---

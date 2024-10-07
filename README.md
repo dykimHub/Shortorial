@@ -6,7 +6,10 @@
 
 숏토리얼은 댄스 챌린지를 중심으로 춤을 연습하고, 촬영하고, SNS에 공유할 수 있는 댄스 학습 서비스입니다.
 
+_기간_
 **2024.04.08 ~ 2024.05.20 (6주)**
+_리팩토링 기간_
+**2024.06.05 ~ 2024.07.24**
 
 **Team. 둠칫둠칫**  
 총 6명 (프론트엔드 2, 백엔드 3, AI 1)
@@ -46,6 +49,7 @@
 ## Stack
 
 <img src="README_assets/2_서비스아키텍처.jpg" />
+<img src="README_assets/18_리팩토링_서비스아키텍처.jpg" />
 
 **Environment**  
 ![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-000000.svg?style=for-the-badge&logo=intellij-idea&logoColor=white)

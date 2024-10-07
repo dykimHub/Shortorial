@@ -7,7 +7,7 @@ spec:
     app: shortorial
     tier: cache
   ports:
-    - port: 6379 # 동일 포트 사용
+    - port: 6379
       targetPort: 6379
   type: ClusterIP
 ---
