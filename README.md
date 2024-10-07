@@ -49,7 +49,7 @@ _리팩토링 기간_
 ## Stack
 
 <img src="README_assets/2_서비스아키텍처.jpg" />
-<img src="README_assets/18_리팩토링_서비스아키텍처.jpg" />
+<img src="README_assets/18_리팩토링_서비스아키텍처.png" />
 
 **Environment**  
 ![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ%20IDEA-000000.svg?style=for-the-badge&logo=intellij-idea&logoColor=white)
