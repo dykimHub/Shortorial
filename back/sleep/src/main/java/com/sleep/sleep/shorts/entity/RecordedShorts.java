@@ -39,7 +39,7 @@ public class RecordedShorts {
     private String recordedShortsS3URL;
 
     // 유튜브 업로드 URL
-    @Column
+    @Column(name = "recorded_shorts_youtubeurl")
     private String recordedShortsYoutubeURL;
 
     // 녹화한 멤버 객체

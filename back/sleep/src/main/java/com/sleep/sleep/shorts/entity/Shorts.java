@@ -38,7 +38,7 @@ public class Shorts {
     @Column(nullable = false)
     private String shortsSource;
 
-    @Column(name = "shorts_s3key", length = 1024, nullable = false)
+    @Column(name = "shorts_s3key", nullable = false, unique = true)
     private String shortsS3Key;
 
     // 쇼츠 s3 링크
