@@ -4,7 +4,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 기본 포트가 3306이라 포트 번호 명시 안해도 연결함
-    url: jdbc:mysql://${MYSQL_URL}/dance?serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:mysql://${MYSQL_URL}:3306/dance?serverTimezone=UTC&characterEncoding=UTF-8
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
   jpa:
@@ -30,9 +30,8 @@ spring:
       max-request-size: 1GB
   data:
     redis:
-      port: 6379
-      # 기본 포트가 6379라 포트 번호 명시 안해도 연결함
       host: ${REDIS_URL}
+      port: 6379
 cloud:
   aws:
     s3:
