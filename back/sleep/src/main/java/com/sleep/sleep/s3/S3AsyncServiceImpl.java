@@ -55,10 +55,10 @@ public class S3AsyncServiceImpl {
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
+    private final S3Presigner presigner;
+    private S3AsyncClient s3AsyncClient;
 
-    private static S3AsyncClient s3AsyncClient;
-
-    public static S3AsyncClient getAsyncClient() {
+    public S3AsyncClient getAsyncClient() {
         if (s3AsyncClient == null) {
             /*
             The `NettyNioAsyncHttpClient` class is part of the AWS SDK for Java, version 2,
@@ -116,7 +116,7 @@ public class S3AsyncServiceImpl {
 
 
     public String createPresignedGetUrl(String keyName) {
-        try (S3Presigner presigner = S3Presigner.create()) {
+
 
             GetObjectRequest objectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -133,7 +133,7 @@ public class S3AsyncServiceImpl {
             log.info("HTTP method: [{}]", presignedRequest.httpRequest().method());
 
             return presignedRequest.url().toExternalForm();
-        }
+
     }
 
 //    /* Create a presigned URL to use in a subsequent PUT request */
