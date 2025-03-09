@@ -33,7 +33,3 @@ spec:
           env:
             - name: VITE_HOME_URL
               value: http://shortorial-backend-service.default
-          # resources:
-          #   limits:
-          #     memory: "128Mi"
-          #     cpu: "500m"

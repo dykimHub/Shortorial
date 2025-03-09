@@ -30,9 +30,3 @@ spec:
       containers:
         - name: shortorial-backend
           image: dyckerkim/shortorial-backend:latest
-          envFrom:
-            - secretRef:
-                name: shortorial-backend-secret
-          #   limits:
-          #     memory: "128Mi"
-          #     cpu: "500m"

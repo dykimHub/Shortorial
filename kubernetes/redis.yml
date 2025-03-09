@@ -7,7 +7,7 @@ spec:
     app: shortorial
     tier: cache
   ports:
-    - port: 6379 # 동일 포트 사용
+    - port: 6379
       targetPort: 6379
   type: ClusterIP
 ---
@@ -30,7 +30,3 @@ spec:
       containers:
         - name: shortorial-cache
           image: redis:6.2
-          # resources:
-          #   limits:
-          #     memory: "128Mi"
-          #     cpu: "500m"
