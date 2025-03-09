@@ -5,6 +5,7 @@ import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
+import com.sleep.sleep.s3.S3AsyncServiceImpl;
 import com.sleep.sleep.s3.S3Service;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
@@ -33,6 +34,8 @@ public class ShortsServiceImpl implements ShortsService {
     private final TriedShortsRepository triedShortsRepository;
     private final RecordedShortsRepository recordedShortsRepository;
 
+    private final S3AsyncServiceImpl s3AsyncServiceImpl;
+
     /**
      * 특정 id의 Shorts 객체를 ShortsDto 객체로 반환
      *
@@ -55,8 +58,21 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findShortsList() {
+        String preSignedURL = s3AsyncServiceImpl.createPresignedGetUrl("shortsList/we’re so GOATED");
+        //System.out.println(preSignedURL);
+
+//        return shortsRepository.findShortsList()
+//                .orElseThrow(() -> new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND));
+
         return shortsRepository.findShortsList()
-                .orElseThrow(() -> new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND))
+                .stream()
+                .map(s -> {
+                    s.setShortsS3URL(preSignedURL);
+                    return s;
+                })
+                .toList(); 
+
     }
 
     /**

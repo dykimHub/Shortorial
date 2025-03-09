@@ -30,6 +30,7 @@ public class ShortsDto {
     private String shortsS3Key;
 
     // 쇼츠 S3 URL
+    @Setter
     private String shortsS3URL;
 
     // 쇼츠 시도한 사람 수
