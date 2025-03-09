@@ -2,6 +2,7 @@ package com.sleep.sleep.s3;
 
 
 
+import com.amazonaws.util.IOUtils;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
@@ -34,6 +35,7 @@ import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher;
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter;
 import software.amazon.awssdk.utils.IoUtils;
+
 
 
 import java.io.IOException;
@@ -89,20 +91,29 @@ public class S3AsyncServiceImpl {
         return s3AsyncClient;
     }
 
-    public CompletableFuture<Void> findS3Object(String keyName, String path) {
+//    /**
+//     * Asynchronously retrieves the bytes of an object from an Amazon S3 bucket and writes them to a local file.
+//     *
+//     * @param bucketName the name of the S3 bucket containing the object
+//     * @param keyName    the key (or name) of the S3 object to retrieve
+//     * @param path       the local file path where the object's bytes will be written
+//     * @return a {@link CompletableFuture} that completes when the object bytes have been written to the local file
+//     */
+    public CompletableFuture<byte[]> getObjectBytesAsync(String s3Key) {
         GetObjectRequest objectRequest = GetObjectRequest.builder()
-                .key(keyName)
+                .key(s3Key)
                 .bucket(bucketName)
                 .build();
 
         CompletableFuture<ResponseBytes<GetObjectResponse>> response = getAsyncClient().getObject(objectRequest, AsyncResponseTransformer.toBytes());
-        return response.thenAccept(objectBytes -> {
+        return response.thenApply(objectBytes -> {
             try {
                 byte[] data = objectBytes.asByteArray();
-                Path filePath = Paths.get(path);
-                Files.write(filePath, data);
+                //Path filePath = Paths.get(path);
+                //Files.write(filePath, data);
                 log.info("Successfully obtained bytes from an S3 object");
-            } catch (IOException ex) {
+                return data;
+            } catch (Exception ex) {
                 throw new RuntimeException("Failed to write data to file", ex);
             }
         }).whenComplete((resp, ex) -> {
@@ -135,6 +146,11 @@ public class S3AsyncServiceImpl {
             return presignedRequest.url().toExternalForm();
 
     }
+
+//    public byte[] findBlobOfS3Object(String s3key) throws IOException {
+//        InputStream inputStream = getObjectBytesAsync(s3key).getObjectContent();
+//        return IOUtils.toByteArray(inputStream);
+//    }
 
 //    /* Create a presigned URL to use in a subsequent PUT request */
 //    public String createPresignedUrl(String bucketName, String keyName, Map<String, String> metadata) {

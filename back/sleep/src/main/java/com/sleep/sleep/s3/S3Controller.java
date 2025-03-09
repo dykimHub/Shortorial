@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -20,11 +21,14 @@ import java.util.Map;
 public class S3Controller {
 
     private final S3Service s3Service;
+    private final S3AsyncServiceImpl s3AsyncService;
 
     @Operation(summary = "S3에 업로드된 쇼츠를 Blob 형태로 반환")
     @PostMapping("/blob")
-    public ResponseEntity<byte[]> findBlobOfS3Object(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) throws IOException {
-        byte[] byteArray = s3Service.findBlobOfS3Object(map.get("s3key"));
+    public ResponseEntity<CompletableFuture<byte[]>> findBlobOfS3Object(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) throws IOException {
+        //byte[] byteArray = s3Service.findBlobOfS3Object(map.get("s3key"));
+        CompletableFuture<byte[]> byteArray = s3AsyncService.getObjectBytesAsync(map.get("s3key"));
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(byteArray);

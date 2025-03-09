@@ -307,7 +307,7 @@ public class ShortsServiceImpl implements ShortsService {
                 .shortsMusicSinger(shorts.getShortsMusicSinger())
                 .shortsSource(shorts.getShortsSource())
                 .shortsS3Key(shorts.getShortsS3Key())
-                .shortsS3URL(shorts.getShortsS3URL())
+                .shortsS3URL(s3AsyncServiceImpl.createPresignedGetUrl(shorts.getShortsS3Key()))
                 // tried_shorts 테이블에서 shorts_id를 count하는 서브쿼리를 보냄
                 .shortsChallengerNum(shorts.getTriedShortsList().size())
                 .build();
