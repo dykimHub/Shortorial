@@ -24,10 +24,10 @@ public class S3Controller {
     private final S3AsyncServiceImpl s3AsyncService;
 
     @Operation(summary = "S3에 업로드된 쇼츠를 Blob 형태로 반환")
-    @PostMapping("/blob")
-    public ResponseEntity<CompletableFuture<byte[]>> findBlobOfS3Object(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) throws IOException {
+    @GetMapping("/blob/{s3key}")
+    public ResponseEntity<CompletableFuture<byte[]>> findBlobOfS3Object(@RequestHeader("Authorization") String accessToken, @PathVariable String s3key) throws IOException {
         //byte[] byteArray = s3Service.findBlobOfS3Object(map.get("s3key"));
-        CompletableFuture<byte[]> byteArray = s3AsyncService.getObjectBytesAsync(map.get("s3key"));
+        CompletableFuture<byte[]> byteArray = s3AsyncService.getObjectBytesAsync(s3key);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
