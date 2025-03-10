@@ -4,7 +4,6 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
-@ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RecordedShortsDto {

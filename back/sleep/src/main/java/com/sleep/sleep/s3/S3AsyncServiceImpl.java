@@ -135,7 +135,7 @@ public class S3AsyncServiceImpl {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
-                .contentType("video/mp4")
+                //.contentType("video/mp4")
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()

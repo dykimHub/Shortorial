@@ -3,7 +3,6 @@ package com.sleep.sleep.shorts.dto;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.*;
 
-@ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortsDto {
