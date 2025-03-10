@@ -1,6 +1,7 @@
 package com.sleep.sleep.s3;
 
 import com.sleep.sleep.exception.SuccessResponse;
+import com.sleep.sleep.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public class S3Controller {
 
     private final S3Service s3Service;
+    private final MemberService memberService;
     private final S3AsyncServiceImpl s3AsyncService;
 
     @Operation(summary = "S3에 업로드된 쇼츠를 Blob 형태로 반환")
@@ -45,10 +47,17 @@ public class S3Controller {
     @Operation(summary = "회원이 녹화한 쇼츠를 S3에서 삭제")
     @DeleteMapping
     public ResponseEntity<SuccessResponse> deleteRecordedShortsFromS3(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
-        System.out.println(map);
         SuccessResponse successResponse = s3Service.deleteRecordedShortsFromS3(map.get("s3key"));
         return ResponseEntity.ok()
                 .body(successResponse);
+    }
+
+    @GetMapping("/presigned-url")
+    public ResponseEntity<String> getPresignedURL(@RequestHeader("Authorization") String accessToken, @RequestParam("createdAt") String createdAt) {
+        String presignedURL = s3AsyncService.createPresignedPutURL(accessToken, createdAt);
+        return ResponseEntity.ok()
+                .body(presignedURL);
+
     }
 
 }

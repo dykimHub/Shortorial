@@ -2,18 +2,12 @@ package com.sleep.sleep.s3;
 
 
 
-import com.amazonaws.util.IOUtils;
-import com.sleep.sleep.exception.CustomException;
-import com.sleep.sleep.exception.ExceptionCode;
-import com.sleep.sleep.exception.SuccessResponse;
-import com.sleep.sleep.member.entity.Member;
+import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.member.service.MemberService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.*;
@@ -21,32 +15,18 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
-import software.amazon.awssdk.core.ResponseBytes;
-import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryMode;
-import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher;
-import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter;
-import software.amazon.awssdk.utils.IoUtils;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -58,6 +38,7 @@ public class S3AsyncServiceImpl {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
     private final S3Presigner presigner;
+    private final JwtTokenUtil jwtTokenUtil;
     private S3AsyncClient s3AsyncClient;
 
     public S3AsyncClient getAsyncClient() {
@@ -145,6 +126,28 @@ public class S3AsyncServiceImpl {
 
             return presignedRequest.url().toExternalForm();
 
+    }
+
+    public String createPresignedPutURL(String accessToken, String createdAt) {
+        String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
+        String fileName = memberId + "/" + createdAt;
+
+        PutObjectRequest objectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .contentType("video/mp4")
+                .build();
+
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))  // The URL will expire in 10 minutes.
+                .putObjectRequest(objectRequest)
+                .build();
+
+        PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(presignRequest);
+        log.info("Presigned URL: [{}]", presignedRequest.url().toString());
+        log.info("HTTP method: [{}]", presignedRequest.httpRequest().method());
+
+        return presignedRequest.url().toExternalForm();
     }
 
 //    public byte[] findBlobOfS3Object(String s3key) throws IOException {
