@@ -18,13 +18,14 @@ import {
   Movie,
 } from "@mui/icons-material";
 import { getShortsInfo } from "../apis/shorts";
-import { uploadShortsToS3, getS3Blob } from "../apis/s3";
+import { getPutPresignedURL } from "../apis/s3";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
 import StarEffect from "../components/style/StarEffect";
 import { Shorts } from "../constants/types";
+import { axios } from "../utils/axios";
 
 const ChallengePage = () => {
   const navigate = useNavigate();
@@ -125,8 +126,10 @@ const ChallengePage = () => {
       recorder.onstop = async () => {
         let s3blob: Blob | null = null;
         if (short) {
-          s3blob = await getS3Blob(short.shortsS3Key); // 쇼츠 블롭화
-          //console.log("s3blob:", s3blob);
+          //s3blob = await getS3Blob(short.shortsS3Key); // 쇼츠 블롭화
+          const response = await axios.get(short.shortsS3URL, { responseType: "blob" });
+          s3blob = response.data;
+          console.log("s3blob:", s3blob);
         }
         if (!ffmpeg.isLoaded()) {
           await ffmpeg.load(); // ffmpeg 로드
@@ -248,7 +251,13 @@ const ChallengePage = () => {
   const s3Upload = async (blob: Blob) => {
     try {
       //const title = getCurrentDateTime();
-      await uploadShortsToS3(blob);
+      const presignedURL = await getPutPresignedURL(Date.now().toString());
+      //console.log(presignedURL);
+      await axios.put(presignedURL, blob, {
+        headers: { "Content-Type": "video/mp4" },
+      });
+
+      //await uploadShortsToS3(blob);
       setLoadPath(complete);
       setFfmpegLog("저장 완료");
       //console.log("s3 upload success", uploadResponse.data);

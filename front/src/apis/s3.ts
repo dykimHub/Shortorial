@@ -7,6 +7,8 @@ const REST_S3_URL = "/api/s3";
 export async function getS3Blob(shortsS3Key: string) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
+    console.log(shortsS3Key);
+
     const res = await axios.post(
       `${REST_S3_URL}/blob`,
       { s3key: shortsS3Key }, // map 전송
@@ -58,6 +60,24 @@ export async function deleteShortsFromS3(s3key: string) {
       data: {
         s3key: s3key,
       },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+export async function getPutPresignedURL(createdAt: string) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    //console.log(shortsS3Key);
+
+    const res = await axios.get(`${REST_S3_URL}/presigned-url`, {
+      headers: {
+        Authorization: token,
+      },
+      params: { createdAt },
     });
 
     return res.data;
