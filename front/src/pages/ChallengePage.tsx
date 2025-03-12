@@ -2,7 +2,6 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import LoadingModalComponent from "../components/modal/LoadingModalComponent";
 import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
 import { NormalizedLandmark } from "@mediapipe/tasks-vision";
@@ -30,7 +29,6 @@ import { axios } from "../utils/axios";
 const ChallengePage = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const ffmpeg = createFFmpeg({ log: false });
 
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
@@ -118,152 +116,67 @@ const ChallengePage = () => {
       return;
     }
 
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    const [track] = stream.getVideoTracks();
+    const { width = 405, height = 720 } = track.getSettings(); // 해상도 기본 값
+    console.log(`📸 녹화 해상도: ${width}x${height}`); // 해상도 확인
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.imageSmoothingEnabled = false;
+    const outputStream = canvas.captureStream(); // 초당 30프레임(디폴트)으로 캡쳐
+
     try {
-      const recorder = new MediaRecorder(stream); // 녹화형으로 변환
+      const recorder = new MediaRecorder(outputStream); // 녹화형으로 변환
       const chunks: BlobPart[] = []; // 스트림 조각을 넣을 배열
       recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 조각이 어느 정도 커지면 push하기
 
       recorder.onstop = async () => {
-        let s3blob: Blob | null = null;
-        if (short) {
-          //s3blob = await getS3Blob(short.shortsS3Key); // 쇼츠 블롭화
-          const response = await axios.get(short.shortsS3URL, { responseType: "blob" });
-          s3blob = response.data;
-          console.log("s3blob:", s3blob);
-        }
-        if (!ffmpeg.isLoaded()) {
-          await ffmpeg.load(); // ffmpeg 로드
-        }
-
+        // 녹화 중지되면
         const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // user video blob 생성
-
-        const reader = new FileReader();
-
-        if (s3blob) reader.readAsArrayBuffer(s3blob); // dance video blob array buffer로 변환
-        reader.onloadend = async () => {
-          const arrayBuffer = reader.result as ArrayBuffer;
-          const uint8Array = new Uint8Array(arrayBuffer);
-          ffmpeg.FS("writeFile", "danceVideo.mp4", uint8Array); // Blob을 가상 파일로 변환
-        };
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`노래 추출... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "danceVideo.mp4",
-          "-vn", // 비디오 무시
-          "-c:a",
-          "copy", // aac 코덱 복사
-          "dance_audio.m4a" // 오디오 파일 생성
-        );
-
-        // 비디오에 오디오 추가
-        await addAudio(userVideoBlob);
+        await s3Upload(userVideoBlob);
       };
 
       recorder.start(); // 녹화 시작
       setMediaRecorder(recorder);
       danceVideoRef.current?.play(); // 댄스 비디오 시작
+
+      function drawFrame() {
+        if (!userVideoRef.current) return;
+        ctx.save();
+        ctx.scale(-1, 1); // 좌우 반전
+        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 거울모드 적용
+        ctx.restore();
+        requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
     } catch (error) {
       console.log(error);
       alert("녹화를 다시 시작해 주세요.");
     }
   };
 
-  const addAudio = async (userVideoBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(userVideoBlob);
-      // 파일 읽기가 완료 되면
-      reader.onloadend = async () => {
-        const arrayBuffer = reader.result as ArrayBuffer;
-        const uint8Array = new Uint8Array(arrayBuffer); // ffmpeg가 읽을 수 있는 8비트 정수 배열로 변환
-        ffmpeg.FS("writeFile", "userVideo.mp4", uint8Array); // 사용자 비디오 가상 파일 만들기
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`노래 삽입... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "userVideo.mp4", // 사용자 영상
-          "-i",
-          "dance_audio.m4a", // 원본 오디오
-          "-map",
-          "0:v:0", // 첫번째 파일(사용자 영상)의 0번째 스트림
-          "-map",
-          "1:a:0", // 두번째 파일(원본 오디오)의 0번째 스트림
-          "-c:v",
-          "copy", // 비디오 인코딩 복사
-          "-c:a",
-          "copy", // 오디오 인코딩 복사
-          "-shortest", // 두 개 파일 중 짧은 쪽에 맞춤
-          "finalUserVideo.mp4" // 파일 생성
-        );
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`거울모드로 저장... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "finalUserVideo.mp4",
-          "-vf", // 비디오 필터
-          "hflip", // 좌우반전
-          "finalUserVideoFlip.mp4"
-        );
-
-        const userVideoFlipFinal = ffmpeg.FS("readFile", "finalUserVideoFlip.mp4");
-        // 최종 파일 Blob 변환
-        const userVideoFinalBlob = new Blob([userVideoFlipFinal.buffer], {
-          type: "video/mp4",
-        });
-
-        // 최종파일 url 전달
-        makeDownloadURL(userVideoFinalBlob);
-      };
-    } catch (error) {
-      console.log(error);
-      alert("오디오를 추가할 수 없습니다.");
-    }
-  };
-
-  const makeDownloadURL = async (userVideoFinalBlob: Blob) => {
-    try {
-      await s3Upload(userVideoFinalBlob);
-      setTimeout(handleCloseModal, 2000);
-    } catch (error) {
-      console.error("비디오 저장 중 오류 발생:", error);
-    }
-  };
-
   const s3Upload = async (blob: Blob) => {
     try {
-      //const title = getCurrentDateTime();
-      const presignedURL = await getPutPresignedURL(Date.now().toString());
-      //console.log(presignedURL);
+      // s3에 객체를 업로드할 수 있는 presignedurl 조회
+      const presignedURL = await getPutPresignedURL(Date.now().toString(), short?.shortsS3Key);
+
+      // 메타데이터를 presignedurl과 똑같이 key value를 지정해야함
+      // s3 메타데이터는 baseu4 encoding안하면 오류남
       await axios.put(presignedURL, blob, {
-        headers: { "Content-Type": "video/mp4" },
+        headers: {
+          "Content-Type": "video/mp4",
+          "x-amz-meta-song": btoa(
+            String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key))
+          ),
+        },
       });
 
-      //await uploadShortsToS3(blob);
       setLoadPath(complete);
       setFfmpegLog("저장 완료");
-      //console.log("s3 upload success", uploadResponse.data);
     } catch (error) {
       setLoadPath(uncomplete);
-      //if (error instanceof Error && error.stack) setFfmpegLog(error.stack);
       setFfmpegLog("저장 실패");
       console.error("s3 upload fail", error);
     }
@@ -299,6 +212,8 @@ const ChallengePage = () => {
     const constraints: MediaStreamConstraints = {
       video: {
         aspectRatio: 9 / 16,
+        width: { ideal: 810 },
+        height: { ideal: 1440 },
       },
       audio: false,
     };
@@ -555,7 +470,6 @@ const UserContainer = styled.div`
 const UserVideoContainer = styled.video`
   position: relative;
   display: flex;
-
   object-fit: cover;
   transform: scaleX(-1);
 `;
