@@ -17,7 +17,7 @@ import {
   Movie,
 } from "@mui/icons-material";
 import { getShortsInfo } from "../apis/shorts";
-import { getPutPresignedURL } from "../apis/s3";
+import { getPresignedGetURL, getPresignedPutURL } from "../apis/s3";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
@@ -37,7 +37,6 @@ const ChallengePage = () => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [danceVideoPath, setDanceVideoPath] = useState<string>("");
-  // const [danceVideoS3blob, setDanceVideoS3blob] = useState<Blob | null>(null);
 
   const [show, setShow] = useState(false);
   const [recording, setRecording] = useState(false); // 녹화 진행
@@ -102,8 +101,7 @@ const ChallengePage = () => {
 
   const stopRecording = () => {
     setLoadPath(loading);
-
-    setFfmpegLog("대기중...");
+    setFfmpegLog("동영상 저장...");
     cancelRecording();
     mediaRecorder?.stop(); // recorder.onstop() 실행
   };
@@ -145,7 +143,7 @@ const ChallengePage = () => {
       function drawFrame() {
         if (!userVideoRef.current) return;
         ctx.save();
-        ctx.scale(-1, 1); // 좌우 반전
+        ctx.scale(-1, 1); // 캔버스 좌우 반전
         ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 거울모드 적용
         ctx.restore();
         requestAnimationFrame(drawFrame);
@@ -159,26 +157,71 @@ const ChallengePage = () => {
 
   const s3Upload = async (blob: Blob) => {
     try {
-      // s3에 객체를 업로드할 수 있는 presignedurl 조회
-      const presignedURL = await getPutPresignedURL(Date.now().toString(), short?.shortsS3Key);
+      const createdAt = Date.now().toString(); // 파일명
+      // s3에 객체를 업로드할 수 있는 presignedputurl 조회
+      const presignedURL = await getPresignedPutURL(createdAt, short?.shortsS3Key);
 
-      // 메타데이터를 presignedurl과 똑같이 key value를 지정해야함
+      // s3 메타데이터를 presignedurl과 똑같이 key value를 지정해야함
       // s3 메타데이터는 baseu4 encoding안하면 오류남
+      const songS3key = btoa(String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key)));
+
       await axios.put(presignedURL, blob, {
         headers: {
           "Content-Type": "video/mp4",
-          "x-amz-meta-song": btoa(
-            String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key))
-          ),
+          "x-amz-meta-song": songS3key,
         },
       });
 
-      setLoadPath(complete);
-      setFfmpegLog("저장 완료");
+      setLoadPath(loading);
+      setFfmpegLog("음악 삽입...");
+
+      // aws lambda가 처리를 완료했는지 조회
+      await check(createdAt);
     } catch (error) {
       setLoadPath(uncomplete);
-      setFfmpegLog("저장 실패");
+      setFfmpegLog("동영상 처리 실패");
       console.error("s3 upload fail", error);
+    }
+  };
+
+  const check = async (createdAt: string) => {
+    // 객체 업로드 됐는지 확인할 presignedGetUrl
+    const presignedGetURL = await getPresignedGetURL(createdAt);
+    console.log(presignedGetURL);
+
+    let attempts = 0; // 요청 횟수 추적
+
+    // 10초마다 요청하기 위해 setInterval 사용
+    const interval = setInterval(async () => {
+      const exists = await isExist(presignedGetURL);
+
+      if (exists) {
+        clearInterval(interval); // 객체가 생성되면 요청 중단
+        setLoadPath(complete);
+        setFfmpegLog("완성!");
+        setTimeout(handleCloseModal, 2000);
+      } else {
+        attempts++;
+        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
+
+        if (attempts >= 6) {
+          // 6번(1분) 요청 후 중단
+          clearInterval(interval);
+          setLoadPath(uncomplete);
+          setFfmpegLog("동영상 처리 실패");
+          setTimeout(handleCloseModal, 3000);
+        }
+      }
+    }, 10000); // 10초 (10000ms) 간격으로 요청
+  };
+
+  const isExist = async (presignedGetURL: string) => {
+    try {
+      await axios.get(presignedGetURL);
+      return true; // 객체 존재함
+    } catch (error: any) {
+      console.error(error.data);
+      return false;
     }
   };
 
@@ -212,6 +255,7 @@ const ChallengePage = () => {
     const constraints: MediaStreamConstraints = {
       video: {
         aspectRatio: 9 / 16,
+        // 이상적인 해상도 값
         width: { ideal: 810 },
         height: { ideal: 1440 },
       },

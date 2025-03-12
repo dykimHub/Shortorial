@@ -68,16 +68,47 @@ export async function deleteShortsFromS3(s3key: string) {
   }
 }
 
-export async function getPutPresignedURL(createdAt: string) {
+export async function getPresignedGetURL(fileName: string | undefined) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(`${REST_S3_URL}/presigned-url/get`, {
+      headers: {
+        Authorization: token,
+      },
+      params: { fileName },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+export async function getPresignedPutURL(createdAt: string, s3key: string | undefined) {
+  try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(`${REST_S3_URL}/presigned-url/put`, {
+      headers: {
+        Authorization: token,
+      },
+      params: { createdAt, s3key },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+export async function getRecordedShorts() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
     //console.log(shortsS3Key);
 
-    const res = await axios.get(`${REST_S3_URL}/presigned-url`, {
+    const res = await axios.get(`${REST_S3_URL}/recorded-shorts`, {
       headers: {
         Authorization: token,
       },
-      params: { createdAt },
     });
 
     return res.data;
