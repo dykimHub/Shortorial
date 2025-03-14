@@ -69,6 +69,7 @@ const ChallengePage = () => {
     setShow(true); // 모달 열기
     stopRecording();
   };
+
   const handleCloseModal = () => setShow(false);
   const showRecordButton = () => setRecording(false);
   const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
@@ -106,6 +107,7 @@ const ChallengePage = () => {
     mediaRecorder?.stop(); // recorder.onstop() 실행
   };
 
+  // 녹화 시작 버튼이 눌리면
   const startRecording = () => {
     setState("RECORD");
 
@@ -114,40 +116,46 @@ const ChallengePage = () => {
       return;
     }
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
-    const [track] = stream.getVideoTracks();
+    const canvas = document.createElement("canvas"); // 캔버스 생성
+    const ctx = canvas.getContext("2d")!; // 2D 렌더링 컨텍스트
+    const [track] = stream.getVideoTracks(); // 스트림에서 비디오 트랙을 가져오기
     const { width = 405, height = 720 } = track.getSettings(); // 해상도 기본 값
-    console.log(`📸 녹화 해상도: ${width}x${height}`); // 해상도 확인
+
+    setShow(true); // 모달 열기
+    setFfmpegLog(`📸 녹화 해상도: ${width}x${height}`);
+    setTimeout(handleCloseModal, 1500);
 
     canvas.width = width;
     canvas.height = height;
     ctx.imageSmoothingEnabled = false;
-    const outputStream = canvas.captureStream(); // 초당 30프레임(디폴트)으로 캡쳐
 
     try {
-      const recorder = new MediaRecorder(outputStream); // 녹화형으로 변환
+      const outputStream = canvas.captureStream(); // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
+      const recorder = new MediaRecorder(outputStream); // 변환된 스트림을 MediaRecorder로 녹화
       const chunks: BlobPart[] = []; // 스트림 조각을 넣을 배열
-      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 조각이 어느 정도 커지면 push하기
+      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 데이터가 쌓이면 배열에 추가
 
+      // 녹화 중지되면
       recorder.onstop = async () => {
-        // 녹화 중지되면
-        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // user video blob 생성
-        await s3Upload(userVideoBlob);
+        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
+        await s3Upload(userVideoBlob); // s3에 업로드
       };
 
-      recorder.start(); // 녹화 시작
+      // 녹화 시작되면
+      recorder.start();
       setMediaRecorder(recorder);
       danceVideoRef.current?.play(); // 댄스 비디오 시작
 
+      // 프레임을 실시간으로 캔버스에 그리기
       function drawFrame() {
         if (!userVideoRef.current) return;
-        ctx.save();
-        ctx.scale(-1, 1); // 캔버스 좌우 반전
-        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 거울모드 적용
-        ctx.restore();
-        requestAnimationFrame(drawFrame);
+        ctx.save(); // 현재 캔버스 상태 저장
+        ctx.scale(-1, 1); // 캔버스 좌우 반전하여 거울 모드 적용
+        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 반전된 상태로 비디오 프레임 그리기기
+        ctx.restore(); // 캔버스 상태 복구
+        requestAnimationFrame(drawFrame); // 다음 프레임을 요청하여 반복 실행
       }
+
       drawFrame();
     } catch (error) {
       console.log(error);
@@ -177,17 +185,19 @@ const ChallengePage = () => {
 
       // aws lambda가 처리를 완료했는지 조회
       await check(createdAt);
-    } catch (error) {
+    } catch (error: any) {
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
-      console.error("s3 upload fail", error);
+      console.error("s3 upload fail", error.data);
+    } finally {
+      setState("READY");
     }
   };
 
   const check = async (createdAt: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
     const presignedGetURL = await getPresignedGetURL(createdAt);
-    console.log(presignedGetURL);
+    //console.log(presignedGetURL);
 
     let attempts = 0; // 요청 횟수 추적
 
@@ -199,7 +209,7 @@ const ChallengePage = () => {
         clearInterval(interval); // 객체가 생성되면 요청 중단
         setLoadPath(complete);
         setFfmpegLog("완성!");
-        setTimeout(handleCloseModal, 2000);
+        setTimeout(handleCloseModal, 1000);
       } else {
         attempts++;
         console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
@@ -334,7 +344,7 @@ const ChallengePage = () => {
   useEffect(() => {
     switch (btn) {
       case "visible":
-        console.log("record");
+        //console.log("record");
         if (state === "READY") {
           showCancelButton();
         } else {
@@ -342,29 +352,29 @@ const ChallengePage = () => {
         }
         break;
       case "timer":
-        console.log("timer");
+        //console.log("timer");
         if (state === "READY") {
           changeTimer();
         }
         break;
       case "save":
-        console.log("save");
+        //console.log("save");
         if (state === "READY") break;
         handleShowModal();
         break;
       case "record":
         if (state == "RECORD") break;
-        console.log("flip");
+        //console.log("flip");
         setIsFlipped(!isFlipped);
         break;
       case "learn":
         if (state == "RECORD") break;
-        console.log("learn");
+        //console.log("learn");
         goToLearnMode();
         break;
       case "rslt":
         if (state == "RECORD") break;
-        console.log("result");
+        //console.log("result");
         goToResult();
         break;
     }
