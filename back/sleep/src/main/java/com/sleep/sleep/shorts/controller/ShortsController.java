@@ -82,39 +82,5 @@ public class ShortsController {
 
     }
 
-    @Operation(summary = "회원이 녹화한 쇼츠 조회")
-    @GetMapping("/recorded")
-    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
-        List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
-        return ResponseEntity.ok()
-                .body(recordedShortsDtoList);
-
-    }
-
-    @Operation(summary = "회원이 녹화한 쇼츠 등록")
-    @PostMapping("/recorded")
-    public ResponseEntity<SuccessResponse> addRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
-        SuccessResponse successResponse = shortsService.addRecordedShorts(accessToken, map.get("s3key"));
-        return ResponseEntity.ok()
-                .body(successResponse);
-
-    }
-
-    @Operation(summary = "회원이 녹화한 쇼츠 제목 변경")
-    @PutMapping("/recorded")
-    public ResponseEntity<SuccessResponse> modifyRecordedShortsTitle(@RequestHeader("Authorization") String accessToken, @RequestBody ModifiedShortsDto modifiedShortsDto) {
-        SuccessResponse successResponse = shortsService.modifyRecordedShortsTitle(accessToken, modifiedShortsDto);
-        return ResponseEntity.ok()
-                .body(successResponse);
-    }
-
-    @Operation(summary = "회원이 녹화한 쇼츠 삭제")
-    @DeleteMapping("/recorded")
-    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
-        SuccessResponse successResponse = shortsService.deleteRecordedShorts(map.get("s3key"));
-        return ResponseEntity.ok()
-                .body(successResponse);
-    }
-
 
 }

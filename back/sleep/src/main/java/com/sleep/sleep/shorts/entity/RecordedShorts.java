@@ -22,31 +22,24 @@ public class RecordedShorts {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int recordedShortsId;
-
     // 녹화한 쇼츠 제목
     @Column(nullable = false)
     private String recordedShortsTitle;
-
     // 녹화한 시간
     @CreationTimestamp
     @Column(nullable = false)
     private OffsetDateTime recordedShortsDate;
-
     @Column(name = "recorded_shorts_s3key", nullable = false, unique = true)
     private String recordedShortsS3key;
-
     @Column(name = "recorded_shorts_s3url", nullable = false)
     private String recordedShortsS3URL;
-
     // 유튜브 업로드 URL
     @Column(name = "recorded_shorts_youtubeurl")
     private String recordedShortsYoutubeURL;
-
     // 녹화한 멤버 객체
     @ManyToOne
     @JoinColumn(name = "member_no")
     private Member member;
-
     @Builder
     public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, String recordedShortsS3URL, Member member) {
         this.recordedShortsTitle = recordedShortsTitle;

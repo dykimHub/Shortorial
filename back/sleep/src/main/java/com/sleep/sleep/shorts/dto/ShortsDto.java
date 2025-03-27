@@ -9,29 +9,20 @@ public class ShortsDto {
 
     // 쇼츠 테이블 id
     private int shortsId;
-
     // 쇼츠 시간
     private int shortsTime;
-
     // 쇼츠 제목
     private String shortsTitle;
-
     // 쇼츠 음악
     private String shortsMusicTitle;
-
     // 쇼츠 가수
     private String shortsMusicSinger;
-
     // 쇼츠 출처
     private String shortsSource;
-
     // 쇼츠 S3 key
     private String shortsS3Key;
-
     // 쇼츠 S3 URL
-    @Setter
     private String shortsS3URL;
-
     // 쇼츠 시도한 사람 수
     private int shortsChallengerNum;
 

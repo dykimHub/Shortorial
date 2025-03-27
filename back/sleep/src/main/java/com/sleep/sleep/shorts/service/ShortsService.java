@@ -25,21 +25,9 @@ public interface ShortsService {
 
     SuccessResponse deleteTriedShorts(String accessToken, int shortsId);
 
-    List<RecordedShortsDto> findRecordedShortsList(String accessToken);
-
-    SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key);
-
-    SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifiedShortsDto modifiedShortsDto);
-
-    SuccessResponse deleteRecordedShorts(String S3key);
-
     Shorts findShorts(int shortsId);
 
-    RecordedShorts findRecordedShorts(int recordedShortsId);
-
     ShortsDto convertToShortsDto(Shorts shorts);
-
-    RecordedShortsDto convertToRecordedShortsDto(RecordedShorts recordedShorts);
 
 
 }
