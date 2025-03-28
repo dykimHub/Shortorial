@@ -1,4 +1,4 @@
-package com.sleep.sleep.shorts.dto;
+package com.sleep.sleep.s3.dto;
 
 import lombok.*;
 

@@ -5,7 +5,7 @@ import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
-import com.sleep.sleep.s3.S3AsyncServiceImpl;
+import com.sleep.sleep.s3.service.S3AsyncServiceImpl;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -191,7 +192,7 @@ public class ShortsServiceImpl implements ShortsService {
                 .shortsMusicSinger(shorts.getShortsMusicSinger())
                 .shortsSource(shorts.getShortsSource())
                 .shortsS3Key(shorts.getShortsS3Key())
-                .shortsS3URL(s3AsyncServiceImpl.createPresignedGetUrl(shorts.getShortsS3Key()))
+                .shortsS3URL(s3AsyncServiceImpl.generatePresignedGetURL(shorts.getShortsS3Key(), Duration.ofMinutes(30)))
                 // tried_shorts 테이블에서 shorts_id를 count하는 서브쿼리를 보냄
                 .shortsChallengerNum(shorts.getTriedShortsList().size())
                 .build();

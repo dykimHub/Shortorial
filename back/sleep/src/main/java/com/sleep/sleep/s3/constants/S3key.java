@@ -15,4 +15,8 @@ public enum S3key {
     public String buildS3Key(String memberId, String fileName) {
         return this.folder + memberId + "/" + fileName + ".mp4";
     }
+
+    public String buildPrefix(String memberId) {
+        return this.folder + memberId + "/";
+    }
 }
