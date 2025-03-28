@@ -1,9 +1,5 @@
 package com.sleep.sleep.common.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +11,6 @@ import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.time.Duration;
@@ -27,18 +22,22 @@ public class S3Config {
     @Value("${cloud.aws.credentials.secret-key}")
     private String secretKey;
 
+    /**
+     * Presigned URL을 생성하는 S3Presigner Bean을 등록합니다.
+     */
     @Bean
     public S3Presigner s3Presigner() {
         return S3Presigner.builder()
-                // AWS 리전 설정
-                .region(Region.AP_NORTHEAST_2)
-                // 정적 자격 증명
+                .region(Region.AP_NORTHEAST_2) // AWS 리전 설정
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)
-                ))
+                ))   // 정적 자격 증명
                 .build();
     }
 
+    /**
+     * 비동기 S3 클라이언트(S3AsyncClient) Bean을 등록합니다.
+     */
     @Bean
     public S3AsyncClient s3AsyncClient() {
         // S3와 통신하는 네트워크 연결 자체를 설정
@@ -50,7 +49,7 @@ public class S3Config {
                 .writeTimeout(Duration.ofSeconds(60))  // 요청 쓰기 타임아웃; 60초 초과 시 실패
                 .build();
 
-        // S3 요청(API 호출)의 전체 동작 방식 제어
+        // 타임아웃 및 재시도 정책 커스터마이징
         ClientOverrideConfiguration overrideConfig = ClientOverrideConfiguration.builder()
                 .apiCallTimeout(Duration.ofMinutes(2))  // 전체 API 요청에 걸리는 최대 시간; 2분 초과 시 실패 처리
                 .apiCallAttemptTimeout(Duration.ofSeconds(90))  // 개별 시도 당 최대 시간; 90초 초과 시 재시도 혹은 실패 처리
@@ -58,12 +57,9 @@ public class S3Config {
                 .build();
 
         return S3AsyncClient.builder()
-                // AWS 리전 설정
-                .region(Region.AP_NORTHEAST_2)
-                // 커스텀 HTTP 클라이언트
-                .httpClient(httpClient)
-                // 타임아웃 및 재시도 정책
-                .overrideConfiguration(overrideConfig)
+                .region(Region.AP_NORTHEAST_2) // AWS 리전 설정
+                .httpClient(httpClient) // 커스텀 HTTP 클라이언트
+                .overrideConfiguration(overrideConfig)  // 커스텀 타임아웃 및 재시도 정책
                 .build();
     }
 
