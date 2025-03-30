@@ -45,8 +45,8 @@ public class MemberService {
     public boolean checkDup(String category, String input) {
         //category로 id, nickname의 값이 넘어오면 해당하는 중복검사 실행
         //true = 해당하는 값이 이미 있음
-        boolean check = switch (category){
-            case "id"->memberRepository.existsByMemberId(input);
+        boolean check = switch (category) {
+            case "id" -> memberRepository.existsByMemberId(input);
 
             case "nickname" -> memberRepository.existsByMemberNickname(input);
 
@@ -64,6 +64,7 @@ public class MemberService {
                 .memberRole(MemberRole.UESR)
                 .build());
     }
+
     public TokenInfo login(OriginLoginRequestDto dto) {
         Member member = memberRepository.findByMemberId(dto.getMemberId()).orElseThrow(
                 () -> new NoSuchElementException("회원이 없습니다."));
@@ -81,6 +82,7 @@ public class MemberService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
     }
+
     private RefreshToken saveRefreshToken(String username) {
         log.info("RefreshToken 등록");
         return refreshTokenRedisRepository.save(RefreshToken.createRefreshToken(username,
@@ -120,12 +122,13 @@ public class MemberService {
         }
         throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
     }
+
     private TokenInfo reissueRefreshToken(String refreshToken, String username) {
         if (lessThanReissueExpirationTimesLeft(refreshToken)) {
-            System.out.println("리프레시 토큰도 재발급");
+            //System.out.println("리프레시 토큰도 재발급");
             return TokenInfo.of(jwtTokenUtil.generateAccessToken(username), saveRefreshToken(username).getRefreshToken());
         }
-        System.out.println("엑세스 토큰만 재발급");
+        //System.out.println("엑세스 토큰만 재발급");
         return TokenInfo.of(jwtTokenUtil.generateAccessToken(username), refreshToken);
     }
 
@@ -140,16 +143,25 @@ public class MemberService {
     }
 
     /**
-     * token에서 memberId를 찾아서 Member 객체를 반환함
+     * token에서 memberId를 추출합니다.
+     *
+     * @param accessToken 로그인한 회원의 token
+     * @return 로그인한 회원의 ID
+     */
+    public String findMemberId(String accessToken) {
+        return jwtTokenUtil.getUsername(accessToken.substring(7));
+    }
+
+    /**
+     * token에서 memberId를 추출하여 Member 객체를 반환합니다.
      *
      * @param accessToken 로그인한 회원의 token
      * @return 로그인한 Member 객체
      * @throws CustomException 해당 Member 객체를 찾을 수 없음
      */
     public Member findMemberEntity(String accessToken) {
-        String memberId = jwtTokenUtil.getUsername(accessToken.substring(7));
-        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
-
-        return member;
+        String memberId = findMemberId(accessToken);
+        return memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new CustomException(ExceptionCode.MEMBER_NOT_FOUND));
     }
 }

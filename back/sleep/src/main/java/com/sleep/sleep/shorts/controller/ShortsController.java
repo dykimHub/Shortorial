@@ -10,14 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/shorts")
 @RestController
 public class ShortsController {
-
     private final ShortsService shortsService;
 
     @Operation(summary = "쇼츠 목록 조회")

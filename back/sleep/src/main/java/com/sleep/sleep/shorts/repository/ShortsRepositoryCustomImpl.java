@@ -24,24 +24,22 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * Shorts 객체 한 개를 반환할 때는 서브 쿼리를 사용했지만 전체 ShortsList를 조회할 때는 Join을 통해 각 행마다 서브 쿼리를 보내는 것을 방지
      */
     @Override
-    public Optional<List<ShortsDto>> findShortsList() {
+    public List<ShortsDto> findShortsList() {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
 
-        return Optional.ofNullable(queryFactory.select(new QShortsDto(
+        return queryFactory.select(new QShortsDto(
                         qShorts.shortsId,
                         qShorts.shortsTime,
                         qShorts.shortsTitle,
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
-                        qShorts.shortsS3Key,
-                        qShorts.shortsS3URL,
                         qTriedShorts.count().intValue()))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
                 .groupBy(qShorts.shortsId)
-                .fetch());
+                .fetch();
 
     }
 
@@ -49,29 +47,27 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * findShortsList와 동일한 로직에서 TriedShorts를 카운트 한 열을 별칭 선언하고 정렬한 후 내림차순으로 3개 반환
      */
     @Override
-    public Optional<List<ShortsDto>> findPopularShortsList() {
+    public List<ShortsDto> findPopularShortsList() {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
 
         // 별칭(alias) 선언해서 정렬 시 활용
         NumberPath<Integer> shortsChallengerNum = Expressions.numberPath(Integer.class, "shortsChallengerNum");
 
-        return Optional.ofNullable(queryFactory.select(new QShortsDto(
+        return queryFactory.select(new QShortsDto(
                         qShorts.shortsId,
                         qShorts.shortsTime,
                         qShorts.shortsTitle,
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
-                        qShorts.shortsS3Key,
-                        qShorts.shortsS3URL,
                         qTriedShorts.count().intValue().as(shortsChallengerNum)))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
                 .groupBy(qShorts.shortsId)
                 .orderBy(shortsChallengerNum.desc())
                 .limit(3)
-                .fetch());
+                .fetch();
 
     }
 
@@ -84,13 +80,13 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * @param memberIndex 특정 회원의 id
      */
     @Override
-    public Optional<List<TriedShortsDto>> findTriedShortsList(int memberIndex) {
+    public List<TriedShortsDto> findTriedShortsList(int memberIndex) {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
         // From절과 동일한 객체를 사용할 때 동일한 변수명은 못쓰고 alias를 지정해야 함
         // QTriedShorts qJoinedTriedShorts = new QTriedShorts("JoinedTriedShorts");
 
-        return Optional.ofNullable(queryFactory.select(new QTriedShortsDto(
+        return queryFactory.select(new QTriedShortsDto(
                         qTriedShorts.triedShortsId,
                         qTriedShorts.triedShortsDate,
                         new QShortsDto(
@@ -100,8 +96,6 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                                 qShorts.shortsMusicTitle,
                                 qShorts.shortsMusicSinger,
                                 qShorts.shortsSource,
-                                qShorts.shortsS3Key,
-                                qShorts.shortsS3URL,
                                 qShorts.triedShortsList.size()
                         )
                 ))
@@ -109,7 +103,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 .innerJoin(qTriedShorts.shorts, qShorts)
                 .where(qTriedShorts.member.memberIndex.eq(memberIndex))
                 .orderBy(qTriedShorts.triedShortsDate.desc())
-                .fetch());
+                .fetch();
 
     }
 

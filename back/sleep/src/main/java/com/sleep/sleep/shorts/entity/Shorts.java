@@ -32,12 +32,7 @@ public class Shorts {
     // 쇼츠 출처
     @Column(nullable = false)
     private String shortsSource;
-    @Column(name = "shorts_s3key", nullable = false, unique = true)
-    private String shortsS3Key;
-    // 쇼츠 s3 링크
-    @Column(name = "shorts_s3url", length = 1024, nullable = false)
-    private String shortsS3URL;
-    // 시도한 쇼츠
+
     @OneToMany(mappedBy = "shorts")
     private List<TriedShorts> triedShortsList;
 

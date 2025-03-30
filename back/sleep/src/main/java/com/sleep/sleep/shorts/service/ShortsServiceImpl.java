@@ -5,11 +5,13 @@ import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
+import com.sleep.sleep.s3.constants.S3key;
 import com.sleep.sleep.s3.service.S3AsyncServiceImpl;
-import com.sleep.sleep.shorts.dto.*;
+import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
+import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
-import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import jakarta.transaction.Transactional;
@@ -29,23 +31,7 @@ public class ShortsServiceImpl implements ShortsService {
     private final MemberService memberService;
     private final ShortsRepository shortsRepository;
     private final TriedShortsRepository triedShortsRepository;
-    private final RecordedShortsRepository recordedShortsRepository;
-
     private final S3AsyncServiceImpl s3AsyncServiceImpl;
-
-    /**
-     * 특정 id의 Shorts 객체를 ShortsDto 객체로 반환
-     *
-     * @param shortsId Shorts 객체의 id
-     * @return ShortsDto 객체
-     */
-    @Override
-    public ShortsDto findShortsDto(int shortsId) {
-        Shorts shorts = findShorts(shortsId);
-        return convertToShortsDto(shorts);
-
-    }
-
 
     /**
      * Shorts DB의 모든 Shorts 객체를 ShortsDto 리스트로 반환함
@@ -55,9 +41,33 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findShortsList() {
-        return shortsRepository.findShortsList()
-                .orElseThrow(() -> new CustomException(ExceptionCode.ALL_SHORTS_NOT_FOUND));
+        return shortsRepository.findShortsList().stream()
+                .map(s -> {
+                    String s3key = S3key.ORIGIN.buildS3key(s.getShortsTitle());
+                    s.setShortsS3URL(s3AsyncServiceImpl.generatePresignedGetURL(s3key, Duration.ofMinutes(30)));
+                    return s;
+                })
+                .toList();
+    }
 
+    /**
+     * 쇼츠 DB에서 특정 id에 해당하는 쇼츠를 조회함
+     * 쇼츠 제목을 활용하여 해당 쇼츠의 s3 key를 만들고 서명된 Get URL을 생성함
+     * 쇼츠의 id, 제목과 생성된 S3 URL로 ShortsDTO를 생성하여 반환함
+     *
+     * @param shortsId 쇼츠 객체의 id
+     * @return ShorsDTO 객체
+     */
+    @Override
+    public ShortsDto findShortsDto(int shortsId) {
+        Shorts shorts = findShorts(shortsId);
+        String s3key = S3key.ORIGIN.buildS3key(shorts.getShortsTitle());
+        return ShortsDto.builder()
+                .shortsId(shorts.getShortsId())
+                .shortsTitle(shorts.getShortsTitle())
+                .shortsS3Key(s3key)
+                .shortsS3URL(s3AsyncServiceImpl.generatePresignedGetURL(s3key, Duration.ofMinutes(30)))
+                .build();
     }
 
     /**
@@ -68,8 +78,13 @@ public class ShortsServiceImpl implements ShortsService {
      */
     @Override
     public List<ShortsDto> findPopularShortsList() {
-        return shortsRepository.findPopularShortsList()
-                .orElseThrow(() -> new CustomException(ExceptionCode.POPULAR_SHORTS_NOT_FOUND));
+        return shortsRepository.findPopularShortsList().stream()
+                .map(s -> {
+                    String s3key = S3key.ORIGIN.buildS3key(s.getShortsTitle());
+                    s.setShortsS3URL(s3AsyncServiceImpl.generatePresignedGetURL(s3key, Duration.ofMinutes(30)));
+                    return s;
+                })
+                .toList();
 
     }
 
@@ -84,7 +99,6 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsStatsDto findShortsStats(String accessToken) {
         Member member = memberService.findMemberEntity(accessToken);
-
         return shortsRepository.findShortsStatsDto(member.getMemberIndex())
                 .orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND));
     }
@@ -99,14 +113,12 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public List<TriedShortsDto> findTriedShortsList(String accessToken) {
         Member member = memberService.findMemberEntity(accessToken);
-
-        return shortsRepository.findTriedShortsList(member.getMemberIndex())
+        return shortsRepository.findTriedShortsList(member.getMemberIndex());
 //                map 메서드는 Optinal 비어있으면 변환 작업을 수행하지 않음
 //                각 시간대별 변환을 프론트 라이브러리가 처리
 //                .map(tlist -> tlist.stream()
 //                        .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
 //                        .toList())
-                .orElse(Collections.emptyList());
 
     }
 
@@ -164,39 +176,15 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 id의 Shorts 객체를 반환
+     * Shorts DB에서 객체를 조회함
      *
      * @param shortsId Shorts 객체의 id
      * @return Shorts 객체
-     * @throws CustomException 해당 Shorts 객체를 찾을 수 없음
+     * @throws CustomException Shorts DB에 해당 객체가 없으면 예외 처리
      */
-    @Override
     public Shorts findShorts(int shortsId) {
         return shortsRepository.findById(shortsId)
                 .orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_NOT_FOUND));
-    }
-
-    /**
-     * Shorts 객체를 ShortsDto 객체로 반환
-     *
-     * @param shorts Shorts 객체
-     * @return ShortsDto 형으로 변환된 객체
-     */
-    @Override
-    public ShortsDto convertToShortsDto(Shorts shorts) {
-        return ShortsDto.builder()
-                .shortsId(shorts.getShortsId())
-                .shortsTime(shorts.getShortsTime())
-                .shortsTitle(shorts.getShortsTitle())
-                .shortsMusicTitle(shorts.getShortsMusicTitle())
-                .shortsMusicSinger(shorts.getShortsMusicSinger())
-                .shortsSource(shorts.getShortsSource())
-                .shortsS3Key(shorts.getShortsS3Key())
-                .shortsS3URL(s3AsyncServiceImpl.generatePresignedGetURL(shorts.getShortsS3Key(), Duration.ofMinutes(30)))
-                // tried_shorts 테이블에서 shorts_id를 count하는 서브쿼리를 보냄
-                .shortsChallengerNum(shorts.getTriedShortsList().size())
-                .build();
-
     }
 
 

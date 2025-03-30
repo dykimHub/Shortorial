@@ -11,11 +11,11 @@ import java.util.Optional;
 @Repository
 public interface ShortsRepositoryCustom {
 
-    Optional<List<ShortsDto>> findShortsList();
+    List<ShortsDto> findShortsList();
 
-    Optional<List<ShortsDto>> findPopularShortsList();
+    List<ShortsDto> findPopularShortsList();
 
-    Optional<List<TriedShortsDto>> findTriedShortsList(int memberIndex);
+    List<TriedShortsDto> findTriedShortsList(int memberIndex);
 
     Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex);
 }
