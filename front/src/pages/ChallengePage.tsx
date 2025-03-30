@@ -23,7 +23,7 @@ import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
 import StarEffect from "../components/style/StarEffect";
-import { Shorts } from "../constants/types";
+import { ShortsDTO } from "../constants/types";
 import { axios } from "../utils/axios";
 
 const ChallengePage = () => {
@@ -33,7 +33,7 @@ const ChallengePage = () => {
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
 
-  const [short, setShort] = useState<Shorts | null>(null);
+  const [short, setShort] = useState<ShortsDTO | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [danceVideoPath, setDanceVideoPath] = useState<string>("");
@@ -56,7 +56,6 @@ const ChallengePage = () => {
   const loadDanceVideo = async () => {
     // 댄스비디오 s3 url
     const thisShort = await getShortsInfo(`${params.shortsId}`);
-
     setShort(thisShort);
     if (thisShort) {
       setDanceVideoPath(thisShort.shortsS3URL); // 쇼츠 s3 링크
@@ -165,26 +164,30 @@ const ChallengePage = () => {
 
   const s3Upload = async (blob: Blob) => {
     try {
-      const createdAt = Date.now().toString(); // 파일명
-      // s3에 객체를 업로드할 수 있는 presignedputurl 조회
-      const presignedURL = await getPresignedPutURL(createdAt, short?.shortsS3Key);
+      const fileName = Date.now().toString(); // 생성날짜를 파일명으로 설정
+      if (short?.shortsS3Key) {
+        // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
+        // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
+        const metadata = {
+          song: btoa(String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key))),
+        };
 
-      // s3 메타데이터를 presignedurl과 똑같이 key value를 지정해야함
-      // s3 메타데이터는 baseu4 encoding안하면 오류남
-      const songS3key = btoa(String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key)));
-
-      await axios.put(presignedURL, blob, {
-        headers: {
-          "Content-Type": "video/mp4",
-          "x-amz-meta-song": songS3key,
-        },
-      });
+        // s3에 객체를 업로드할 수 있는 presignedputurl 생성된
+        const presignedPutURL = await getPresignedPutURL(fileName, metadata);
+        // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
+        await axios.put(presignedPutURL, blob, {
+          headers: {
+            "Content-Type": "video/mp4",
+            "x-amz-meta-song": metadata["song"],
+          },
+        });
+      }
 
       setLoadPath(loading);
       setFfmpegLog("음악 삽입...");
 
       // aws lambda가 처리를 완료했는지 조회
-      await check(createdAt);
+      await check(fileName);
     } catch (error: any) {
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
@@ -194,9 +197,9 @@ const ChallengePage = () => {
     }
   };
 
-  const check = async (createdAt: string) => {
+  const check = async (fileName: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
-    const presignedGetURL = await getPresignedGetURL(createdAt);
+    const presignedGetURL = await getPresignedGetURL(fileName);
     //console.log(presignedGetURL);
 
     let attempts = 0; // 요청 횟수 추적

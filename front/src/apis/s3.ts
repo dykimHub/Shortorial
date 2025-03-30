@@ -1,3 +1,4 @@
+import { S3PutRequest } from "../constants/types";
 import { axios } from "../utils/axios";
 import { uploadShortsToDB } from "./recordedshorts";
 
@@ -7,7 +8,7 @@ const REST_S3_URL = "/api/s3";
 export async function getS3Blob(shortsS3Key: string) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-    console.log(shortsS3Key);
+    //console.log(shortsS3Key);
 
     const res = await axios.post(
       `${REST_S3_URL}/blob`,
@@ -68,10 +69,10 @@ export async function deleteShortsFromS3(s3key: string) {
   }
 }
 
-export async function getPresignedGetURL(fileName: string | undefined) {
+export async function getPresignedGetURL(fileName: string) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-    const res = await axios.get(`${REST_S3_URL}/presigned-url/get`, {
+    const res = await axios.get(`${REST_S3_URL}/get`, {
       headers: {
         Authorization: token,
       },
@@ -84,14 +85,17 @@ export async function getPresignedGetURL(fileName: string | undefined) {
   }
 }
 
-export async function getPresignedPutURL(createdAt: string, s3key: string | undefined) {
+export async function getPresignedPutURL(fileName: string, metadata: Record<string, string>) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-    const res = await axios.get(`${REST_S3_URL}/presigned-url/put`, {
+    const s3PutRequest: S3PutRequest = {
+      fileName: fileName,
+      metadata: metadata,
+    };
+    const res = await axios.post(`${REST_S3_URL}/put`, s3PutRequest, {
       headers: {
         Authorization: token,
       },
-      params: { createdAt, s3key },
     });
 
     return res.data;
@@ -105,7 +109,7 @@ export async function getRecordedShorts() {
     const token = "Bearer " + localStorage.getItem("accessToken");
     //console.log(shortsS3Key);
 
-    const res = await axios.get(`${REST_S3_URL}/recorded-shorts`, {
+    const res = await axios.get(`${REST_S3_URL}/get/list`, {
       headers: {
         Authorization: token,
       },
