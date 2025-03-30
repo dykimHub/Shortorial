@@ -3,16 +3,17 @@ import styled from "styled-components";
 import { Edit, EditOff, Close, Download } from "@mui/icons-material";
 import { updateTitle, deleteShorts } from "../../apis/recordedshorts";
 import { getS3Blob } from "../../apis/s3";
-import { UploadShorts } from "../../constants/types";
+//import { UploadShorts } from "../../constants/types";
+import { S3Object } from "../../constants/types";
 import moment from "moment";
 
 interface UploadComponentProps {
-  uploadShorts: UploadShorts;
+  uploadShorts: S3Object;
   onDelete: () => void;
 }
 
 const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
-  const [title, setTitle] = useState<string>(uploadShorts.recordedShortsTitle);
+  const [title, setTitle] = useState<string>(uploadShorts.key);
   const [modify, setModify] = useState<boolean>(false);
   const [download, setDownload] = useState<boolean>(false);
   //const [share, setShare] = useState<boolean>(false);
@@ -50,7 +51,7 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     setDownload(true);
 
     try {
-      const videoBlob = await getS3Blob(uploadShorts.recordedShortsS3key);
+      const videoBlob = await getS3Blob(uploadShorts.key);
       const downloadUrl = URL.createObjectURL(videoBlob);
 
       const downloadLink = document.createElement("a");
@@ -94,11 +95,9 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     <ResultContainer>
       <VideoContainer>
         <Gradient className="gradient" />
-        <Video src={uploadShorts.recordedShortsS3URL} controls crossOrigin="anonymous"></Video>
+        <Video src={uploadShorts.url} controls crossOrigin="anonymous"></Video>
         <MyVideoControlComponent>
-          <CloseIcon
-            onClick={() => deleteUploadedShorts(uploadShorts.recordedShortsS3key)}
-          ></CloseIcon>
+          <CloseIcon onClick={() => deleteUploadedShorts(uploadShorts.key)}></CloseIcon>
           {!download && <DownloadIcon onClick={downloadVideo}></DownloadIcon>}
           {download && (
             <DownloadingIcon src="../src/assets/mypage/downloading.gif"></DownloadingIcon>
@@ -121,10 +120,10 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
       {modify && (
         <TitleContainer>
           <InputBox type="text" value={title} onChange={handleTitleChange} />
-          <CheckIcon onClick={() => saveTitle(uploadShorts.recordedShortsId, title)}></CheckIcon>
+          <CheckIcon onClick={() => saveTitle(1, title)}></CheckIcon>
         </TitleContainer>
       )}
-      <div className="date">{moment(uploadShorts.recordedShortsDate).format("MMM DD, hA")}</div>
+      <div className="date">{moment(uploadShorts.lastModified).format("MMM DD, H:MM")}</div>
     </ResultContainer>
   );
 };

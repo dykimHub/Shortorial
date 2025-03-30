@@ -1,23 +1,16 @@
 import { useEffect, useState } from "react";
-import { UploadShorts } from "../../constants/types";
-import { getUploadedShorts } from "../../apis/recordedshorts";
+//import { UploadShorts } from "../../constants/types";
+import { S3Object } from "../../constants/types";
+//import { getUploadedShorts } from "../../apis/recordedshorts";
+import { getRecordedShorts } from "../../apis/s3";
 import { getCounting } from "../../apis/shorts";
 import useMypageStore from "../../store/useMypageStore";
 import styled from "styled-components";
 import UploadComponent from "./UploadComponent";
 
 export default function UploadList() {
-  const [uploadedShortsList, setUploadedShortsList] = useState<UploadShorts[]>([]);
+  const [uploadedShortsList, setUploadedShortsList] = useState<S3Object[]>([]);
   const { setCountings } = useMypageStore();
-
-  // const getRecordedShorts = async () => {
-  //   try {
-  //     const data = await getUploadedShorts();
-  //     setShortsList(data);
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   }
-  // };
 
   const handleDeleteShort = async () => {
     await loadRecordedShortsList();
@@ -26,17 +19,14 @@ export default function UploadList() {
   };
 
   const loadRecordedShortsList = async () => {
-    const data = await getUploadedShorts();
+    //const data = await getUploadedShorts();
+    const data = await getRecordedShorts();
     if (data) setUploadedShortsList(data);
   };
 
   useEffect(() => {
     loadRecordedShortsList();
   }, []);
-
-  // useEffect(() => {
-  //   getRecordedShorts();
-  // }, []);
 
   return (
     <Container>
@@ -48,7 +38,7 @@ export default function UploadList() {
             ) : (
               uploadedShortsList.map((uploadShorts) => (
                 <UploadComponent
-                  key={uploadShorts.recordedShortsId}
+                  key={uploadShorts.key}
                   uploadShorts={uploadShorts}
                   onDelete={handleDeleteShort}
                 />

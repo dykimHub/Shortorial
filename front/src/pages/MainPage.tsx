@@ -49,9 +49,9 @@ const MainPage = () => {
     navigate(`/learn/${shortsId}`);
   };
 
-  const goToChallengeMode = (shortsNo: number) => {
-    getTryCount(shortsNo);
-    navigate(`/challenge/${shortsNo}`);
+  const goToChallengeMode = (shortsId: number) => {
+    getTryCount(shortsId);
+    navigate(`/challenge/${shortsId}`);
   };
 
   // 둘러보기 쇼츠 리스트 가져오기
