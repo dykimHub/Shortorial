@@ -1,14 +1,18 @@
 package com.sleep.sleep.s3.service;
 
 import com.sleep.sleep.s3.dto.S3ObjectDto;
+import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public interface S3AsyncService {
-    String generatePresignedGetURL(String accessToken, String s3key);
+    String generatePresignedGetURL(String accessToken, String fileName);
 
-    String generatePresignedPutURL(String accessToken, String createdAt, String originS3key);
+    String generatePresignedGetURL(String s3key, Duration valid);
 
     List<S3ObjectDto> getRecordedShortsList(String accessToken);
+
+    String generatePresignedPutURL(String accessToken, S3PutRequestDTO s3PutRequestDTO);
+
 }

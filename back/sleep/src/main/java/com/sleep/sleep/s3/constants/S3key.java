@@ -12,11 +12,17 @@ public enum S3key {
 
     private String folder;
 
-    public String buildS3Key(String memberId, String fileName) {
-        return this.folder + memberId + "/" + fileName + ".mp4";
-    }
-
     public String buildPrefix(String memberId) {
         return this.folder + memberId + "/";
     }
+
+    public String buildS3key(String fileName){
+        return this.folder + fileName;
+    }
+
+    public String buildS3key(String memberId, String fileName) {
+        return this.folder + memberId + "/" + fileName + ".mp4";
+    }
+
+
 }
