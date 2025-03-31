@@ -1,8 +1,11 @@
 package com.sleep.sleep.shorts.controller;
 
 import com.sleep.sleep.exception.SuccessResponse;
-import com.sleep.sleep.shorts.dto.*;
+import com.sleep.sleep.shorts.dto.ShortsDto;
+import com.sleep.sleep.shorts.dto.ShortsStatsDto;
+import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.service.ShortsService;
+import com.sleep.sleep.shorts.service.TriedShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,7 @@ import java.util.List;
 @RestController
 public class ShortsController {
     private final ShortsService shortsService;
+    private final TriedShortsService triedShortsService;
 
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
@@ -56,7 +60,7 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠 조회")
     @GetMapping("/tried")
     public ResponseEntity<List<TriedShortsDto>> findTriedShortsList(@RequestHeader("Authorization") String accessToken) {
-        List<TriedShortsDto> shortsList = shortsService.findTriedShortsList(accessToken);
+        List<TriedShortsDto> shortsList = triedShortsService.findTriedShortsList(accessToken);
         return ResponseEntity.ok()
                 .body(shortsList);
 
@@ -65,7 +69,7 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠에 추가")
     @PostMapping("/tried/{shortsId}")
     public ResponseEntity<SuccessResponse> addTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
-        SuccessResponse successResponse = shortsService.addTriedShorts(accessToken, shortsId);
+        SuccessResponse successResponse = triedShortsService.addTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 
@@ -74,7 +78,7 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠에서 삭제")
     @DeleteMapping("/tried/{shortsId}")
     public ResponseEntity<SuccessResponse> deleteTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
-        SuccessResponse successResponse = shortsService.deleteTriedShorts(accessToken, shortsId);
+        SuccessResponse successResponse = triedShortsService.deleteTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 
