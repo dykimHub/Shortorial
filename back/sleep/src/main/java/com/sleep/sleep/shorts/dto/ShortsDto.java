@@ -21,7 +21,7 @@ public class ShortsDto {
     // 쇼츠 S3 key
     private String shortsS3Key;
     // 쇼츠 S3 PresingedGetURL
-    @Setter
+    @With
     private String shortsS3URL;
     // 쇼츠 시도한 사람 수
     private int shortsChallengerNum;
@@ -38,10 +38,15 @@ public class ShortsDto {
     }
 
     @Builder
-    public ShortsDto(int shortsId, String shortsTitle, String shortsS3Key, String shortsS3URL) {
+    public ShortsDto(int shortsId, int shortsTime, String shortsTitle, String shortsMusicTitle, String shortsMusicSinger, String shortsSource, String shortsS3Key, String shortsS3URL, int shortsChallengerNum) {
         this.shortsId = shortsId;
+        this.shortsTime = shortsTime;
         this.shortsTitle = shortsTitle;
+        this.shortsMusicTitle = shortsMusicTitle;
+        this.shortsMusicSinger = shortsMusicSinger;
+        this.shortsSource = shortsSource;
         this.shortsS3Key = shortsS3Key;
         this.shortsS3URL = shortsS3URL;
+        this.shortsChallengerNum = shortsChallengerNum;
     }
 }

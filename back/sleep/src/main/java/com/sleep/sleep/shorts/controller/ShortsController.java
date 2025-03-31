@@ -18,21 +18,21 @@ import java.util.List;
 public class ShortsController {
     private final ShortsService shortsService;
 
-    @Operation(summary = "쇼츠 목록 조회")
-    @GetMapping
-    public ResponseEntity<List<ShortsDto>> findShortList() {
-        List<ShortsDto> shortsDtoList = shortsService.findShortsList();
-        return ResponseEntity.ok()
-                .body(shortsDtoList);
-
-    }
-
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
     public ResponseEntity<ShortsDto> findShorts(@PathVariable int shortsId) {
         ShortsDto shortsDto = shortsService.findShortsDto(shortsId);
         return ResponseEntity.ok()
                 .body(shortsDto);
+
+    }
+
+    @Operation(summary = "쇼츠 목록 조회")
+    @GetMapping
+    public ResponseEntity<List<ShortsDto>> findShortList() {
+        List<ShortsDto> shortsDtoList = shortsService.findShortsList();
+        return ResponseEntity.ok()
+                .body(shortsDtoList);
 
     }
 
