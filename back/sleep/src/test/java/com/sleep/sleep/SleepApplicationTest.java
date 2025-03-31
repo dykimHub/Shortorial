@@ -4,10 +4,8 @@ import com.sleep.sleep.member.dto.JoinDto;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.repository.MemberRepository;
 import com.sleep.sleep.member.service.MemberService;
-import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
-import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
 import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import com.sleep.sleep.shorts.service.ShortsService;
@@ -16,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Random;
-import java.util.UUID;
 
 //@Sql("/data.sql")
 //@ActiveProfiles("test")
@@ -36,14 +33,11 @@ class SleepApplicationTest {
     ShortsRepository shortsRepository;
     @Autowired
     TriedShortsRepository triedShortsRepository;
-    @Autowired
-    RecordedShortsRepository recordedShortsRepository;
 
     @Test
     void setUp() {
         addMembers();
         addTriedShorts(5000);
-        addRecordedShorts(5000);
     }
 
     private void addMembers() {
@@ -78,22 +72,5 @@ class SleepApplicationTest {
 
     }
 
-    private void addRecordedShorts(int count) {
-        for (int i = 1; i <= count; i++) {
-            int memberIndex = random.nextInt(memberNum) + 1;
-            Member member = memberRepository.findById(memberIndex).orElseThrow();
-
-            RecordedShorts recordedShorts = RecordedShorts.builder()
-                    .recordedShortsTitle(UUID.randomUUID().toString())
-                    .recordedShortsS3key(UUID.randomUUID().toString())
-                    .recordedShortsS3URL(UUID.randomUUID().toString())
-                    .member(member)
-                    .build();
-
-            recordedShortsRepository.save(recordedShorts);
-
-        }
-
-    }
 
 }

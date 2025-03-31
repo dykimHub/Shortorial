@@ -23,10 +23,10 @@ public interface TriedShortsRepository extends JpaRepository<TriedShorts, Intege
     /**
      * 회원 id, 쇼츠 id 복합 unique key를 이용하여 회원이 시도한 쇼츠 객체를 반환
      *
-     * @param memberIndex 특정 회원의 id
+     * @param memberId 특정 회원의 아이디
      * @param shortsId    특정 쇼츠의 id
      */
-    @Query("SELECT t FROM TriedShorts t WHERE t.member.memberIndex = :memberIndex AND t.shorts.shortsId = :shortsId")
-    Optional<TriedShorts> findTriedShorts(int memberIndex, int shortsId);
+    @Query("SELECT t FROM TriedShorts t WHERE t.member.memberId = :memberId AND t.shorts.shortsId = :shortsId")
+    Optional<TriedShorts> findTriedShorts(String memberId, int shortsId);
 
 }

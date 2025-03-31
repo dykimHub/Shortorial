@@ -30,8 +30,6 @@ class ShortsRepositoryTest {
 
     @Autowired
     private JPAQueryFactory queryFactory;
-    @Autowired
-    private RecordedShortsRepository recordedShortsRepository;
 
     @DisplayName("특정 회원의 TriedShorts 목록을 DTO 형식으로 조회")
     @Test
@@ -49,8 +47,6 @@ class ShortsRepositoryTest {
                                 qShorts.shortsMusicTitle,
                                 qShorts.shortsMusicSinger,
                                 qShorts.shortsSource,
-                                qShorts.shortsS3Key,
-                                qShorts.shortsS3URL,
                                 qShorts.triedShortsList.size()
                         )
                 ))
