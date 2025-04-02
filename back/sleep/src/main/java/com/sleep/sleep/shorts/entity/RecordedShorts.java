@@ -17,35 +17,33 @@ import java.time.OffsetDateTime;
 )
 @Entity
 public class RecordedShorts {
-
-    // 녹화한 쇼츠 테이블 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int recordedShortsId;
-    // 녹화한 쇼츠 제목
+    private int recordedShortsId; // 녹화한 쇼츠 테이블 ID
     @Column(nullable = false)
-    private String recordedShortsTitle;
-    // 녹화한 시간
+    private String recordedShortsTitle; // 녹화한 쇼츠 제목
     @CreationTimestamp
     @Column(nullable = false)
-    private OffsetDateTime recordedShortsDate;
+    private OffsetDateTime recordedShortsDate; // 녹화한 시간
     @Column(name = "recorded_shorts_s3key", nullable = false, unique = true)
-    private String recordedShortsS3key;
-    @Column(name = "recorded_shorts_s3url", nullable = false)
-    private String recordedShortsS3URL;
-    // 유튜브 업로드 URL
+    private String recordedShortsS3key; // 녹화한 쇼츠 s3key
+    @Column
+    private String status;
     @Column(name = "recorded_shorts_youtubeurl")
-    private String recordedShortsYoutubeURL;
-    // 녹화한 멤버 객체
+    private String recordedShortsYoutubeURL; // 유튜브 업로드 URL
     @ManyToOne
     @JoinColumn(name = "member_no")
     private Member member;
+    @ManyToOne
+    @JoinColumn(name = "shorts_id")
+    private Shorts shorts;
+
     @Builder
-    public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, String recordedShortsS3URL, Member member) {
+    public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, String status, Member member, Shorts shorts) {
         this.recordedShortsTitle = recordedShortsTitle;
         this.recordedShortsS3key = recordedShortsS3key;
-        this.recordedShortsS3URL = recordedShortsS3URL;
+        this.status = status;
         this.member = member;
+        this.shorts = shorts;
     }
-
 }

@@ -1,110 +1,66 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.exception.CustomException;
-import com.sleep.sleep.exception.ExceptionCode;
-import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
-import com.sleep.sleep.s3.service.S3AsyncServiceImpl;
-import com.sleep.sleep.shorts.dto.ModifiedShortsDto;
-import com.sleep.sleep.shorts.dto.RecordedShortsDto;
+import com.sleep.sleep.s3.constants.S3Status;
+import com.sleep.sleep.s3.constants.S3key;
+import com.sleep.sleep.s3.dto.S3PutRequestDTO;
+import com.sleep.sleep.s3.dto.S3PutResponseDTO;
+import com.sleep.sleep.s3.service.S3AsyncService;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
+import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
-import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.Duration;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class RecordedShortsServiceImpl implements RecordedShortsService {
     private final MemberService memberService;
-    private final TriedShortsRepository triedShortsRepository;
-    private final S3AsyncServiceImpl s3AsyncServiceImpl;
+    private final ShortsService shortsService;
+    private final S3AsyncService s3AsyncService;
     private final RecordedShortsRepository recordedShortsRepository;
 
     /**
-     * 특정 id의 회원의 RecordedShortsDto 리스트를 반환함
+     * S3PutResponseDTO를 활용하여 RecordedShorts 객체를 생성하고 녹화한 쇼츠 DB에 저장합니다.
+     * S3 Put용 서명된 URL을 생성한 후 S3 key와 함께 S3PutResponseDTO를 생성하여 반환합니다.
      *
-     * @param accessToken 로그인한 회원의 token
-     * @return RecordedShortsDto 리스트
-     */
-    @Override
-    public List<RecordedShortsDto> findRecordedShortsList(String accessToken) {
-        Member member = memberService.findMemberEntity(accessToken);
-        return null;
-    }
-
-    /**
-     * 특정 id의 회원이 녹화한 쇼츠를 recorded_shorts에 등록함
-     * 녹화된 쇼츠의 제목을 활용하여 S3 링크를 얻고 메타데이터에서 S3에 저장된 시간을 얻음
-     *
-     * @param accessToken         로그인한 회원의 token
-     * @param recordedShortsS3Key 녹화하고 S3에 업로드된 쇼츠의 S3key
-     * @return RecordedShorts 등록에 성공하면 SuccessResponse 객체를 반환함
+     * @param accessToken     로그인한 회원의 토큰
+     * @param s3PutRequestDTO S3에 업로드할 때 필요한 정보가 담긴 S3PutRequestDTO 객체
+     * @return s3key와 서명된 Put URL이 담긴 S3PutResponseDTO 객체
      */
     @Transactional
     @Override
-    public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key) {
+    public S3PutResponseDTO addRecordedShorts(String accessToken, S3PutRequestDTO s3PutRequestDTO) {
         Member member = memberService.findMemberEntity(accessToken);
+        Shorts shorts = shortsService.findShorts(s3PutRequestDTO.getShortsId());
+        // UUID를 활용하여 파일 제목을 임의 지정
+        String fileName = UUID.randomUUID().toString();
+        // 파일 제목으로 s3 key 생성(S3 User 폴더에 업로드)
+        String recordedShortsS3key = S3key.USERS.buildS3key(member.getMemberId(), fileName);
+        String presignedPutURL = s3AsyncService.generatePresignedPutURL(recordedShortsS3key, s3PutRequestDTO.getMetadata(), Duration.ofMinutes(10));
 
-        String recordedShortsTitle = recordedShortsS3Key.split("/")[1];
-        String recordedShortsS3URL = null;
-
-        RecordedShorts recordedShorts = RecordedShorts.builder()
-                .recordedShortsTitle(recordedShortsTitle)
-                .recordedShortsS3key(recordedShortsS3Key)
-                .recordedShortsS3URL(recordedShortsS3URL)
+        // 음악 처리 성공하면 S3 Lambda 폴더에 최종 업로드
+        String processedShortsS3key = S3key.LAMBDA.buildS3key(member.getMemberId(), fileName);
+        RecordedShorts newRecordedShorts = RecordedShorts.builder()
+                .recordedShortsTitle(fileName)
+                .recordedShortsS3key(processedShortsS3key)
+                .status(S3Status.PENDING.getStatus()) // S3 업로드 되기 전이므로 PENDING 상태로 기록
+                .shorts(shorts)
                 .member(member)
                 .build();
 
-        recordedShortsRepository.save(recordedShorts);
+        recordedShortsRepository.save(newRecordedShorts);
 
-        return SuccessResponse.of("회원이 녹화한 쇼츠가 저장되었습니다.");
-    }
+        return S3PutResponseDTO.builder()
+                .processedShortsS3key(processedShortsS3key)
+                .presignedPutURL(presignedPutURL)
+                .build();
 
-    /**
-     * 특정 id의 회원이 녹화한 쇼츠의 제목을 변경함
-     *
-     * @param accessToken       로그인한 회원의 token
-     * @param modifiedShortsDto 제목을 수정할 RecordedShorts 객체의 id와 새로운 제목이 포함된 ModifiedShortsDto 객체
-     * @return 제목 변경에 성공하면 SuccessResponse 객체를 반환함
-     * @throws CustomException 특정 id의 회원이 녹화한 쇼츠 중에 겹치는 제목이 있음
-     */
-    @Transactional
-    @Override
-    public SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifiedShortsDto modifiedShortsDto) {
-        RecordedShorts recordedShorts = recordedShortsRepository.findById(modifiedShortsDto.getRecordedShortsId())
-                .orElseThrow(() -> new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND));
-        String memberId = memberService.findMemberId(accessToken);
-
-        recordedShortsRepository.findByRecordedShortsTitle(memberId, modifiedShortsDto.getNewRecordedShortsTitle())
-                .ifPresent(r -> {
-                    throw new CustomException(ExceptionCode.EXISTED_RECORDED_SHORTS_TITLE);
-                });
-
-        recordedShortsRepository.modifyRecordedShortsTitle(recordedShorts.getRecordedShortsId(), modifiedShortsDto.getNewRecordedShortsTitle());
-
-        return SuccessResponse.of("회원이 녹화한 쇼츠가 새로운 제목으로 변경되었습니다.");
-    }
-
-    /**
-     * RecordedShorts 객체의 삭제를 시도하면 is_deleted 열을 1로 변환함
-     *
-     * @param S3key 삭제할 RecordedShorts 객체의 S3 key
-     * @return 삭제에 성공하면 SuccessResponse 객체를 반환함
-     */
-    @Transactional
-    @Override
-    public SuccessResponse deleteRecordedShorts(String S3key) {
-        RecordedShorts recordedShorts = recordedShortsRepository.findByRecordedShortsByS3key(S3key)
-                .orElseThrow(() -> new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND));
-
-        recordedShortsRepository.deleteById(recordedShorts.getRecordedShortsId());
-
-        return SuccessResponse.of("회원이 녹화한 쇼츠가 삭제되었습니다.");
     }
 
 }

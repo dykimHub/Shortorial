@@ -1,19 +1,9 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.exception.SuccessResponse;
-import com.sleep.sleep.shorts.dto.ModifiedShortsDto;
-import com.sleep.sleep.shorts.dto.RecordedShortsDto;
-
-import java.util.List;
+import com.sleep.sleep.s3.dto.S3PutRequestDTO;
+import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 
 public interface RecordedShortsService {
-    List<RecordedShortsDto> findRecordedShortsList(String accessToken);
-
-    SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key);
-
-    SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifiedShortsDto modifiedShortsDto);
-
-    SuccessResponse deleteRecordedShorts(String S3key);
-
+    S3PutResponseDTO addRecordedShorts(String accessToken, S3PutRequestDTO s3PutRequestDTO);
 
 }

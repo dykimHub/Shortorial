@@ -1,9 +1,12 @@
 package com.sleep.sleep.shorts.controller;
 
 import com.sleep.sleep.exception.SuccessResponse;
+import com.sleep.sleep.s3.dto.S3PutRequestDTO;
+import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
+import com.sleep.sleep.shorts.service.RecordedShortsService;
 import com.sleep.sleep.shorts.service.ShortsService;
 import com.sleep.sleep.shorts.service.TriedShortsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +24,7 @@ import java.util.List;
 public class ShortsController {
     private final ShortsService shortsService;
     private final TriedShortsService triedShortsService;
+    private final RecordedShortsService recordedShortsService;
 
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
@@ -82,6 +86,15 @@ public class ShortsController {
         return ResponseEntity.ok()
                 .body(successResponse);
 
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠에 추가")
+    @PostMapping("/recorded")
+    public ResponseEntity<S3PutResponseDTO> addRecordedShorts(@RequestHeader("Authorization") String accessToken,
+                                                              @RequestBody S3PutRequestDTO s3PutRequestDTO) {
+        S3PutResponseDTO s3PutResponseDTO = recordedShortsService.addRecordedShorts(accessToken, s3PutRequestDTO);
+        return ResponseEntity.ok()
+                .body(s3PutResponseDTO);
     }
 
 
