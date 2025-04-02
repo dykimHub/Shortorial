@@ -1,4 +1,4 @@
-import { ModifyingShorts } from "../constants/types";
+import { ModifyingShorts, S3PutRequest } from "../constants/types";
 import { axios } from "../utils/axios";
 import { deleteShortsFromS3 } from "./s3.ts";
 
@@ -22,25 +22,45 @@ export async function getUploadedShorts() {
 }
 
 // 회원이 녹화한 쇼츠 등록
-export async function uploadShortsToDB(s3key: string) {
+export async function getPresignedPutURL(shortsId: number, metadata: Record<string, string>) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-
-    const res = await axios.post(
-      `${REST_RECORDED_SHORTS_URL}`,
-      { s3key: s3key }, // map 전송
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
+    const s3PutRequest: S3PutRequest = {
+      shortsId: shortsId,
+      metadata: metadata,
+    };
+    const res = await axios.post(`${REST_RECORDED_SHORTS_URL}`, s3PutRequest, {
+      headers: {
+        Authorization: token,
+      },
+    });
 
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);
   }
 }
+
+// // 회원이 녹화한 쇼츠 등록
+// export async function uploadShortsToDB(s3key: string) {
+//   try {
+//     const token = "Bearer " + localStorage.getItem("accessToken");
+
+//     const res = await axios.post(
+//       `${REST_RECORDED_SHORTS_URL}`,
+//       { s3key: s3key }, // map 전송
+//       {
+//         headers: {
+//           Authorization: token,
+//         },
+//       }
+//     );
+
+//     return res.data;
+//   } catch (error: any) {
+//     console.error(error.response.data);
+//   }
+// }
 
 // 회원이 녹화한 쇼츠 제목 수정
 export async function updateTitle(modifyingShorts: ModifyingShorts) {

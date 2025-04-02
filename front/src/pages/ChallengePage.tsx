@@ -17,13 +17,15 @@ import {
   Movie,
 } from "@mui/icons-material";
 import { getShortsInfo } from "../apis/shorts";
-import { getPresignedGetURL, getPresignedPutURL } from "../apis/s3";
+import { getPresignedGetURL } from "../apis/s3";
+import { getPresignedPutURL } from "../apis/recordedshorts";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
+import camera from "../assets/challenge/camera.png";
 import StarEffect from "../components/style/StarEffect";
-import { ShortsDTO } from "../constants/types";
+import { Shorts } from "../constants/types";
 import { axios } from "../utils/axios";
 
 const ChallengePage = () => {
@@ -33,7 +35,7 @@ const ChallengePage = () => {
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
 
-  const [short, setShort] = useState<ShortsDTO | null>(null);
+  const [short, setShort] = useState<Shorts | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [danceVideoPath, setDanceVideoPath] = useState<string>("");
@@ -44,6 +46,12 @@ const ChallengePage = () => {
   const [timer, setTimer] = useState<number>(initialTimer); // 타이머
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
   const [ffmpegLog, setFfmpegLog] = useState("");
+  const [resolutionText, setResolutionText] = useState<string | null>(null);
+  const videoResolutionRef = useRef<{ width: number; height: number }>({
+    width: 405,
+    height: 720,
+  });
+
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
 
   type LearnState = "RECORD" | "READY";
@@ -71,7 +79,8 @@ const ChallengePage = () => {
 
   const handleCloseModal = () => setShow(false);
   const showRecordButton = () => setRecording(false);
-  const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
+  // const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
+  const showCancelButton = () => prepareRecording(); // 타이머 useEffect 시작
 
   const goToLearnMode = () => {
     stream?.getTracks().forEach((track) => track.stop());
@@ -106,23 +115,38 @@ const ChallengePage = () => {
     mediaRecorder?.stop(); // recorder.onstop() 실행
   };
 
-  // 녹화 시작 버튼이 눌리면
-  const startRecording = () => {
-    setState("RECORD");
-
+  const prepareRecording = () => {
     if (!stream) {
       alert("카메라 접근을 허용해주세요.");
       return;
     }
 
+    const [track] = stream.getVideoTracks();
+    const { width = 405, height = 720 } = track.getSettings();
+    videoResolutionRef.current = { width, height };
+
+    setResolutionText(`녹화 해상도: ${width}x${height}`);
+    setRecording(true); // ✅ recording 상태 변경 → useEffect 작동 트리거
+  };
+
+  // 녹화 시작 버튼이 눌리면
+  const startRecording = () => {
+    // if (!stream) {
+    //   alert("카메라 접근을 허용해주세요.");
+    //   return;
+    // }
+
     const canvas = document.createElement("canvas"); // 캔버스 생성
     const ctx = canvas.getContext("2d")!; // 2D 렌더링 컨텍스트
-    const [track] = stream.getVideoTracks(); // 스트림에서 비디오 트랙을 가져오기
-    const { width = 405, height = 720 } = track.getSettings(); // 해상도 기본 값
+    //const [track] = stream.getVideoTracks(); // 스트림에서 비디오 트랙을 가져오기
+    //const { width = 405, height = 720 } = track.getSettings(); // 해상도 기본 값
+    //setResolutionText(`📸 녹화 해상도: ${width}x${height}`);
+    const { width, height } = videoResolutionRef.current;
+    setState("RECORD");
 
-    setShow(true); // 모달 열기
-    setFfmpegLog(`📸 녹화 해상도: ${width}x${height}`);
-    setTimeout(handleCloseModal, 1500);
+    //setShow(true); // 모달 열기
+    //setFfmpegLog(`📸 녹화 해상도: ${width}x${height}`);
+    //setTimeout(handleCloseModal, 1500);
 
     canvas.width = width;
     canvas.height = height;
@@ -163,43 +187,49 @@ const ChallengePage = () => {
   };
 
   const s3Upload = async (blob: Blob) => {
-    try {
-      const fileName = Date.now().toString(); // 생성날짜를 파일명으로 설정
-      if (short?.shortsS3Key) {
-        // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
-        // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
-        const metadata = {
-          song: btoa(String.fromCharCode(...new TextEncoder().encode(short?.shortsS3Key))),
-        };
+    if (!short) {
+      alert("원본 Shorts에 문제가 생겼습니다.");
+      throw new Error("원본 쇼츠가 존재하지 않습니다.");
+    }
 
-        // s3에 객체를 업로드할 수 있는 presignedputurl 생성된
-        const presignedPutURL = await getPresignedPutURL(fileName, metadata);
-        // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
-        await axios.put(presignedPutURL, blob, {
-          headers: {
-            "Content-Type": "video/mp4",
-            "x-amz-meta-song": metadata["song"],
-          },
-        });
-      }
+    try {
+      // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
+      // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
+      const metadata = {
+        song: btoa(String.fromCharCode(...new TextEncoder().encode(short.shortsS3key))),
+      };
+
+      // s3에 객체를 업로드할 수 있는 presignedputurl 및 lambda 처리 완료됐다고 가정하고 생성한 s3key 받음
+      const { processedShortsS3key, presignedPutURL } = await getPresignedPutURL(
+        short.shortsId,
+        metadata
+      );
+
+      // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
+      await axios.put(presignedPutURL, blob, {
+        headers: {
+          "Content-Type": "video/mp4",
+          "x-amz-meta-song": metadata["song"],
+        },
+      });
 
       setLoadPath(loading);
       setFfmpegLog("음악 삽입...");
 
       // aws lambda가 처리를 완료했는지 조회
-      await check(fileName);
+      await check(processedShortsS3key);
     } catch (error: any) {
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
-      console.error("s3 upload fail", error.data);
+      console.error("s3 업로드 실패", error.data);
     } finally {
       setState("READY");
     }
   };
 
-  const check = async (fileName: string) => {
+  const check = async (processedShortsS3key: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
-    const presignedGetURL = await getPresignedGetURL(fileName);
+    const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
     //console.log(presignedGetURL);
 
     let attempts = 0; // 요청 횟수 추적
@@ -225,7 +255,7 @@ const ChallengePage = () => {
           setTimeout(handleCloseModal, 3000);
         }
       }
-    }, 10000); // 10초 (10000ms) 간격으로 요청
+    }, 5000); // 5초 (5000ms) 간격으로 요청
   };
 
   const isExist = async (presignedGetURL: string) => {
@@ -241,10 +271,14 @@ const ChallengePage = () => {
   // 타이머
   useEffect(() => {
     if (recording) {
+      setShow(true);
+      setLoadPath(camera);
+      setFfmpegLog(resolutionText || "녹화 준비 중...");
       // 녹화 시작 버튼을 눌렀을 때
       const intervalId = setInterval(() => {
         setTimer((prevTimer) => {
           if (prevTimer <= 1) {
+            handleCloseModal();
             clearInterval(intervalId); // 인터벌 종료
             startRecording(); // 녹화 시작
             return initialTimer; // 로컬스토리지에 저장된 타이머값으로 초기화

@@ -19,16 +19,10 @@ export interface Shorts {
   shortsTitle: string;
   shortsTime: number;
   shortsChallengerNum: number;
+  shortsS3key: string;
   shortsS3URL: string;
   shortsMusicTitle: string;
   shortsMusicSinger: string;
-}
-
-export interface ShortsDTO {
-  shortsId: number;
-  shortsTitle: string;
-  shortsS3Key: string;
-  shortsS3URL: string;
 }
 
 export interface RecomShorts {
@@ -83,6 +77,6 @@ export interface S3Object {
 }
 
 export interface S3PutRequest {
-  fileName: string;
+  shortsId: number;
   metadata: Record<string, string>;
 }
