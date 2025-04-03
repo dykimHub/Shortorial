@@ -6,12 +6,9 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortsStatsDto {
-    // 시도한 쇼츠 수
-    int triedShortsNum;
-    // 녹화한 쇼츠 수
-    int recordedShortsNum;
-    // 유튜브에 업로드한 쇼츠 수
-    int uploadedShortsNum;
+    int triedShortsNum; // 시도한 쇼츠 수
+    int recordedShortsNum; // 녹화한 쇼츠 수
+    int uploadedShortsNum; // 유튜브에 업로드한 쇼츠 수
 
     @QueryProjection
     @Builder

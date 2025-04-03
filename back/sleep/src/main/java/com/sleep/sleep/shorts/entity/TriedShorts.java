@@ -21,25 +21,16 @@ import java.time.ZoneOffset;
 )
 @Entity
 public class TriedShorts {
-
-    // 시도한 쇼츠 테이블 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int triedShortsId;
-
-    // 시도한 시간
+    private int triedShortsId; // 시도한 쇼츠 테이블 ID
     @CreationTimestamp
     @Column(nullable = false)
-    private OffsetDateTime triedShortsDate;
-
-    // 시도한 쇼츠 객체
+    private OffsetDateTime triedShortsDate; // 시도한 시간
     @ManyToOne
     @JoinColumn(name = "shorts_id")
-    private Shorts shorts;
-
-    // 시도한 멤버 객체
-    // 시도한 쇼츠를 조회할 때 멤버 정보를 출력할 필요가 없어서 Lazy Fetch로 변경
-    @ManyToOne(fetch = FetchType.LAZY)
+    private Shorts shorts; // 시도한 쇼츠 객체
+    @ManyToOne(fetch = FetchType.LAZY) // 회원 정보는 필요할 때만 조회
     @JoinColumn(name = "member_no")
     private Member member;
 
@@ -50,8 +41,7 @@ public class TriedShorts {
     }
 
     public void updateTriedShortsDate() {
-        OffsetDateTime updatedTriedShortsDate = OffsetDateTime.now(ZoneOffset.UTC);
-        this.triedShortsDate = updatedTriedShortsDate;
+        this.triedShortsDate = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
 }

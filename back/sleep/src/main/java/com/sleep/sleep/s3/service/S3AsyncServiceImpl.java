@@ -4,7 +4,6 @@ package com.sleep.sleep.s3.service;
 import com.sleep.sleep.member.service.MemberService;
 import com.sleep.sleep.s3.constants.S3key;
 import com.sleep.sleep.s3.dto.S3ObjectDto;
-import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,22 +33,6 @@ public class S3AsyncServiceImpl implements S3AsyncService {
     private String bucketName;
 
     /**
-     * 유효 기간 내에 S3 객체를 조회할 수 있는 서명된 GET URL을 만들어서 반환합니다.
-     * AWS에서 이 서명을 검사해서 정당한 요청인지, 유효 시간 안인지 판단합니다.
-     * 외부 사용자가 직접 인증하지 않고도 한시적으로 객체 접근 권한을 부여받을 수 있습니다.
-     *
-     * @param accessToken 회원의 엑세스 토큰
-     * @param fileName    회원 챌린지 파일 제목
-     * @return S3 객체를 조회할 수 있는 PresignedGetURL
-     */
-    @Override
-    public String generatePresignedGetURL(String accessToken, String fileName) {
-        String memberId = memberService.findMemberId(accessToken);
-        String s3key = S3key.USERS.buildS3key(memberId, fileName);
-        return generatePresignedGetURL(s3key, Duration.ofMinutes(30));
-    }
-
-    /**
      * 사용자 녹화한 쇼츠 목록을 조회합니다.
      *
      * @param accessToken 회원의 엑세스 토큰
@@ -64,22 +47,9 @@ public class S3AsyncServiceImpl implements S3AsyncService {
     }
 
     /**
-     * 유효 기간 내에 S3에 저장할 수 있는 서명된 PUT URL을 만들어서 반환합니다.
-     * 생성할 S3 객체에 원본 쇼츠의 S3 key를 메타데이터로 저장합니다.
-     *
-     * @param accessToken     회원의 엑세스 토큰
-     * @param s3PutRequestDTO 파일 제목, 메타데이터가 담긴 S3PutRequestDTO 객체
-     * @return S3에 저장할 수 있는 PresignedPutURL
-     */
-    @Override
-    public String generatePresignedPutURL(String accessToken, S3PutRequestDTO s3PutRequestDTO) {
-        String memberId = memberService.findMemberId(accessToken);
-        String userS3key = S3key.USERS.buildS3key(memberId, s3PutRequestDTO.getFileName());
-        return generatePresignedPutURL(userS3key, s3PutRequestDTO.getMetadata(), Duration.ofMinutes(10));
-    }
-
-    /**
-     * S3 객체 GET 요청을 생성하고, S3 객체 GET 요청의 서명된 URL을 생성합니다.
+     * 유효 기간 내에 S3 객체를 조회할 수 있는 서명된 GET URL을 만들어서 반환합니다.
+     * AWS에서 이 서명을 검사해서 정당한 요청인지, 유효 시간 안인지 판단합니다.
+     * 외부 사용자가 직접 인증하지 않고도 한시적으로 객체 접근 권한을 부여받을 수 있습니다.
      *
      * @param s3key S3 객체의 키
      * @param valid PresignedGetURL 유효 기간
@@ -118,13 +88,14 @@ public class S3AsyncServiceImpl implements S3AsyncService {
      * S3 객체 PUT 요청을 생성하고, S3 객체 PUT 요청의 서명된 URL을 생성합니다.
      * 프론트엔드에서 전송하는 메타데이터나 Content-Type이 이 요청에서 정의한 값과 일치하지 않을 경우, 업로드가 거부됩니다.
      *
-     * @param userS3key 저장할 쇼츠의 S3 경로
-     * @param metadata  쇼츠와 함께 저장할 메타데이터(원본 쇼츠 S3 경로)
-     * @param valid     PresignedPutURL 유효 기간
+     * @param recordedShortsS3key 저장할 쇼츠의 S3 경로
+     * @param metadata            쇼츠와 함께 저장할 메타데이터(원본 쇼츠 S3 경로)
+     * @param valid               PresignedPutURL 유효 기간
      * @return 요청 객체를 바탕으로 생성된 PresignedPutURL
      */
-    private String generatePresignedPutURL(String userS3key, Map<String, String> metadata, Duration valid) {
-        PutObjectRequest putObjectRequest = buildPutObjectRequest(metadata, userS3key);
+    @Override
+    public String generatePresignedPutURL(String recordedShortsS3key, Map<String, String> metadata, Duration valid) {
+        PutObjectRequest putObjectRequest = buildPutObjectRequest(metadata, recordedShortsS3key);
         PutObjectPresignRequest putObjectPresignRequest = buildPutObjectPresignRequest(putObjectRequest, valid);
         return presigner.presignPutObject(putObjectPresignRequest)
                 .url()

@@ -69,6 +69,14 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
 
     }
 
+    /**
+     * 녹화된 쇼츠의 상태를 업데이트 합니다.
+     * AWS S3 PUT 성공 / 실패, AWS Lambda 처리 성공 / 실패했을 때 호출됩니다.
+     *
+     * @param modifyingStatusDto 녹화된 쇼츠의 S3 key와 업로드 상태가 담긴 ModifyingStatusDto 객체
+     * @return status 컬럼을 업데이트했다면 SuccessResponse 객체 반환
+     * @throws CustomException status 컬럼 업데이트에 실패했다면 예외 처리
+     */
     @Transactional
     @Override
     public SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto) {

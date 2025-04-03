@@ -15,7 +15,7 @@ public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, 
 
     @Query("SELECT r FROM RecordedShorts r WHERE r.recordedShortsS3key = :recordedShortsS3key")
     RecordedShorts findByRecordedShortsS3key(String recordedShortsS3key);
-    
+
     @Modifying
     @Query("UPDATE RecordedShorts r SET r.status = :status WHERE r.recordedShortsS3key = :recordedShortsS3key")
     int modifyRecordedShortsStatus(String recordedShortsS3key, S3Status status);

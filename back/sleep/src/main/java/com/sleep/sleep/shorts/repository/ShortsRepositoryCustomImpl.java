@@ -35,6 +35,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
+                        qShorts.shortsS3key,
                         qTriedShorts.count().intValue()))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
@@ -61,6 +62,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qShorts.shortsMusicTitle,
                         qShorts.shortsMusicSinger,
                         qShorts.shortsSource,
+                        qShorts.shortsS3key,
                         qTriedShorts.count().intValue().as(shortsChallengerNum)))
                 .from(qShorts)
                 .leftJoin(qShorts.triedShortsList, qTriedShorts)
@@ -96,6 +98,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                                 qShorts.shortsMusicTitle,
                                 qShorts.shortsMusicSinger,
                                 qShorts.shortsSource,
+                                qShorts.shortsS3key,
                                 qShorts.triedShortsList.size()
                         )
                 ))

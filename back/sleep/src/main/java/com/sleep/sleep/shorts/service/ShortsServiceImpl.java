@@ -3,13 +3,11 @@ package com.sleep.sleep.shorts.service;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.member.service.MemberService;
-import com.sleep.sleep.s3.constants.S3key;
-import com.sleep.sleep.s3.service.S3AsyncServiceImpl;
+import com.sleep.sleep.s3.service.S3AsyncService;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.ShortsRepository;
-import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +22,7 @@ import java.util.List;
 public class ShortsServiceImpl implements ShortsService {
     private final MemberService memberService;
     private final ShortsRepository shortsRepository;
-    private final TriedShortsRepository triedShortsRepository;
-    private final S3AsyncServiceImpl s3AsyncServiceImpl;
+    private final S3AsyncService s3AsyncService;
 
     /**
      * 쇼츠 DB에서 특정 id에 해당하는 쇼츠를 조회함
@@ -38,12 +35,10 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsDto findShortsDto(int shortsId) {
         Shorts shorts = findShorts(shortsId);
-        String s3key = S3key.ORIGIN.buildS3key(shorts.getShortsTitle());
-        String s3PresignedGetURL = s3AsyncServiceImpl.generatePresignedGetURL(s3key, Duration.ofMinutes(30));
+        String s3PresignedGetURL = s3AsyncService.generatePresignedGetURL(shorts.getShortsS3key(), Duration.ofMinutes(30));
         return ShortsDto.builder()
                 .shortsId(shorts.getShortsId())
-                .shortsTitle(shorts.getShortsTitle())
-                .shortsS3Key(s3key)
+                .shortsS3Key(shorts.getShortsS3key())
                 .shortsS3URL(s3PresignedGetURL)
                 .build();
     }
@@ -111,9 +106,7 @@ public class ShortsServiceImpl implements ShortsService {
      * @return 새로운 ShortsDto 객체
      */
     private ShortsDto withPresignedGetURL(ShortsDto shortsDto) {
-        String s3key = S3key.ORIGIN.buildS3key(shortsDto.getShortsTitle());
-        String s3PresignedGetURL = s3AsyncServiceImpl.generatePresignedGetURL(s3key, Duration.ofMinutes(30));
-        return shortsDto.withShortsS3URL(s3PresignedGetURL);
+        return shortsDto.withShortsS3URL(s3AsyncService.generatePresignedGetURL(shortsDto.getShortsS3key(), Duration.ofMinutes(30)));
 
     }
 
