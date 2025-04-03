@@ -22,7 +22,7 @@ export async function getUploadedShorts() {
 }
 
 // 회원이 녹화한 쇼츠 등록
-export async function getPresignedPutURL(shortsId: number, metadata: Record<string, string>) {
+export async function addRecordedShorts(shortsId: number, metadata: Record<string, string>) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
     const s3PutRequest: S3PutRequest = {
@@ -35,6 +35,20 @@ export async function getPresignedPutURL(shortsId: number, metadata: Record<stri
       },
     });
 
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response.data);
+  }
+}
+
+// 녹화한 쇼츠 상태 변화
+export async function modifyRecordedShortsStatus(s3key: string, status: string) {
+  try {
+    //const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.put(`${REST_RECORDED_SHORTS_URL}`, {
+      recordedShortsS3key: s3key,
+      status: status,
+    });
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);

@@ -18,7 +18,7 @@ import {
 } from "@mui/icons-material";
 import { getShortsInfo } from "../apis/shorts";
 import { getPresignedGetURL } from "../apis/s3";
-import { getPresignedPutURL } from "../apis/recordedshorts";
+import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
@@ -192,6 +192,8 @@ const ChallengePage = () => {
       throw new Error("원본 쇼츠가 존재하지 않습니다.");
     }
 
+    let processedShortsS3key = "";
+
     try {
       // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
       // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
@@ -200,18 +202,19 @@ const ChallengePage = () => {
       };
 
       // s3에 객체를 업로드할 수 있는 presignedputurl 및 lambda 처리 완료됐다고 가정하고 생성한 s3key 받음
-      const { processedShortsS3key, presignedPutURL } = await getPresignedPutURL(
-        short.shortsId,
-        metadata
-      );
+      const result = await addRecordedShorts(short.shortsId, metadata);
+      processedShortsS3key = result.processedShortsS3key;
 
       // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
-      await axios.put(presignedPutURL, blob, {
+      await axios.put(result.presignedPutURL, blob, {
         headers: {
           "Content-Type": "video/mp4",
           "x-amz-meta-song": metadata["song"],
         },
       });
+
+      // S3 Put 요청에 성공하면 uploaded 상태로 변경
+      await modifyRecordedShortsStatus(processedShortsS3key, "UPLOADED");
 
       setLoadPath(loading);
       setFfmpegLog("음악 삽입...");
@@ -219,6 +222,8 @@ const ChallengePage = () => {
       // aws lambda가 처리를 완료했는지 조회
       await check(processedShortsS3key);
     } catch (error: any) {
+      // s3 업로드 실패했다면 failed로 상태 변경
+      await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
       console.error("s3 업로드 실패", error.data);
@@ -230,15 +235,15 @@ const ChallengePage = () => {
   const check = async (processedShortsS3key: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
     const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
-    //console.log(presignedGetURL);
-
-    let attempts = 0; // 요청 횟수 추적
-
+    // 요청 횟수 추적
+    let attempts = 0;
     // 10초마다 요청하기 위해 setInterval 사용
     const interval = setInterval(async () => {
       const exists = await isExist(presignedGetURL);
 
       if (exists) {
+        // aws lambda가 처리를 완료했다면 completed로 상태 변경
+        await modifyRecordedShortsStatus(processedShortsS3key, "COMPLETED");
         clearInterval(interval); // 객체가 생성되면 요청 중단
         setLoadPath(complete);
         setFfmpegLog("완성!");
@@ -246,9 +251,10 @@ const ChallengePage = () => {
       } else {
         attempts++;
         console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
-
-        if (attempts >= 6) {
-          // 6번(1분) 요청 후 중단
+        // 12번(1분) 요청 후 중단
+        if (attempts >= 12) {
+          // 람다 처리 실패했다면 failed로 상태 변경
+          await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
           clearInterval(interval);
           setLoadPath(uncomplete);
           setFfmpegLog("동영상 처리 실패");
