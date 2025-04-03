@@ -3,6 +3,7 @@ package com.sleep.sleep.shorts.controller;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
+import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
@@ -95,6 +96,14 @@ public class ShortsController {
         S3PutResponseDTO s3PutResponseDTO = recordedShortsService.addRecordedShorts(accessToken, s3PutRequestDTO);
         return ResponseEntity.ok()
                 .body(s3PutResponseDTO);
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠의 S3 상태 변경")
+    @PutMapping("/recorded")
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestBody ModifyingStatusDto modifyingStatusDto){
+        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(modifyingStatusDto);
+        return ResponseEntity.ok()
+                .body(successResponse);
     }
 
 

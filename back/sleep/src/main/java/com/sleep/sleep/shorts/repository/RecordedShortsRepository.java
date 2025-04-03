@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.repository;
 
+import com.sleep.sleep.s3.constants.S3Status;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,17 +13,12 @@ import java.util.Optional;
 @Repository
 public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, Integer> {
 
-    @Query("SELECT r FROM RecordedShorts r WHERE r.member.memberIndex = :memberIndex ORDER BY r.recordedShortsDate DESC")
-    Optional<List<RecordedShorts>> findByRecordedShortsList(int memberIndex);
-
-    @Query("SELECT r FROM RecordedShorts r WHERE r.member.memberIndex = :memberId AND r.recordedShortsTitle = :newRecordedShortsTitle")
-    Optional<RecordedShorts> findByRecordedShortsTitle(String memberId, String newRecordedShortsTitle);
-
+    @Query("SELECT r FROM RecordedShorts r WHERE r.recordedShortsS3key = :recordedShortsS3key")
+    RecordedShorts findByRecordedShortsS3key(String recordedShortsS3key);
+    
     @Modifying
-    @Query("UPDATE RecordedShorts r SET r.recordedShortsTitle = :newRecordedShortsTitle WHERE r.recordedShortsId = :recordedShortsId")
-    void modifyRecordedShortsTitle(int recordedShortsId, String newRecordedShortsTitle);
+    @Query("UPDATE RecordedShorts r SET r.status = :status WHERE r.recordedShortsS3key = :recordedShortsS3key")
+    int modifyRecordedShortsStatus(String recordedShortsS3key, S3Status status);
 
-    @Query("SELECT r FROM RecordedShorts r WHERE r.recordedShortsS3key = :S3key")
-    Optional<RecordedShorts> findByRecordedShortsByS3key(String S3key);
 
 }

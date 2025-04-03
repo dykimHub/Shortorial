@@ -1,11 +1,9 @@
 package com.sleep.sleep.shorts.entity;
 
 import com.sleep.sleep.member.entity.Member;
+import com.sleep.sleep.s3.constants.S3Status;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.OffsetDateTime;
@@ -28,7 +26,8 @@ public class RecordedShorts {
     @Column(name = "recorded_shorts_s3key", nullable = false, unique = true)
     private String recordedShortsS3key; // 녹화한 쇼츠 s3key
     @Column
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private S3Status status; // s3 업로드 및 처리 상태
     @Column(name = "recorded_shorts_youtubeurl")
     private String recordedShortsYoutubeURL; // 유튜브 업로드 URL
     @ManyToOne
@@ -39,7 +38,7 @@ public class RecordedShorts {
     private Shorts shorts;
 
     @Builder
-    public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, String status, Member member, Shorts shorts) {
+    public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, S3Status status, Member member, Shorts shorts) {
         this.recordedShortsTitle = recordedShortsTitle;
         this.recordedShortsS3key = recordedShortsS3key;
         this.status = status;

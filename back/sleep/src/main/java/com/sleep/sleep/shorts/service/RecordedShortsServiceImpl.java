@@ -1,5 +1,8 @@
 package com.sleep.sleep.shorts.service;
 
+import com.sleep.sleep.exception.CustomException;
+import com.sleep.sleep.exception.ExceptionCode;
+import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
 import com.sleep.sleep.s3.constants.S3Status;
@@ -7,16 +10,19 @@ import com.sleep.sleep.s3.constants.S3key;
 import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.s3.service.S3AsyncService;
+import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class RecordedShortsServiceImpl implements RecordedShortsService {
@@ -49,7 +55,7 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
         RecordedShorts newRecordedShorts = RecordedShorts.builder()
                 .recordedShortsTitle(fileName)
                 .recordedShortsS3key(processedShortsS3key)
-                .status(S3Status.PENDING.getStatus()) // S3 업로드 되기 전이므로 PENDING 상태로 기록
+                .status(S3Status.PENDING) // S3 업로드 되기 전이므로 PENDING 상태로 기록
                 .shorts(shorts)
                 .member(member)
                 .build();
@@ -60,6 +66,16 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
                 .processedShortsS3key(processedShortsS3key)
                 .presignedPutURL(presignedPutURL)
                 .build();
+
+    }
+
+    @Transactional
+    @Override
+    public SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto) {
+        int result = recordedShortsRepository.modifyRecordedShortsStatus(modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
+        if (result < 1) throw new CustomException(ExceptionCode.RECORDED_SHORTS_UPDATE_FAILED);
+        log.info("Modifying Status: s3key={}, status={}", modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
+        return SuccessResponse.of("녹화 파일 업로드 상태가 성공적으로 업데이트 되었습니다.");
 
     }
 
