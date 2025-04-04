@@ -14,7 +14,14 @@ public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, 
     int modifyRecordedShortsStatus(String recordedShortsS3key, S3Status status);
 
     @Modifying
+    @Query("UPDATE RecordedShorts r SET r.recordedShortsTitle = :newRecordedShortsTitle WHERE r.recordedShortsId = :recordedShortsId")
+    int modifyRecordedShortsTitle(int recordedShortsId, String newRecordedShortsTitle);
+
+    @Modifying
     @Query("UPDATE RecordedShorts r SET r.isDeleted = true WHERE r.recordedShortsId = :recordedShortsId")
-    int deleteRecordedShortsById(int recordedShortsId);
+    int deleteByRecordedShortsId(int recordedShortsId);
+
+    @Query("SELECT COUNT(*) > 0 FROM RecordedShorts r WHERE r.member.memberIndex = :memberIndex AND r.recordedShortsTitle = :recordedShortsTitle")
+    boolean existsByRecordedShortsTitle(int memberIndex, String recordedShortsTitle);
 
 }

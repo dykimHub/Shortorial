@@ -11,6 +11,7 @@ import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.s3.service.S3AsyncService;
 import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
+import com.sleep.sleep.shorts.dto.ModifyingTitleDto;
 import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
@@ -19,6 +20,7 @@ import com.sleep.sleep.shorts.repository.ShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -87,8 +89,27 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
         int result = recordedShortsRepository.modifyRecordedShortsStatus(modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
         if (result < 1) throw new CustomException(ExceptionCode.RECORDED_SHORTS_UPDATE_FAILED);
         log.info("Modifying Status: s3key={}, status={}", modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
-        return SuccessResponse.of("녹화 파일 업로드 상태가 성공적으로 업데이트 되었습니다.");
+        return SuccessResponse.of("녹화한 쇼츠의 S3 업로드 상태가 성공적으로 업데이트 되었습니다.");
 
+    }
+
+    /**
+     * 특정 id의 회원이 녹화한 쇼츠 중에 동일한 제목이 있는지 확인하고, 없으면 녹화한 쇼츠의 제목을 변경함
+     *
+     * @param accessToken       로그인한 회원의 token
+     * @param modifyingTitleDto 제목을 수정할 RecordedShorts 객체의 id와 새로운 제목이 포함된 ModifiedShortsDto 객체
+     * @return 제목 변경에 성공하면 SuccessResponse 객체를 반환함
+     * @throws CustomException 특정 id의 회원이 녹화한 쇼츠 중에 겹치는 제목이 있음
+     */
+    @Transactional
+    @Override
+    public SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifyingTitleDto modifyingTitleDto) {
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        boolean isExist = recordedShortsRepository.existsByRecordedShortsTitle(memberIndex, modifyingTitleDto.getNewRecordedShortsTitle());
+        if (isExist) throw new CustomException(ExceptionCode.EXISTED_RECORDED_SHORTS_TITLE);
+        int result = recordedShortsRepository.modifyRecordedShortsTitle(modifyingTitleDto.getRecordedShortsId(), modifyingTitleDto.getNewRecordedShortsTitle());
+        if (result < 1) throw new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND);
+        return SuccessResponse.of("녹화한 쇼츠의 제목을 성공적으로 변경하였습니다.");
     }
 
     /**
@@ -115,7 +136,7 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
     @Transactional
     @Override
     public SuccessResponse deleteRecordedShorts(int recordedShortsId) {
-        int result = recordedShortsRepository.deleteRecordedShortsById(recordedShortsId);
+        int result = recordedShortsRepository.deleteByRecordedShortsId(recordedShortsId);
         if (result < 1)
             throw new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND);
         return SuccessResponse.of("회원이 녹화한 쇼츠가 삭제되었습니다.");

@@ -15,7 +15,7 @@ public enum ExceptionCode {
     SHORTS_STATS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_005", "회원의 쇼츠 통계를 계산할 수 없습니다."),
     TRIED_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_004", "회원이 시도한 쇼츠를 찾을 수 없습니다."),
     RECORDED_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_005", "회원이 녹화한 쇼츠를 찾을 수 없습니다."),
-    EXISTED_RECORDED_SHORTS_TITLE(HttpStatus.BAD_REQUEST, "SHORTS_006","회원이 녹화한 쇼츠의 제목이 이미 존재합니다."),
+    EXISTED_RECORDED_SHORTS_TITLE(HttpStatus.BAD_REQUEST, "SHORTS_006","이미 존재하는 제목입니다."),
     RECORDED_SHORTS_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "SHORTS_007", "회원이 녹화한 쇼츠의 상태를 변경할 수 없습니다."),
 
     RECORDED_FILE_NULL(HttpStatus.BAD_REQUEST, "S3_001", "회원이 녹화한 파일이 없습니다."),

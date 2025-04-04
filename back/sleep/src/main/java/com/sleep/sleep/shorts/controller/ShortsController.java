@@ -103,6 +103,14 @@ public class ShortsController {
                 .body(successResponse);
     }
 
+    @Operation(summary = "회원이 녹화한 쇼츠 제목 변경")
+    @PutMapping("/recorded/title")
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsTitle(@RequestHeader("Authorization") String accessToken, @RequestBody ModifyingTitleDto modifyingTitleDto) {
+        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsTitle(accessToken, modifyingTitleDto);
+        return ResponseEntity.ok()
+                .body(successResponse);
+    }
+
     @Operation(summary = "회원이 녹화한 쇼츠 목록 조회")
     @GetMapping("/recorded")
     public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
@@ -118,6 +126,8 @@ public class ShortsController {
         return ResponseEntity.ok()
                 .body(successResponse);
     }
+
+
 
 
 }
