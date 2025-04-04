@@ -4,9 +4,14 @@ import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
+
+import java.util.List;
 
 public interface RecordedShortsService {
     S3PutResponseDTO addRecordedShorts(String accessToken, S3PutRequestDTO s3PutRequestDTO);
 
     SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto);
+
+    List<RecordedShortsDto> findRecordedShortsDtoList(String accessToken);
 }

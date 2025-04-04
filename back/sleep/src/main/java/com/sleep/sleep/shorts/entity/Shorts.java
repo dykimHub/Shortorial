@@ -30,6 +30,6 @@ public class Shorts {
     @OneToMany(mappedBy = "shorts")
     private List<TriedShorts> triedShortsList;
     @OneToMany(mappedBy = "shorts")
-    private List<TriedShorts> triedShortsList1;
+    private List<RecordedShorts> recordedShortsList;
 
 }

@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.service;
 
+import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
@@ -11,15 +12,18 @@ import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.s3.service.S3AsyncService;
 import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.entity.RecordedShorts;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.repository.RecordedShortsRepository;
+import com.sleep.sleep.shorts.repository.ShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -30,6 +34,7 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
     private final ShortsService shortsService;
     private final S3AsyncService s3AsyncService;
     private final RecordedShortsRepository recordedShortsRepository;
+    private final ShortsRepository shortsRepository;
 
     /**
      * S3PutResponseDTO를 활용하여 RecordedShorts 객체를 생성하고 녹화한 쇼츠 DB에 저장합니다.
@@ -42,7 +47,7 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
     @Transactional
     @Override
     public S3PutResponseDTO addRecordedShorts(String accessToken, S3PutRequestDTO s3PutRequestDTO) {
-        Member member = memberService.findMemberEntity(accessToken);
+        Member member = memberService.findByMemberId(memberService.getMemberId(accessToken));
         Shorts shorts = shortsService.findShorts(s3PutRequestDTO.getShortsId());
         // UUID를 활용하여 파일 제목을 임의 지정
         String fileName = UUID.randomUUID().toString();
@@ -87,4 +92,29 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
 
     }
 
+    /**
+     * 해당 회원이 녹화한 쇼츠 목록을 조회합니다.
+     * 녹화한 쇼츠의 S3 key를 활용하여 서명된 Get URL을 생성한 후 함께 반환합니다.
+     *
+     * @param accessToken 로그인한 회원의 토큰
+     * @return RecordedShortsDto 객체 리스트
+     */
+    @Override
+    public List<RecordedShortsDto> findRecordedShortsDtoList(String accessToken) {
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        return shortsRepository.findRecordedShortsDtoList(memberIndex).stream()
+                .map(this::withPresignedGetURL)
+                .toList();
+    }
+
+    /**
+     * 기존 RecordedShortsDto 객체에 서명된 Get URL을 추가하여 반환합니다.
+     *
+     * @param recordedShortsDto RecordedShortsDto 객체
+     * @return S3 URL이 추가된 RecordedShortsDto 객체
+     */
+    private RecordedShortsDto withPresignedGetURL(RecordedShortsDto recordedShortsDto) {
+        return recordedShortsDto.withRecordedShortsS3URL(s3AsyncService.generatePresignedGetURL(recordedShortsDto.getRecordedShortsS3key(), Duration.ofMinutes(30)));
+
+    }
 }

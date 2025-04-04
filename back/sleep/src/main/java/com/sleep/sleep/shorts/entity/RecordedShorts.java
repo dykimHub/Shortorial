@@ -30,7 +30,7 @@ public class RecordedShorts {
     private S3Status status; // s3 업로드 및 처리 상태
     @Column(name = "recorded_shorts_youtubeurl")
     private String recordedShortsYoutubeURL; // 유튜브 업로드 URL
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // 회원 정보는 필요할 때만 조회
     @JoinColumn(name = "member_no")
     private Member member;
     @ManyToOne

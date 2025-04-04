@@ -79,10 +79,10 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * 3. 쇼츠 정보 중 shortsChallengerNum을 구할 때 tried_shorts 테이블에서 shorts_id를 count하는 서브 쿼리를 보냄(qShorts.triedShortsList.size())
      * qShorts.triedShortsList와 새롭게 정의한 qTriedShorts를 한번 더 join해서 계산할 수도 있으나 서브 쿼리를 보내는 쪽이 성능이 좋았음
      *
-     * @param memberId 특정 회원의 아이디
+     * @param memberIndex 특정 회원의 번호
      */
     @Override
-    public List<TriedShortsDto> findTriedShortsList(String memberId) {
+    public List<TriedShortsDto> findTriedShortsList(int memberIndex) {
         QShorts qShorts = QShorts.shorts;
         QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
         // From절과 동일한 객체를 사용할 때 동일한 변수명은 못쓰고 alias를 지정해야 함
@@ -104,7 +104,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 ))
                 .from(qTriedShorts)
                 .innerJoin(qTriedShorts.shorts, qShorts)
-                .where(qTriedShorts.member.memberId.eq(memberId))
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
                 .orderBy(qTriedShorts.triedShortsDate.desc())
                 .fetch();
 
@@ -115,10 +115,10 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
      * 2. recorded_shorts에서 해당 member index를 조회하고 count하는 서브쿼리를 보냄
      * 3. recorded_shorts에서 해당 member index에 youtubeURL이 null이 아닌 행을 조회하고 count하는 서브쿼리를 보냄
      *
-     * @param memberId 특정 회원의 아이디
+     * @param memberIndex 특정 회원 번호
      */
     @Override
-    public Optional<ShortsStatsDto> findShortsStatsDto(String memberId) {
+    public Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex) {
         QMember qMember = QMember.member;
         QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
 
@@ -127,12 +127,37 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                         qMember.recordedShortsList.size(),
                         JPAExpressions.select(qRecordedShorts.count().intValue())
                                 .from(qRecordedShorts)
-                                .where(qRecordedShorts.member.memberId.eq(memberId)
+                                .where(qRecordedShorts.member.memberIndex.eq(memberIndex)
                                         .and(qRecordedShorts.recordedShortsYoutubeURL.isNotNull()))))
                 .from(qMember)
-                .where(qMember.memberId.eq(memberId))
+                .where(qMember.memberIndex.eq(memberIndex))
                 .fetchOne());
 
+    }
+
+    /**
+     * 해당 회원 번호에 해당하는 녹화된 쇼츠 데이터를 조회합니다.
+     * 녹화된 쇼츠 데이터 중 RecordedShortsDto에 해당하는 열만 매핑하여 리스트로 반환합니다.
+     *
+     * @param memberIndex 회원 번호
+     * @return RecordedShortsDto 리스트
+     */
+    @Override
+    public List<RecordedShortsDto> findRecordedShortsDtoList(int memberIndex) {
+        QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
+        return queryFactory.select(new QRecordedShortsDto(
+                        qRecordedShorts.recordedShortsId,
+                        qRecordedShorts.recordedShortsTitle,
+                        qRecordedShorts.recordedShortsDate,
+                        qRecordedShorts.recordedShortsS3key,
+                        qRecordedShorts.recordedShortsYoutubeURL,
+                        qRecordedShorts.shorts.shortsMusicTitle,
+                        qRecordedShorts.shorts.shortsMusicSinger
+                ))
+                .from(qRecordedShorts)
+                // memberId가 아닌 다른 컬럼을 기준으로 조회하면 Lazy Fetch라고 하더라도 서브 쿼리 생성함
+                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
+                .fetch();
     }
 
 }

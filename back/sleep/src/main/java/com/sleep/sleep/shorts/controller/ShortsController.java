@@ -3,10 +3,7 @@ package com.sleep.sleep.shorts.controller;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.s3.dto.S3PutRequestDTO;
 import com.sleep.sleep.s3.dto.S3PutResponseDTO;
-import com.sleep.sleep.shorts.dto.ModifyingStatusDto;
-import com.sleep.sleep.shorts.dto.ShortsDto;
-import com.sleep.sleep.shorts.dto.ShortsStatsDto;
-import com.sleep.sleep.shorts.dto.TriedShortsDto;
+import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.service.RecordedShortsService;
 import com.sleep.sleep.shorts.service.ShortsService;
 import com.sleep.sleep.shorts.service.TriedShortsService;
@@ -104,6 +101,14 @@ public class ShortsController {
         SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(modifyingStatusDto);
         return ResponseEntity.ok()
                 .body(successResponse);
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠 목록 조회")
+    @GetMapping("/recorded")
+    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
+        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsService.findRecordedShortsDtoList(accessToken);
+        return ResponseEntity.ok()
+                .body(recordedShortsDtoList);
     }
 
 
