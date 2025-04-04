@@ -1,12 +1,12 @@
 package com.sleep.sleep.common.JWT;
 
+import com.sleep.sleep.member.entity.MemberRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -36,6 +36,14 @@ public class JwtTokenUtil {
         return extractAllClaims(token).get("username", String.class);
     }
 
+    public int getUserId(String token) {
+        return extractAllClaims(token).get("userId", Integer.class);
+    }
+
+    public String getUserRole(String token) {
+        return extractAllClaims(token).get("userRole", String.class);
+    }
+
     private Key getSigningKey(String secretKey) {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -46,17 +54,19 @@ public class JwtTokenUtil {
         return expiration.before(new Date());
     }
 
-    public String generateAccessToken(String username) {
-        return doGenerateToken(username, ACCESS_TOKEN_EXPIRATION_TIME.getValue());
+    public String generateAccessToken(String username, int userId, String role) {
+        return doGenerateToken(username, userId, role, ACCESS_TOKEN_EXPIRATION_TIME.getValue());
     }
 
-    public String generateRefreshToken(String username) {
-        return doGenerateToken(username, REFRESH_TOKEN_EXPIRATION_TIME.getValue());
+    public String generateRefreshToken(String username, int userId, String role) {
+        return doGenerateToken(username, userId, role, REFRESH_TOKEN_EXPIRATION_TIME.getValue());
     }
 
-    private String doGenerateToken(String username, long expireTime) { // 1
+    private String doGenerateToken(String username, int userId, String role, long expireTime) { // 1
         Claims claims = Jwts.claims();
         claims.put("username", username);
+        claims.put("userId", userId);
+        claims.put("userRole", role);
 
         return Jwts.builder()
                 .setClaims(claims)
