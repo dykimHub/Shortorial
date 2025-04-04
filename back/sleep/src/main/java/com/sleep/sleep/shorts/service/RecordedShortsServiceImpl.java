@@ -1,6 +1,5 @@
 package com.sleep.sleep.shorts.service;
 
-import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.exception.CustomException;
 import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
@@ -105,6 +104,21 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
         return shortsRepository.findRecordedShortsDtoList(memberIndex).stream()
                 .map(this::withPresignedGetURL)
                 .toList();
+    }
+
+    /**
+     * RecordedShorts 객체의 삭제를 시도하면 is_deleted 열을 1로 변환함
+     *
+     * @param recordedShortsId 삭제할 RecordedShorts 객체의 recordedShortsId
+     * @return 삭제에 성공하면 SuccessResponse 객체를 반환함
+     */
+    @Transactional
+    @Override
+    public SuccessResponse deleteRecordedShorts(int recordedShortsId) {
+        int result = recordedShortsRepository.deleteRecordedShortsById(recordedShortsId);
+        if (result < 1)
+            throw new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND);
+        return SuccessResponse.of("회원이 녹화한 쇼츠가 삭제되었습니다.");
     }
 
     /**

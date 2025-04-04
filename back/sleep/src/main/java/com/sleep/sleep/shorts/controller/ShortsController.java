@@ -111,5 +111,13 @@ public class ShortsController {
                 .body(recordedShortsDtoList);
     }
 
+    @Operation(summary = "회원이 녹화한 쇼츠 삭제")
+    @DeleteMapping("/recorded/{recordedShortsId}")
+    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int recordedShortsId) {
+        SuccessResponse successResponse = recordedShortsService.deleteRecordedShorts(recordedShortsId);
+        return ResponseEntity.ok()
+                .body(successResponse);
+    }
+
 
 }

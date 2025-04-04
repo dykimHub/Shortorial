@@ -3,11 +3,17 @@ package com.sleep.sleep.shorts.entity;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.s3.constants.S3Status;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
 
+
+@SQLRestriction("is_deleted = false") // 삭제하지 않은 데이터만 조회
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "recorded_shorts",
@@ -36,6 +42,8 @@ public class RecordedShorts {
     @ManyToOne
     @JoinColumn(name = "shorts_id")
     private Shorts shorts;
+    @Column(nullable = false)
+    private boolean isDeleted;
 
     @Builder
     public RecordedShorts(String recordedShortsTitle, String recordedShortsS3key, S3Status status, Member member, Shorts shorts) {

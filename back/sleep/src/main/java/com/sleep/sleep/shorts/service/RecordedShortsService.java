@@ -14,4 +14,6 @@ public interface RecordedShortsService {
     SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto);
 
     List<RecordedShortsDto> findRecordedShortsDtoList(String accessToken);
+
+    SuccessResponse deleteRecordedShorts(int recordedShortsId);
 }

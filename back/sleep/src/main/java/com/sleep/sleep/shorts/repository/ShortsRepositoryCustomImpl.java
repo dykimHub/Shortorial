@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sleep.sleep.member.entity.QMember;
+import com.sleep.sleep.s3.constants.S3Status;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.QRecordedShorts;
 import com.sleep.sleep.shorts.entity.QShorts;
@@ -136,7 +137,7 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     }
 
     /**
-     * 해당 회원 번호에 해당하는 녹화된 쇼츠 데이터를 조회합니다.
+     * 해당 회원 번호에 해당하고 상태가 COMPLETED인 녹화된 쇼츠 데이터를 조회합니다.
      * 녹화된 쇼츠 데이터 중 RecordedShortsDto에 해당하는 열만 매핑하여 리스트로 반환합니다.
      *
      * @param memberIndex 회원 번호
@@ -156,7 +157,9 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
                 ))
                 .from(qRecordedShorts)
                 // memberId가 아닌 다른 컬럼을 기준으로 조회하면 Lazy Fetch라고 하더라도 서브 쿼리 생성함
-                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
+                .where(qRecordedShorts.member.memberIndex.eq(memberIndex)
+                        .and(qRecordedShorts.status.eq(S3Status.COMPLETED)))
+                .orderBy(qRecordedShorts.recordedShortsDate.desc())
                 .fetch();
     }
 
