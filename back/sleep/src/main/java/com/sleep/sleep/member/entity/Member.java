@@ -18,13 +18,13 @@ public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_no", updatable = false)
+    @Column(name = "member_no")
     private int memberIndex;
     @Column(unique = true)
     private String memberId;
     @Column(nullable = false)
     private String memberPass;
-    @Column(unique = true)
+    @Column(unique = false)
     private String memberNickname;
     @Column(nullable = true)
     private String memberProfile;

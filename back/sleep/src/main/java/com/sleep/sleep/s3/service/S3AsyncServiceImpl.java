@@ -1,6 +1,7 @@
 package com.sleep.sleep.s3.service;
 
 
+import com.sleep.sleep.common.JWT.JwtTokenUtil;
 import com.sleep.sleep.member.service.MemberService;
 import com.sleep.sleep.s3.constants.S3key;
 import com.sleep.sleep.s3.dto.S3ObjectDto;
@@ -28,7 +29,7 @@ import java.util.Map;
 public class S3AsyncServiceImpl implements S3AsyncService {
     private final S3Presigner presigner;
     private final S3AsyncClient s3AsyncClient;
-    private final MemberService memberService;
+    private final JwtTokenUtil jwtTokenUtil;
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
@@ -40,7 +41,7 @@ public class S3AsyncServiceImpl implements S3AsyncService {
      */
     @Override
     public List<S3ObjectDto> getRecordedShortsList(String accessToken) {
-        String memberId = memberService.findMemberId(accessToken);
+        String memberId = jwtTokenUtil.getUsername(accessToken);
         // S3의 lambda/{userId}/ 경로에 존재하는 객체 목록 조회
         String prefix = S3key.LAMBDA.buildPrefix(memberId);
         return getS3ObjectList(prefix, Duration.ofMinutes(30));

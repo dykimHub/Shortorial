@@ -19,12 +19,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,9 +72,12 @@ public class MemberServiceImpl implements MemberService {
         String username = member.getMemberId();
         int userId = member.getMemberIndex();
         String role = member.getMemberRole().name();
+        log.info("회원 {}번 로그인", userId);
+
         String accessToken = jwtTokenUtil.generateAccessToken(username, userId, role);
+        log.info("회원 {}번 엑세스 토큰 등록", userId);
         RefreshToken refreshToken = saveRefreshToken(username, userId, role);
-        log.info("로그인 성공");
+        log.info("회원 {}번 리프레시 토큰 등록", userId);
         return TokenInfo.of(accessToken, refreshToken.getRefreshToken());
     }
 
@@ -88,7 +88,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     private RefreshToken saveRefreshToken(String username, int userId, String role) {
-        log.info("RefreshToken 등록");
         return refreshTokenRedisRepository.save(RefreshToken.createRefreshToken(username,
                 jwtTokenUtil.generateRefreshToken(username, userId, role), REFRESH_TOKEN_EXPIRATION_TIME.getValue()));
     }
@@ -136,10 +135,10 @@ public class MemberServiceImpl implements MemberService {
 
     private TokenInfo reissueRefreshToken(String refreshToken, String username, int userId, String role) {
         if (lessThanReissueExpirationTimesLeft(refreshToken)) {
-            //System.out.println("리프레시 토큰도 재발급");
+            log.info("회원 {}번 리프레시 토큰 재발급", userId);
             return TokenInfo.of(jwtTokenUtil.generateAccessToken(username, userId, role), saveRefreshToken(username, userId, role).getRefreshToken());
         }
-        //System.out.println("엑세스 토큰만 재발급");
+        log.info("회원 {}번 엑세스 토큰 재발급", userId);
         return TokenInfo.of(jwtTokenUtil.generateAccessToken(username, userId, role), refreshToken);
     }
 

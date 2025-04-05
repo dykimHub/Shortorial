@@ -21,7 +21,7 @@ public interface RecordedShortsRepository extends JpaRepository<RecordedShorts, 
     @Query("UPDATE RecordedShorts r SET r.isDeleted = true WHERE r.recordedShortsId = :recordedShortsId")
     int deleteByRecordedShortsId(int recordedShortsId);
 
-    @Query("SELECT COUNT(*) > 0 FROM RecordedShorts r WHERE r.member.memberIndex = :memberIndex AND r.recordedShortsTitle = :recordedShortsTitle")
+    @Query("SELECT COUNT(r.recordedShortsId) > 0 FROM RecordedShorts r WHERE r.member.memberIndex = :memberIndex AND r.recordedShortsTitle = :recordedShortsTitle")
     boolean existsByRecordedShortsTitle(int memberIndex, String recordedShortsTitle);
 
 }

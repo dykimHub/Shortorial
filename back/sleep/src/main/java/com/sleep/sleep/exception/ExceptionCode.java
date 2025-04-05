@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ExceptionCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "회원을 찾을 수 없습니다."),
+    ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "MEMBER_002", "권한이 없습니다. 다시 로그인 해주세요."),
 
     SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_001", "쇼츠를 찾을 수 없습니다."),
     ALL_SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_002", "쇼츠 리스트가 비어있습니다."),

@@ -2,6 +2,7 @@ package com.sleep.sleep.common.JWT;
 
 import com.sleep.sleep.member.entity.MemberRole;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -23,8 +24,7 @@ public class JwtTokenUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    public Claims extractAllClaims(String token) { // 2
-        //log.info("extractAllClasims, token: "+token.toString());
+    public Claims extractAllClaims (String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey(SECRET_KEY))
                 .build()
@@ -49,9 +49,13 @@ public class JwtTokenUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public Boolean isTokenExpired(String token) {
-        Date expiration = extractAllClaims(token).getExpiration();
-        return expiration.before(new Date());
+    public boolean isTokenExpired(String token) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            return claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true; // 만료된 토큰
+        }
     }
 
     public String generateAccessToken(String username, int userId, String role) {
