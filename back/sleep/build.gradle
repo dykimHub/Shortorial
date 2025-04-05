@@ -48,9 +48,9 @@ dependencies {
 	// AWS SDK
 //	implementation 'software.amazon.awssdk:s3:2.17.26'
 //	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
-	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.262'
-	implementation 'software.amazon.awssdk:s3:2.20.140' // 최신 버전 적용
-	implementation 'software.amazon.awssdk:sts:2.20.140' // (필요한 경우 추가)
+//	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.262' // aws sdk v1
+	implementation 'software.amazon.awssdk:s3:2.20.140' // aws sdk v2
+	implementation 'software.amazon.awssdk:sts:2.20.140'
 	implementation 'software.amazon.awssdk:netty-nio-client:2.20.140'
 
 	//swagger
