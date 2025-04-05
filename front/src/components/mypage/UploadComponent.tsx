@@ -2,18 +2,17 @@ import { useState } from "react";
 import styled from "styled-components";
 import { Edit, EditOff, Close, Download } from "@mui/icons-material";
 import { updateTitle, deleteShorts } from "../../apis/recordedshorts";
-import { getS3Blob } from "../../apis/s3";
-//import { UploadShorts } from "../../constants/types";
-import { S3Object } from "../../constants/types";
+import { UploadShorts } from "../../constants/types";
+import { MusicNote } from "@mui/icons-material";
 import moment from "moment";
 
 interface UploadComponentProps {
-  uploadShorts: S3Object;
+  uploadShorts: UploadShorts;
   onDelete: () => void;
 }
 
 const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
-  const [title, setTitle] = useState<string>(uploadShorts.key);
+  const [title, setTitle] = useState<string>(uploadShorts.recordedShortsTitle);
   const [modify, setModify] = useState<boolean>(false);
   const [download, setDownload] = useState<boolean>(false);
   //const [share, setShare] = useState<boolean>(false);
@@ -23,9 +22,9 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     setTitle(event.target.value);
   };
 
-  const deleteUploadedShorts = async (recordedShortsS3key: string) => {
-    alert("복구할 수 없습니다. 그래도 삭제하시겠습니까?");
-    await deleteShorts(recordedShortsS3key);
+  const deleteUploadedShorts = async (recordedShortsId: number) => {
+    alert("삭제하시겠습니까?");
+    await deleteShorts(recordedShortsId);
     onDelete();
   };
 
@@ -47,24 +46,19 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     }
   };
 
-  const downloadVideo = async () => {
+  const downloadVideo = async (s3url: string) => {
     setDownload(true);
 
     try {
-      const videoBlob = await getS3Blob(uploadShorts.key);
-      const downloadUrl = URL.createObjectURL(videoBlob);
-
       const downloadLink = document.createElement("a");
-      downloadLink.href = downloadUrl;
+      downloadLink.href = s3url;
       downloadLink.setAttribute("download", `${title}.mp4`);
       document.body.appendChild(downloadLink);
       downloadLink.click();
-
       document.body.removeChild(downloadLink);
-      URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
+    } catch (err: any) {
       alert("다운로드에 실패했습니다.");
-      console.log(err);
+      console.error(err.data);
     } finally {
       setDownload(false);
     }
@@ -95,10 +89,16 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
     <ResultContainer>
       <VideoContainer>
         <Gradient className="gradient" />
-        <Video src={uploadShorts.url} controls crossOrigin="anonymous"></Video>
+        <Video src={uploadShorts.recordedShortsS3URL} controls crossOrigin="anonymous"></Video>
         <MyVideoControlComponent>
-          <CloseIcon onClick={() => deleteUploadedShorts(uploadShorts.key)}></CloseIcon>
-          {!download && <DownloadIcon onClick={downloadVideo}></DownloadIcon>}
+          <CloseIcon
+            onClick={() => deleteUploadedShorts(uploadShorts.recordedShortsId)}
+          ></CloseIcon>
+          {!download && (
+            <DownloadIcon
+              onClick={() => downloadVideo(uploadShorts.recordedShortsS3URL)}
+            ></DownloadIcon>
+          )}
           {download && (
             <DownloadingIcon src="../src/assets/mypage/downloading.gif"></DownloadingIcon>
           )}
@@ -120,10 +120,14 @@ const UploadComponent = ({ uploadShorts, onDelete }: UploadComponentProps) => {
       {modify && (
         <TitleContainer>
           <InputBox type="text" value={title} onChange={handleTitleChange} />
-          <CheckIcon onClick={() => saveTitle(1, title)}></CheckIcon>
+          <CheckIcon onClick={() => saveTitle(uploadShorts.recordedShortsId, title)}></CheckIcon>
         </TitleContainer>
       )}
-      <div className="date">{moment(uploadShorts.lastModified).format("MMM DD, H:MM")}</div>
+      <div className="date">{moment(uploadShorts.recordedShortsDate).format("MMM DD, H:mm")}</div>
+      <div style={{ color: "#606060", fontSize: "14px" }}>
+        <MusicNote fontSize="small" />
+        {uploadShorts.shortsMusicTitle}
+      </div>
     </ResultContainer>
   );
 };

@@ -45,8 +45,9 @@ const ChallengePage = () => {
   const initialTimer = parseInt(localStorage.getItem("timer") || "3");
   const [timer, setTimer] = useState<number>(initialTimer); // 타이머
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
-  const [ffmpegLog, setFfmpegLog] = useState("");
-  const [resolutionText, setResolutionText] = useState<string | null>(null);
+  const [ffmpegLog, setFfmpegLog] = useState(""); // 동영상 상태
+  const [resolutionText, setResolutionText] = useState<string | null>(null); // 해상도
+
   const videoResolutionRef = useRef<{ width: number; height: number }>({
     width: 405,
     height: 720,
@@ -79,8 +80,8 @@ const ChallengePage = () => {
 
   const handleCloseModal = () => setShow(false);
   const showRecordButton = () => setRecording(false);
-  // const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
-  const showCancelButton = () => prepareRecording(); // 타이머 useEffect 시작
+  // 녹화 시작 버튼 눌리면 녹화 준비 시작
+  const showCancelButton = () => prepareRecording();
 
   const goToLearnMode = () => {
     stream?.getTracks().forEach((track) => track.stop());
@@ -126,27 +127,16 @@ const ChallengePage = () => {
     videoResolutionRef.current = { width, height };
 
     setResolutionText(`녹화 해상도: ${width}x${height}`);
-    setRecording(true); // ✅ recording 상태 변경 → useEffect 작동 트리거
+    setRecording(true); // recording 상태 변경 → useEffect 작동 트리거
   };
 
-  // 녹화 시작 버튼이 눌리면
   const startRecording = () => {
-    // if (!stream) {
-    //   alert("카메라 접근을 허용해주세요.");
-    //   return;
-    // }
-
-    const canvas = document.createElement("canvas"); // 캔버스 생성
-    const ctx = canvas.getContext("2d")!; // 2D 렌더링 컨텍스트
-    //const [track] = stream.getVideoTracks(); // 스트림에서 비디오 트랙을 가져오기
-    //const { width = 405, height = 720 } = track.getSettings(); // 해상도 기본 값
-    //setResolutionText(`📸 녹화 해상도: ${width}x${height}`);
+    // 캔버스 생성
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
     const { width, height } = videoResolutionRef.current;
+    // 모션인식 상태 변경
     setState("RECORD");
-
-    //setShow(true); // 모달 열기
-    //setFfmpegLog(`📸 녹화 해상도: ${width}x${height}`);
-    //setTimeout(handleCloseModal, 1500);
 
     canvas.width = width;
     canvas.height = height;
@@ -188,7 +178,7 @@ const ChallengePage = () => {
 
   const s3Upload = async (blob: Blob) => {
     if (!short) {
-      alert("원본 Shorts에 문제가 생겼습니다.");
+      alert("원본 쇼츠에 문제가 생겼습니다.");
       throw new Error("원본 쇼츠가 존재하지 않습니다.");
     }
 

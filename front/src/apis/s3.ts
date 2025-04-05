@@ -1,32 +1,30 @@
-//import { S3PutRequest } from "../constants/types";
 import { axios } from "../utils/axios";
-//import { uploadShortsToDB } from "./recordedshorts";
 
 const REST_S3_URL = "/api/s3";
 
 // S3에 있는 파일을 Blob으로 받기
-export async function getS3Blob(shortsS3Key: string) {
-  try {
-    const token = "Bearer " + localStorage.getItem("accessToken");
-    //console.log(shortsS3Key);
+// export async function getS3Blob(shortsS3Key: string) {
+//   try {
+//     const token = "Bearer " + localStorage.getItem("accessToken");
+//     //console.log(shortsS3Key);
 
-    const res = await axios.post(
-      `${REST_S3_URL}/blob`,
-      { s3key: shortsS3Key }, // map 전송
+//     const res = await axios.post(
+//       `${REST_S3_URL}/blob`,
+//       { s3key: shortsS3Key }, // map 전송
 
-      {
-        headers: {
-          Authorization: token,
-        },
-        responseType: "blob",
-      }
-    );
+//       {
+//         headers: {
+//           Authorization: token,
+//         },
+//         responseType: "blob",
+//       }
+//     );
 
-    return res.data;
-  } catch (error: any) {
-    console.error(error.response.data);
-  }
-}
+//     return res.data;
+//   } catch (error: any) {
+//     console.error(error.response.data);
+//   }
+// }
 
 // S3에 녹화 쇼츠 업로드
 // export async function uploadShortsToS3(blob: Blob) {
@@ -50,32 +48,28 @@ export async function getS3Blob(shortsS3Key: string) {
 // }
 
 // S3에서 녹화 쇼츠 삭제
-export async function deleteShortsFromS3(s3key: string) {
-  try {
-    const token = "Bearer " + localStorage.getItem("accessToken");
+// export async function deleteShortsFromS3(s3key: string) {
+//   try {
+//     const token = "Bearer " + localStorage.getItem("accessToken");
 
-    const res = await axios.delete(`${REST_S3_URL}`, {
-      headers: {
-        Authorization: token,
-      },
-      data: {
-        s3key: s3key,
-      },
-    });
+//     const res = await axios.delete(`${REST_S3_URL}`, {
+//       headers: {
+//         Authorization: token,
+//       },
+//       data: {
+//         s3key: s3key,
+//       },
+//     });
 
-    return res.data;
-  } catch (error: any) {
-    console.error(error.response.data);
-  }
-}
+//     return res.data;
+//   } catch (error: any) {
+//     console.error(error.response.data);
+//   }
+// }
 
 export async function getPresignedGetURL(s3key: string) {
   try {
-    //const token = "Bearer " + localStorage.getItem("accessToken");
     const res = await axios.get(`${REST_S3_URL}/get`, {
-      // headers: {
-      //   Authorization: token,
-      // },
       params: { s3key },
     });
 
@@ -85,22 +79,22 @@ export async function getPresignedGetURL(s3key: string) {
   }
 }
 
-export async function getRecordedShorts() {
-  try {
-    const token = "Bearer " + localStorage.getItem("accessToken");
-    //console.log(shortsS3Key);
+// export async function getRecordedShorts() {
+//   try {
+//     const token = "Bearer " + localStorage.getItem("accessToken");
+//     //console.log(shortsS3Key);
 
-    const res = await axios.get(`${REST_S3_URL}/get/list`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+//     const res = await axios.get(`${REST_S3_URL}/get/list`, {
+//       headers: {
+//         Authorization: token,
+//       },
+//     });
 
-    return res.data;
-  } catch (error: any) {
-    console.error(error.response.data);
-  }
-}
+//     return res.data;
+//   } catch (error: any) {
+//     console.error(error.response.data);
+//   }
+// }
 
 // 유튜브 업로드
 // const youtubeUrl = import.meta.env.VITE_YOUTUBE_URL;
