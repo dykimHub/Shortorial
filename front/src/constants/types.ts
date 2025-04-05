@@ -2,8 +2,8 @@ export interface VideoSection {
   id: number;
   start: number;
   end: number;
-  acc: number;
-  maxAcc: number;
+  //acc: number;
+  //maxAcc: number;
 }
 
 export default interface Member {
@@ -39,11 +39,13 @@ export interface RecomShorts {
 
 export interface UploadShorts {
   recordedShortsId: number;
+  recordedShortsTitle: string;
+  recordedShortsDate: Date;
   recordedShortsS3key: string;
   recordedShortsS3URL: string;
-  recordedShortsTitle: string;
   recordedShortsYoutubeURL: string;
-  recordedShortsDate: Date;
+  shortsMusicTitle: string;
+  shortsMusicSinger: string;
 }
 
 export interface TryShorts {
@@ -58,7 +60,7 @@ export interface Countings {
   uploadedShortsNum: number;
 }
 
-export interface ModifyingShorts {
+export interface ModifyingTitle {
   recordedShortsId: number;
   newRecordedShortsTitle: string;
 }

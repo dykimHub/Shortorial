@@ -52,7 +52,7 @@ export async function getInfo() {
     });
 
     return response.data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (error: any) {
+    console.log(error.response.data);
   }
 }

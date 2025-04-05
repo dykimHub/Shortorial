@@ -19,13 +19,14 @@ const SectionButtonList = ({
   isLooping = false,
   clickHandler,
 }: SectionButtonListProps) => {
-  const [currentSection, loopSection, setCurrentSection, setLoopSection] =
-    useLearnStore((state) => [
+  const [currentSection, loopSection, setCurrentSection, setLoopSection] = useLearnStore(
+    (state) => [
       state.currentSection,
       state.loopSection,
       state.setCurrentSection,
       state.setLoopSection,
-    ]);
+    ]
+  );
 
   // 현재 시간에 있는 구간 반환
   const loadCurrSection = useCallback(() => {
@@ -33,12 +34,11 @@ const SectionButtonList = ({
     const time = currentTime;
 
     if (sectionList) {
-      result = sectionList.find(
-        (item) => time >= item.start && time < item.end
-      );
+      result = sectionList.find((item) => time >= item.start && time < item.end);
     }
 
-    result = result ?? { id: 0, start: 0, end: 0, acc: 0, maxAcc: 0 };
+    //result = result ?? { id: 0, start: 0, end: 0, acc: 0, maxAcc: 0 };
+    result = result ?? { id: 0, start: 0, end: 0 };
     setCurrentSection(result);
 
     if (isLooping) setLoopSection(result);

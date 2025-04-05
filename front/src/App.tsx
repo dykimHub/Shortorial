@@ -26,7 +26,7 @@ function App() {
             element={<PrivateRoute component={<ChallengePage />} />}
           />
           {/* <Route path="/video-resize" element={<VideoResizePage />} /> */}
-          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/mypage" element={<PrivateRoute component={<MyPage />} />} />
         </Routes>
       </BrowserRouter>
     </>

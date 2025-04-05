@@ -19,16 +19,16 @@ import { useActionStore, useBtnStore, useMotionDetectionStore } from "../store/u
 import SectionButtonList from "../components/buttonList/SectionButtonList";
 import MotionCamera from "../components/motion/MotionCamera";
 import VideoMotionButton from "../components/button/VideoMotionButton";
-import { Acc } from "../modules/Acc";
+//import { Acc } from "../modules/Acc";
 import {
   useMotionLandmarkStore,
   useVideoLandmarkStore,
-  useValueStore,
+  //useValueStore,
   useCountStore,
 } from "../store/useAccStore";
 
-import greatImage from "../assets/score/great.png";
-import goodImage from "../assets/score/good.png";
+//import greatImage from "../assets/score/great.png";
+//import goodImage from "../assets/score/good.png";
 import StarEffect from "../components/style/StarEffect";
 
 const LearnPage = () => {
@@ -60,7 +60,7 @@ const LearnPage = () => {
     shortsTitle: "",
     shortsSource: "",
     shortsChallengerNum: 0,
-    shortsS3Key: "",
+    shortsS3key: "",
     shortsS3URL: "",
     shortsMusicSinger: "",
     shortsMusicTitle: "",
@@ -94,7 +94,7 @@ const LearnPage = () => {
   ]);
 
   const currentSection = useLearnStore((state) => state.currentSection);
-  // const setCurrentSection = useLearnStore((state) => state.setCurrentSection);
+  //const setCurrentSection = useLearnStore((state) => state.setCurrentSection);
 
   const btn = useBtnStore((state) => state.btn);
   const action = useActionStore((state) => state.action);
@@ -120,7 +120,7 @@ const LearnPage = () => {
         setState("PAUSE");
       }
     }
-  }, [params.shortsNo]);
+  }, [params.shortsId]);
 
   // 구간 리스트 초기화
   const initSectionList = (videoLength: number) => {
@@ -133,10 +133,11 @@ const LearnPage = () => {
         id: i,
         start: i * secondsPerSection,
         end: (i + 1) * secondsPerSection,
-        acc: 0,
-        maxAcc: 0,
+        //acc: 0,
+        //maxAcc: 0,
       });
     }
+    console.log(sectionList);
 
     setSectionList(result);
   };
@@ -204,7 +205,7 @@ const LearnPage = () => {
     if (video) {
       // 반복하지 않는 경우
       if (!isLooping) {
-        console.log("not Loop");
+        //console.log("not Loop");
         setCurrentTime(video.currentTime);
         if (video.ended) {
           {
@@ -383,7 +384,7 @@ const LearnPage = () => {
         if (state === "PAUSE") changePlaySpeed();
         break;
       case "canvas":
-        console.log("canvas");
+        //console.log("canvas");
         canvasSetting();
         break;
       default:
@@ -401,77 +402,76 @@ const LearnPage = () => {
   // landmark 정보
   const videoLandmark = useVideoLandmarkStore.getState().videoLandmark;
   const motionLandmark = useMotionLandmarkStore.getState().motionLandmark;
-  const [acc, setAcc] = useState(0);
-  const [accValue, setAccValue] = useValueStore((state) => [state.accValue, state.setAccValue]);
+  //const [acc, setAcc] = useState(0);
+  //const [accValue, setAccValue] = useValueStore((state) => [state.accValue, state.setAccValue]);
   const [count, setCount] = useCountStore((state) => [state.count, state.setCount]);
 
-  const [scoreImage, setScoreImage] = useState("");
+  //const [scoreImage, setScoreImage] = useState("");
   // 정확도 계산하기
-  useEffect(() => {
-    if (sectionList.length > 0 || state === "PAUSE") {
-      const sectionListTmp = sectionList;
+  // useEffect(() => {
+  //   if (sectionList.length > 0 || state === "PAUSE") {
+  //     const sectionListTmp = sectionList;
 
-      if (currentSection.id > 0) {
-        sectionListTmp[currentSection.id - 1].maxAcc = Math.max(
-          acc / count,
-          sectionListTmp[currentSection.id - 1].acc
-        );
-        sectionListTmp[currentSection.id - 1].acc = acc / count;
-      } else {
-        sectionListTmp[sectionListTmp.length - 1].maxAcc = Math.max(
-          acc / count,
-          sectionListTmp[sectionListTmp.length - 1].acc
-        );
-        sectionListTmp[sectionListTmp.length - 1].acc = acc / count;
-      }
-      settingImage(acc / count);
-      setSectionList(sectionListTmp);
-      setAccValue(0);
-      setCount(0);
-    }
-  }, [currentSection.id, state]);
+  //     if (currentSection.id > 0) {
+  //       sectionListTmp[currentSection.id - 1].maxAcc = Math.max(
+  //         //acc / count,
+  //         sectionListTmp[currentSection.id - 1].acc
+  //       );
+  //       sectionListTmp[currentSection.id - 1].acc = acc / count;
+  //     } else {
+  //       sectionListTmp[sectionListTmp.length - 1].maxAcc = Math.max(
+  //         //acc / count,
+  //         sectionListTmp[sectionListTmp.length - 1].acc
+  //       );
+  //       sectionListTmp[sectionListTmp.length - 1].acc = acc / count;
+  //     }
+  //     settingImage(acc / count);
+  //     setSectionList(sectionListTmp);
+  //     setAccValue(0);
+  //     setCount(0);
+  //   }
+  // }, [currentSection.id, state]);
 
   useEffect(() => {
     if (sectionList.length > 0 && flag) {
       const sectionListTmp = sectionList;
-      sectionListTmp[currentSection.id].maxAcc = Math.max(
-        acc / count,
-        sectionListTmp[currentSection.id].acc
-      );
-      sectionListTmp[currentSection.id].acc = acc / count;
-      console.log(sectionListTmp);
+      // sectionListTmp[currentSection.id].maxAcc = Math.max(
+      //   acc / count,
+      //   sectionListTmp[currentSection.id].acc
+      // );
+      //sectionListTmp[currentSection.id].acc = acc / count;
       setSectionList(sectionListTmp);
     }
-    settingImage(acc / count);
-    setAccValue(0);
+    //settingImage(acc / count);
+    //setAccValue(0);
     setCount(0);
     setFlag(false);
   }, [flag]);
 
-  const [isVisible, setIsVisible] = useState(false);
-  const settingImage = (score: number) => {
-    setIsVisible(true);
-    if (score > 40) {
-      setScoreImage(greatImage);
-    } else {
-      setScoreImage(goodImage);
-    }
-    setTimeout(() => {
-      setIsVisible(false);
-    }, 500);
-  };
+  //const [isVisible, setIsVisible] = useState(false);
+  // const settingImage = (score: number) => {
+  //   setIsVisible(true);
+  //   if (score > 40) {
+  //     setScoreImage(greatImage);
+  //   } else {
+  //     setScoreImage(goodImage);
+  //   }
+  //   setTimeout(() => {
+  //     setIsVisible(false);
+  //   }, 500);
+  // };
 
-  useEffect(() => {
-    if (state !== "PLAY") {
-      setIsVisible(false);
-    }
-  }, [state]);
+  // useEffect(() => {
+  //   if (state !== "PLAY") {
+  //     setIsVisible(false);
+  //   }
+  // }, [state]);
   useEffect(() => {
     const fetchData = async () => {
       if (videoLandmark && motionLandmark) {
-        setAcc(await Acc(videoLandmark, motionLandmark));
+        //setAcc(await Acc(videoLandmark, motionLandmark));
         if (state === "PLAY") {
-          setAccValue(acc + accValue);
+          //setAccValue(acc + accValue);
           setCount(count + 1);
         }
       }
@@ -488,6 +488,7 @@ const LearnPage = () => {
       ) : (
         <>
           <LeftSection ref={leftSectionRef}>
+            {/* <div style={{ color: "white" }}>왼쪽 패널</div> */}
             <SectionButtonList
               sectionList={sectionList}
               parentWidth={getLeftSectionWidth()}
@@ -515,7 +516,7 @@ const LearnPage = () => {
                 autoPlay
                 isCanvas={isCanvas}
               ></MotionCamera>
-              <Image src={scoreImage} $visible={isVisible && startFlag} />
+              {/* <Image src={scoreImage} $visible={isVisible && startFlag} /> */}
               <VideoMotionButtonList>
                 {state === "PAUSE" ? (
                   <VideoMotionButton
@@ -727,10 +728,10 @@ const LoadingText = styled.div`
   color: #fff;
 `;
 
-const Image = styled.img<{ $visible: boolean }>`
-  position: absolute;
-  width: 50%;
-  display: ${(props) => (props.$visible ? "flex" : "none")};
-  z-index: 2;
-`;
+// const Image = styled.img<{ $visible: boolean }>`
+//   position: absolute;
+//   width: 50%;
+//   display: ${(props) => (props.$visible ? "flex" : "none")};
+//   z-index: 2;
+// `;
 export default LearnPage;
