@@ -5,7 +5,7 @@ import com.sleep.sleep.exception.ExceptionCode;
 import com.sleep.sleep.exception.SuccessResponse;
 import com.sleep.sleep.member.entity.Member;
 import com.sleep.sleep.member.service.MemberService;
-import com.sleep.sleep.s3.service.S3AsyncServiceImpl;
+import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
 import com.sleep.sleep.shorts.entity.Shorts;
 import com.sleep.sleep.shorts.entity.TriedShorts;
@@ -23,26 +23,21 @@ public class TriedShortsServiceImpl implements TriedShortsService {
     private final MemberService memberService;
     private final ShortsRepository shortsRepository;
     private final TriedShortsRepository triedShortsRepository;
-    private final S3AsyncServiceImpl s3AsyncServiceImpl;
     private final ShortsService shortsService;
 
     /**
-     * 특정 id의 회원의 TriedShorts 리스트를 TriedShortsDto 리스트로 반환함
-     * With 어노테이션을 활용하여 triedShortsDate를 제외한 변수들은 기존 변수에서 복사함
+     * 특정 id의 회원의 TriedShorts 리스트를 조회하여 TriedShortsDto 리스트로 변환함
+     * TriedShortsDto 객체에 포함된 ShortsDto 객체에 서명된 Get URL을 붙인 후 최종 반환함
      *
      * @param accessToken 로그인한 회원의 토큰
      * @return triedShortsDto 리스트
      */
     @Override
     public List<TriedShortsDto> findTriedShortsList(String accessToken) {
-        String memberId = memberService.findMemberId(accessToken);
-        return shortsRepository.findTriedShortsList(memberId);
-//                map 메서드는 Optinal 비어있으면 변환 작업을 수행하지 않음
-//                각 시간대별 변환을 프론트 라이브러리가 처리
-//                .map(tlist -> tlist.stream()
-//                        .map(t -> t.withTriedShortsDate(t.getTriedShortsDate().plusHours(9)))
-//                        .toList())
-
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        return shortsRepository.findTriedShortsList(memberIndex).stream()
+                .map(this::withPresignedGetURL)
+                .toList();
     }
 
     /**
@@ -56,10 +51,10 @@ public class TriedShortsServiceImpl implements TriedShortsService {
     @Transactional
     @Override
     public SuccessResponse addTriedShorts(String accessToken, int shortsId) {
-        Member member = memberService.findMemberEntity(accessToken);
+        Member member = memberService.findByMemberId(memberService.getMemberId(accessToken));
         Shorts shorts = shortsService.findShorts(shortsId);
 
-        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberId(), shorts.getShortsId())
+        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId())
                 .map(ts -> { // 이미 존재한다면
                     ts.updateTriedShortsDate(); // 시도한 날짜를 업데이트
                     return ts;
@@ -86,12 +81,23 @@ public class TriedShortsServiceImpl implements TriedShortsService {
     @Transactional
     @Override
     public SuccessResponse deleteTriedShorts(String accessToken, int shortsId) {
-        String memberId = memberService.findMemberId(accessToken);
-        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(memberId, shortsId)
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(memberIndex, shortsId)
                 .orElseThrow(() -> new CustomException(ExceptionCode.TRIED_SHORTS_NOT_FOUND));
 
         triedShortsRepository.delete(triedShorts);
-
         return SuccessResponse.of("회원이 시도한 쇼츠에서 삭제되었습니다.");
+    }
+
+    /**
+     * 기존 TriedShortsDto 객체의 ShortsDto 객체에 서명된 Get URL을 추가하여 반환합니다.
+     *
+     * @param triedShortsDto TriedShortsDto 객체
+     * @return S3 URL이 추가된 ShortsDto 객체가 포함된 TriedShortsDto 객체
+     */
+    private TriedShortsDto withPresignedGetURL(TriedShortsDto triedShortsDto) {
+        ShortsDto shortsDto = shortsService.withPresignedGetURL(triedShortsDto.getShortsDto());
+        return triedShortsDto.withShortsDto(shortsDto);
+
     }
 }

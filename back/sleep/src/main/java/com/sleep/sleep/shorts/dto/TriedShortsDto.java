@@ -5,12 +5,12 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
-@With
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TriedShortsDto {
     private int triedShortsId; // 시도한 쇼츠 테이블 id
     private OffsetDateTime triedShortsDate; // 시도한 시간
+    @With
     private ShortsDto shortsDto; // 쇼츠 정보
 
     @QueryProjection

@@ -20,4 +20,6 @@ public interface ShortsService {
     ShortsStatsDto findShortsStats(String accessToken);
 
     Shorts findShorts(int shortsId);
+
+    ShortsDto withPresignedGetURL(ShortsDto shortsDto);
 }

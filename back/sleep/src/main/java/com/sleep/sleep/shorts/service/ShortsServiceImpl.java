@@ -38,6 +38,7 @@ public class ShortsServiceImpl implements ShortsService {
         String s3PresignedGetURL = s3AsyncService.generatePresignedGetURL(shorts.getShortsS3key(), Duration.ofMinutes(30));
         return ShortsDto.builder()
                 .shortsId(shorts.getShortsId())
+                .shortsTime(shorts.getShortsTime())
                 .shortsS3Key(shorts.getShortsS3key())
                 .shortsS3URL(s3PresignedGetURL)
                 .build();
@@ -81,8 +82,8 @@ public class ShortsServiceImpl implements ShortsService {
     @Transactional
     @Override
     public ShortsStatsDto findShortsStats(String accessToken) {
-        String memberId = memberService.findMemberId(accessToken);
-        return shortsRepository.findShortsStatsDto(memberId)
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        return shortsRepository.findShortsStatsDto(memberIndex)
                 .orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND));
     }
 
@@ -103,9 +104,10 @@ public class ShortsServiceImpl implements ShortsService {
      * 기존 ShortsDto 객체에 서명된 Get URL을 추가하여 반환합니다.
      *
      * @param shortsDto ShortsDto 객체
-     * @return 새로운 ShortsDto 객체
+     * @return S3 URL이 추가된 ShortsDto 객체
      */
-    private ShortsDto withPresignedGetURL(ShortsDto shortsDto) {
+    @Override
+    public ShortsDto withPresignedGetURL(ShortsDto shortsDto) {
         return shortsDto.withShortsS3URL(s3AsyncService.generatePresignedGetURL(shortsDto.getShortsS3key(), Duration.ofMinutes(30)));
 
     }
