@@ -15,6 +15,9 @@ export async function getTryShorts() {
 
     return res.data;
   } catch (error: any) {
+    if (error.response.data.code === "MEMBER_002") {
+      alert(`${error.response.data.message}`);
+    }
     console.error(error.response.data);
   }
 }
@@ -36,6 +39,9 @@ export async function getTryCount(shortsId: number) {
 
     return res.data;
   } catch (error: any) {
+    if (error.response.data.code === "MEMBER_002") {
+      alert(`${error.response.data.message}`);
+    }
     console.error(error.response.data);
   }
 }
@@ -53,6 +59,9 @@ export async function deleteTriedShorts(shortsId: number) {
 
     return res.data;
   } catch (error: any) {
+    if (error.response.data.code === "MEMBER_002") {
+      alert(`${error.response.data.message}`);
+    }
     console.error(error.response.data);
   }
 }

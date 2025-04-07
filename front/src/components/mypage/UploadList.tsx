@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-//import { UploadShorts } from "../../constants/types";
-import { S3Object } from "../../constants/types";
-//import { getUploadedShorts } from "../../apis/recordedshorts";
-import { getRecordedShorts } from "../../apis/s3";
+import { UploadShorts } from "../../constants/types";
+import { getUploadedShorts } from "../../apis/recordedshorts";
 import { getCounting } from "../../apis/shorts";
 import useMypageStore from "../../store/useMypageStore";
 import styled from "styled-components";
 import UploadComponent from "./UploadComponent";
 
 export default function UploadList() {
-  const [uploadedShortsList, setUploadedShortsList] = useState<S3Object[]>([]);
+  const [uploadedShortsList, setUploadedShortsList] = useState<UploadShorts[]>([]);
   const { setCountings } = useMypageStore();
 
   const handleDeleteShort = async () => {
@@ -20,7 +18,7 @@ export default function UploadList() {
 
   const loadRecordedShortsList = async () => {
     //const data = await getUploadedShorts();
-    const data = await getRecordedShorts();
+    const data = await getUploadedShorts();
     if (data) setUploadedShortsList(data);
   };
 
@@ -38,7 +36,7 @@ export default function UploadList() {
             ) : (
               uploadedShortsList.map((uploadShorts) => (
                 <UploadComponent
-                  key={uploadShorts.key}
+                  key={uploadShorts.recordedShortsId}
                   uploadShorts={uploadShorts}
                   onDelete={handleDeleteShort}
                 />
