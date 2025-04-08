@@ -24,6 +24,11 @@ public class ShortsController {
     private final TriedShortsService triedShortsService;
     private final RecordedShortsService recordedShortsService;
 
+    @GetMapping("/health-check")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("ok");
+    }
+
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
     public ResponseEntity<ShortsDto> findShorts(@PathVariable int shortsId) {
@@ -97,7 +102,7 @@ public class ShortsController {
 
     @Operation(summary = "회원이 녹화한 쇼츠의 S3 상태 변경")
     @PutMapping("/recorded")
-    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestBody ModifyingStatusDto modifyingStatusDto){
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestBody ModifyingStatusDto modifyingStatusDto) {
         SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(modifyingStatusDto);
         return ResponseEntity.ok()
                 .body(successResponse);
@@ -126,8 +131,6 @@ public class ShortsController {
         return ResponseEntity.ok()
                 .body(successResponse);
     }
-
-
 
 
 }
