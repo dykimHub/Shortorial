@@ -34,7 +34,7 @@ jobs:
       - name: Build and Push Docker Image
         id: build-image
         run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/shortorial-be:${{ github.sha }}
+          IMAGE=${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}
           docker buildx build -t $IMAGE --push back/sleep
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
@@ -48,7 +48,7 @@ jobs:
       # 6. task-definition-base.json에 이미지와 환경변수 값 치환하여 task-definition.json 생성
       - name: Build ECS task definition with jq
         run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/shortorial-be:${{ github.sha }}
+          IMAGE=${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}
 
           jq --arg img "$IMAGE" \
             --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
