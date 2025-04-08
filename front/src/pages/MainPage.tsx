@@ -49,21 +49,23 @@ const MainPage = () => {
     navigate(`/learn/${shortsId}`);
   };
 
-  const goToChallengeMode = (shortsNo: number) => {
-    getTryCount(shortsNo);
-    navigate(`/challenge/${shortsNo}`);
+  const goToChallengeMode = (shortsId: number) => {
+    getTryCount(shortsId);
+    navigate(`/challenge/${shortsId}`);
   };
 
   // 둘러보기 쇼츠 리스트 가져오기
   const loadAllShortsList = async () => {
     const data = await getShortsList();
     if (data) setAllShortsList(data);
+    //console.log(data);
   };
 
   // 인기 쇼츠 리스트 가져오기
   const loadPopularShortsList = async () => {
     const data = await getTopRankingShorts();
     if (data) setPopularShortsList(data);
+    //console.log(data);
   };
 
   // 추천 쇼츠 리스트 가져오기

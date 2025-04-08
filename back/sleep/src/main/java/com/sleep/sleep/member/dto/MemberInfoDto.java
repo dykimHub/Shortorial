@@ -1,17 +1,26 @@
 package com.sleep.sleep.member.dto;
 
-
-import lombok.AllArgsConstructor;
+import com.sleep.sleep.member.entity.MemberRole;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberInfoDto {
-    String username;
+    int memberIndex;
+    String memberId;
     String memberNickname;
     String memberProfile;
+    MemberRole memberRole;
+
+    @Builder
+    public MemberInfoDto(int memberIndex, String memberId, String memberNickname, String memberProfile, MemberRole memberRole) {
+        this.memberIndex = memberIndex;
+        this.memberId = memberId;
+        this.memberNickname = memberNickname;
+        this.memberProfile = memberProfile;
+        this.memberRole = memberRole;
+    }
 }

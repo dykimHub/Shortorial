@@ -28,20 +28,19 @@ public class MemberController {
 
     @Operation(summary = "카테고리 별 중복 검사.아이디, 닉네임, 이메일")
     @GetMapping("/check/{category}/{input}")
-    public ResponseEntity<Map<String, Object>> dupCheck(@PathVariable String category,@PathVariable String input){
+    public ResponseEntity<Map<String, Object>> dupCheck(@PathVariable String category, @PathVariable String input) {
         Map<String, Object> resultMap = new HashMap<>();
         HttpStatus status = HttpStatus.OK;
-        try{
-            boolean dupCheck = memberService.checkDup(category,input);
+        try {
+            boolean dupCheck = memberService.checkDup(category, input);
             resultMap.put("dupCheck", dupCheck);
-        }catch(Exception e){
+        } catch (Exception e) {
             log.info(e.getMessage());
             resultMap.put("message", e.getMessage());
             status = HttpStatus.BAD_REQUEST;
         }
         return ResponseEntity.status(status).body(resultMap);
     }
-
 
 
     @Operation(summary = "일반 로그인")
@@ -90,11 +89,7 @@ public class MemberController {
         HttpStatus status = HttpStatus.OK;
         MemberInfoDto memberInfoDto = null;
         try {
-            //System.out.println(accessToken.toString());
-            String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
-            //System.out.println("username : "+ username);
-            memberInfoDto = memberService.getMemberInfo(username);
-//            System.out.println("memberInfo : "+ memberInfoDto.getMemberNickname());
+            memberInfoDto = memberService.getMemberInfo(accessToken);
 //            resultMap.put("memberInfo", memberInfoDto);
         } catch (Exception e) {
             log.info(e.getMessage());

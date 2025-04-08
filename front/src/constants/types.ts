@@ -2,8 +2,8 @@ export interface VideoSection {
   id: number;
   start: number;
   end: number;
-  acc: number;
-  maxAcc: number;
+  //acc: number;
+  //maxAcc: number;
 }
 
 export default interface Member {
@@ -19,7 +19,7 @@ export interface Shorts {
   shortsTitle: string;
   shortsTime: number;
   shortsChallengerNum: number;
-  shortsS3Key: string;
+  shortsS3key: string;
   shortsS3URL: string;
   shortsMusicTitle: string;
   shortsMusicSinger: string;
@@ -39,11 +39,13 @@ export interface RecomShorts {
 
 export interface UploadShorts {
   recordedShortsId: number;
+  recordedShortsTitle: string;
+  recordedShortsDate: Date;
   recordedShortsS3key: string;
   recordedShortsS3URL: string;
-  recordedShortsTitle: string;
   recordedShortsYoutubeURL: string;
-  recordedShortsDate: Date;
+  shortsMusicTitle: string;
+  shortsMusicSinger: string;
 }
 
 export interface TryShorts {
@@ -58,7 +60,7 @@ export interface Countings {
   uploadedShortsNum: number;
 }
 
-export interface ModifyingShorts {
+export interface ModifyingTitle {
   recordedShortsId: number;
   newRecordedShortsTitle: string;
 }
@@ -67,4 +69,16 @@ export interface ErrorResponse {
   status: string;
   code: string;
   message: string;
+}
+
+export interface S3Object {
+  key: string; // S3에서의 파일 경로 (예: "test/file1.jpg")
+  url: string; // Presigned URL 또는 정적 S3 URL
+  size: number; // 파일 크기 (bytes)
+  lastModified: Date; // 마지막 수정 날짜
+}
+
+export interface S3PutRequest {
+  shortsId: number;
+  metadata: Record<string, string>;
 }

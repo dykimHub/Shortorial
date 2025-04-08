@@ -1,8 +1,12 @@
 package com.sleep.sleep.shorts.controller;
 
 import com.sleep.sleep.exception.SuccessResponse;
+import com.sleep.sleep.s3.dto.S3PutRequestDTO;
+import com.sleep.sleep.s3.dto.S3PutResponseDTO;
 import com.sleep.sleep.shorts.dto.*;
+import com.sleep.sleep.shorts.service.RecordedShortsService;
 import com.sleep.sleep.shorts.service.ShortsService;
+import com.sleep.sleep.shorts.service.TriedShortsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,23 +14,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/shorts")
 @RestController
 public class ShortsController {
-
     private final ShortsService shortsService;
+    private final TriedShortsService triedShortsService;
+    private final RecordedShortsService recordedShortsService;
 
-    @Operation(summary = "쇼츠 목록 조회")
-    @GetMapping
-    public ResponseEntity<List<ShortsDto>> findShortList() {
-        List<ShortsDto> shortsDtoList = shortsService.findShortsList();
-        return ResponseEntity.ok()
-                .body(shortsDtoList);
-
+    @GetMapping("/health-check")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("ok");
     }
 
     @Operation(summary = "특정 쇼츠 조회")
@@ -35,6 +35,15 @@ public class ShortsController {
         ShortsDto shortsDto = shortsService.findShortsDto(shortsId);
         return ResponseEntity.ok()
                 .body(shortsDto);
+
+    }
+
+    @Operation(summary = "쇼츠 목록 조회")
+    @GetMapping
+    public ResponseEntity<List<ShortsDto>> findShortList() {
+        List<ShortsDto> shortsDtoList = shortsService.findShortsList();
+        return ResponseEntity.ok()
+                .body(shortsDtoList);
 
     }
 
@@ -58,7 +67,7 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠 조회")
     @GetMapping("/tried")
     public ResponseEntity<List<TriedShortsDto>> findTriedShortsList(@RequestHeader("Authorization") String accessToken) {
-        List<TriedShortsDto> shortsList = shortsService.findTriedShortsList(accessToken);
+        List<TriedShortsDto> shortsList = triedShortsService.findTriedShortsList(accessToken);
         return ResponseEntity.ok()
                 .body(shortsList);
 
@@ -67,7 +76,7 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠에 추가")
     @PostMapping("/tried/{shortsId}")
     public ResponseEntity<SuccessResponse> addTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
-        SuccessResponse successResponse = shortsService.addTriedShorts(accessToken, shortsId);
+        SuccessResponse successResponse = triedShortsService.addTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 
@@ -76,42 +85,49 @@ public class ShortsController {
     @Operation(summary = "회원이 시도한 쇼츠에서 삭제")
     @DeleteMapping("/tried/{shortsId}")
     public ResponseEntity<SuccessResponse> deleteTriedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
-        SuccessResponse successResponse = shortsService.deleteTriedShorts(accessToken, shortsId);
+        SuccessResponse successResponse = triedShortsService.deleteTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
 
     }
 
-    @Operation(summary = "회원이 녹화한 쇼츠 조회")
-    @GetMapping("/recorded")
-    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
-        List<RecordedShortsDto> recordedShortsDtoList = shortsService.findRecordedShortsList(accessToken);
-        return ResponseEntity.ok()
-                .body(recordedShortsDtoList);
-
-    }
-
-    @Operation(summary = "회원이 녹화한 쇼츠 등록")
+    @Operation(summary = "회원이 녹화한 쇼츠에 추가")
     @PostMapping("/recorded")
-    public ResponseEntity<SuccessResponse> addRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
-        SuccessResponse successResponse = shortsService.addRecordedShorts(accessToken, map.get("s3key"));
+    public ResponseEntity<S3PutResponseDTO> addRecordedShorts(@RequestHeader("Authorization") String accessToken,
+                                                              @RequestBody S3PutRequestDTO s3PutRequestDTO) {
+        S3PutResponseDTO s3PutResponseDTO = recordedShortsService.addRecordedShorts(accessToken, s3PutRequestDTO);
+        return ResponseEntity.ok()
+                .body(s3PutResponseDTO);
+    }
+
+    @Operation(summary = "회원이 녹화한 쇼츠의 S3 상태 변경")
+    @PutMapping("/recorded")
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestBody ModifyingStatusDto modifyingStatusDto) {
+        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(modifyingStatusDto);
         return ResponseEntity.ok()
                 .body(successResponse);
-
     }
 
     @Operation(summary = "회원이 녹화한 쇼츠 제목 변경")
-    @PutMapping("/recorded")
-    public ResponseEntity<SuccessResponse> modifyRecordedShortsTitle(@RequestHeader("Authorization") String accessToken, @RequestBody ModifiedShortsDto modifiedShortsDto) {
-        SuccessResponse successResponse = shortsService.modifyRecordedShortsTitle(accessToken, modifiedShortsDto);
+    @PutMapping("/recorded/title")
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsTitle(@RequestHeader("Authorization") String accessToken, @RequestBody ModifyingTitleDto modifyingTitleDto) {
+        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsTitle(accessToken, modifyingTitleDto);
         return ResponseEntity.ok()
                 .body(successResponse);
     }
 
+    @Operation(summary = "회원이 녹화한 쇼츠 목록 조회")
+    @GetMapping("/recorded")
+    public ResponseEntity<List<RecordedShortsDto>> findRecordedShortsList(@RequestHeader("Authorization") String accessToken) {
+        List<RecordedShortsDto> recordedShortsDtoList = recordedShortsService.findRecordedShortsDtoList(accessToken);
+        return ResponseEntity.ok()
+                .body(recordedShortsDtoList);
+    }
+
     @Operation(summary = "회원이 녹화한 쇼츠 삭제")
-    @DeleteMapping("/recorded")
-    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @RequestBody Map<String, String> map) {
-        SuccessResponse successResponse = shortsService.deleteRecordedShorts(map.get("s3key"));
+    @DeleteMapping("/recorded/{recordedShortsId}")
+    public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int recordedShortsId) {
+        SuccessResponse successResponse = recordedShortsService.deleteRecordedShorts(recordedShortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
     }

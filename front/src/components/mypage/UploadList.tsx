@@ -10,15 +10,6 @@ export default function UploadList() {
   const [uploadedShortsList, setUploadedShortsList] = useState<UploadShorts[]>([]);
   const { setCountings } = useMypageStore();
 
-  // const getRecordedShorts = async () => {
-  //   try {
-  //     const data = await getUploadedShorts();
-  //     setShortsList(data);
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   }
-  // };
-
   const handleDeleteShort = async () => {
     await loadRecordedShortsList();
     const countings = await getCounting();
@@ -26,6 +17,7 @@ export default function UploadList() {
   };
 
   const loadRecordedShortsList = async () => {
+    //const data = await getUploadedShorts();
     const data = await getUploadedShorts();
     if (data) setUploadedShortsList(data);
   };
@@ -33,10 +25,6 @@ export default function UploadList() {
   useEffect(() => {
     loadRecordedShortsList();
   }, []);
-
-  // useEffect(() => {
-  //   getRecordedShorts();
-  // }, []);
 
   return (
     <Container>

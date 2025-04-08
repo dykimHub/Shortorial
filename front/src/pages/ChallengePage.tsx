@@ -2,7 +2,6 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import LoadingModalComponent from "../components/modal/LoadingModalComponent";
 import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
 import { NormalizedLandmark } from "@mediapipe/tasks-vision";
@@ -18,18 +17,20 @@ import {
   Movie,
 } from "@mui/icons-material";
 import { getShortsInfo } from "../apis/shorts";
-import { uploadShortsToS3, getS3Blob } from "../apis/s3";
+import { getPresignedGetURL } from "../apis/s3";
+import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
+import camera from "../assets/challenge/camera.png";
 import StarEffect from "../components/style/StarEffect";
 import { Shorts } from "../constants/types";
+import { axios } from "../utils/axios";
 
 const ChallengePage = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const ffmpeg = createFFmpeg({ log: false });
 
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
@@ -38,14 +39,20 @@ const ChallengePage = () => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [danceVideoPath, setDanceVideoPath] = useState<string>("");
-  // const [danceVideoS3blob, setDanceVideoS3blob] = useState<Blob | null>(null);
 
   const [show, setShow] = useState(false);
   const [recording, setRecording] = useState(false); // 녹화 진행
   const initialTimer = parseInt(localStorage.getItem("timer") || "3");
   const [timer, setTimer] = useState<number>(initialTimer); // 타이머
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
-  const [ffmpegLog, setFfmpegLog] = useState("");
+  const [ffmpegLog, setFfmpegLog] = useState(""); // 동영상 상태
+  const [resolutionText, setResolutionText] = useState<string | null>(null); // 해상도
+
+  const videoResolutionRef = useRef<{ width: number; height: number }>({
+    width: 405,
+    height: 720,
+  });
+
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
 
   type LearnState = "RECORD" | "READY";
@@ -58,7 +65,6 @@ const ChallengePage = () => {
   const loadDanceVideo = async () => {
     // 댄스비디오 s3 url
     const thisShort = await getShortsInfo(`${params.shortsId}`);
-
     setShort(thisShort);
     if (thisShort) {
       setDanceVideoPath(thisShort.shortsS3URL); // 쇼츠 s3 링크
@@ -71,9 +77,11 @@ const ChallengePage = () => {
     setShow(true); // 모달 열기
     stopRecording();
   };
+
   const handleCloseModal = () => setShow(false);
   const showRecordButton = () => setRecording(false);
-  const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
+  // 녹화 시작 버튼 눌리면 녹화 준비 시작
+  const showCancelButton = () => prepareRecording();
 
   const goToLearnMode = () => {
     stream?.getTracks().forEach((track) => track.stop());
@@ -103,170 +111,170 @@ const ChallengePage = () => {
 
   const stopRecording = () => {
     setLoadPath(loading);
-
-    setFfmpegLog("대기중...");
+    setFfmpegLog("동영상 저장...");
     cancelRecording();
     mediaRecorder?.stop(); // recorder.onstop() 실행
   };
 
-  const startRecording = () => {
-    setState("RECORD");
-
+  const prepareRecording = () => {
     if (!stream) {
       alert("카메라 접근을 허용해주세요.");
       return;
     }
 
+    const [track] = stream.getVideoTracks();
+    const { width = 405, height = 720 } = track.getSettings();
+    videoResolutionRef.current = { width, height };
+
+    setResolutionText(`녹화 해상도: ${width}x${height}`);
+    setRecording(true); // recording 상태 변경 → useEffect 작동 트리거
+  };
+
+  const startRecording = () => {
+    // 캔버스 생성
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    const { width, height } = videoResolutionRef.current;
+    // 모션인식 상태 변경
+    setState("RECORD");
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.imageSmoothingEnabled = false;
+
     try {
-      const recorder = new MediaRecorder(stream); // 녹화형으로 변환
+      const outputStream = canvas.captureStream(); // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
+      const recorder = new MediaRecorder(outputStream); // 변환된 스트림을 MediaRecorder로 녹화
       const chunks: BlobPart[] = []; // 스트림 조각을 넣을 배열
-      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 조각이 어느 정도 커지면 push하기
+      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 데이터가 쌓이면 배열에 추가
 
+      // 녹화 중지되면
       recorder.onstop = async () => {
-        let s3blob: Blob | null = null;
-        if (short) {
-          s3blob = await getS3Blob(short.shortsS3Key); // 쇼츠 블롭화
-          //console.log("s3blob:", s3blob);
-        }
-        if (!ffmpeg.isLoaded()) {
-          await ffmpeg.load(); // ffmpeg 로드
-        }
-
-        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // user video blob 생성
-
-        const reader = new FileReader();
-
-        if (s3blob) reader.readAsArrayBuffer(s3blob); // dance video blob array buffer로 변환
-        reader.onloadend = async () => {
-          const arrayBuffer = reader.result as ArrayBuffer;
-          const uint8Array = new Uint8Array(arrayBuffer);
-          ffmpeg.FS("writeFile", "danceVideo.mp4", uint8Array); // Blob을 가상 파일로 변환
-        };
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`노래 추출... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "danceVideo.mp4",
-          "-vn", // 비디오 무시
-          "-c:a",
-          "copy", // aac 코덱 복사
-          "dance_audio.m4a" // 오디오 파일 생성
-        );
-
-        // 비디오에 오디오 추가
-        await addAudio(userVideoBlob);
+        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
+        await s3Upload(userVideoBlob); // s3에 업로드
       };
 
-      recorder.start(); // 녹화 시작
+      // 녹화 시작되면
+      recorder.start();
       setMediaRecorder(recorder);
       danceVideoRef.current?.play(); // 댄스 비디오 시작
+
+      // 프레임을 실시간으로 캔버스에 그리기
+      function drawFrame() {
+        if (!userVideoRef.current) return;
+        ctx.save(); // 현재 캔버스 상태 저장
+        ctx.scale(-1, 1); // 캔버스 좌우 반전하여 거울 모드 적용
+        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 반전된 상태로 비디오 프레임 그리기기
+        ctx.restore(); // 캔버스 상태 복구
+        requestAnimationFrame(drawFrame); // 다음 프레임을 요청하여 반복 실행
+      }
+
+      drawFrame();
     } catch (error) {
       console.log(error);
       alert("녹화를 다시 시작해 주세요.");
     }
   };
 
-  const addAudio = async (userVideoBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(userVideoBlob);
-      // 파일 읽기가 완료 되면
-      reader.onloadend = async () => {
-        const arrayBuffer = reader.result as ArrayBuffer;
-        const uint8Array = new Uint8Array(arrayBuffer); // ffmpeg가 읽을 수 있는 8비트 정수 배열로 변환
-        ffmpeg.FS("writeFile", "userVideo.mp4", uint8Array); // 사용자 비디오 가상 파일 만들기
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`노래 삽입... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "userVideo.mp4", // 사용자 영상
-          "-i",
-          "dance_audio.m4a", // 원본 오디오
-          "-map",
-          "0:v:0", // 첫번째 파일(사용자 영상)의 0번째 스트림
-          "-map",
-          "1:a:0", // 두번째 파일(원본 오디오)의 0번째 스트림
-          "-c:v",
-          "copy", // 비디오 인코딩 복사
-          "-c:a",
-          "copy", // 오디오 인코딩 복사
-          "-shortest", // 두 개 파일 중 짧은 쪽에 맞춤
-          "finalUserVideo.mp4" // 파일 생성
-        );
-
-        ffmpeg.setProgress(({ ratio }) => {
-          if (ratio > 0) {
-            setLoadPath(loading);
-            setFfmpegLog(`거울모드로 저장... ${Math.round(ratio * 100)}%\n`);
-          }
-        });
-
-        await ffmpeg.run(
-          "-i",
-          "finalUserVideo.mp4",
-          "-vf", // 비디오 필터
-          "hflip", // 좌우반전
-          "finalUserVideoFlip.mp4"
-        );
-
-        const userVideoFlipFinal = ffmpeg.FS("readFile", "finalUserVideoFlip.mp4");
-        // 최종 파일 Blob 변환
-        const userVideoFinalBlob = new Blob([userVideoFlipFinal.buffer], {
-          type: "video/mp4",
-        });
-
-        // 최종파일 url 전달
-        makeDownloadURL(userVideoFinalBlob);
-      };
-    } catch (error) {
-      console.log(error);
-      alert("오디오를 추가할 수 없습니다.");
-    }
-  };
-
-  const makeDownloadURL = async (userVideoFinalBlob: Blob) => {
-    try {
-      await s3Upload(userVideoFinalBlob);
-      setTimeout(handleCloseModal, 2000);
-    } catch (error) {
-      console.error("비디오 저장 중 오류 발생:", error);
-    }
-  };
-
   const s3Upload = async (blob: Blob) => {
+    if (!short) {
+      alert("원본 쇼츠에 문제가 생겼습니다.");
+      throw new Error("원본 쇼츠가 존재하지 않습니다.");
+    }
+
+    let processedShortsS3key = "";
+
     try {
-      //const title = getCurrentDateTime();
-      await uploadShortsToS3(blob);
-      setLoadPath(complete);
-      setFfmpegLog("저장 완료");
-      //console.log("s3 upload success", uploadResponse.data);
-    } catch (error) {
+      // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
+      // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
+      const metadata = {
+        song: btoa(String.fromCharCode(...new TextEncoder().encode(short.shortsS3key))),
+      };
+
+      // s3에 객체를 업로드할 수 있는 presignedputurl 및 lambda 처리 완료됐다고 가정하고 생성한 s3key 받음
+      const result = await addRecordedShorts(short.shortsId, metadata);
+      processedShortsS3key = result.processedShortsS3key;
+
+      // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
+      await axios.put(result.presignedPutURL, blob, {
+        headers: {
+          "Content-Type": "video/mp4",
+          "x-amz-meta-song": metadata["song"],
+        },
+      });
+
+      // S3 Put 요청에 성공하면 uploaded 상태로 변경
+      await modifyRecordedShortsStatus(processedShortsS3key, "UPLOADED");
+
+      setLoadPath(loading);
+      setFfmpegLog("음악 삽입...");
+
+      // aws lambda가 처리를 완료했는지 조회
+      await check(processedShortsS3key);
+    } catch (error: any) {
+      // s3 업로드 실패했다면 failed로 상태 변경
+      await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
       setLoadPath(uncomplete);
-      //if (error instanceof Error && error.stack) setFfmpegLog(error.stack);
-      setFfmpegLog("저장 실패");
-      console.error("s3 upload fail", error);
+      setFfmpegLog("동영상 처리 실패");
+      console.error("s3 업로드 실패", error.data);
+    } finally {
+      setState("READY");
+    }
+  };
+
+  const check = async (processedShortsS3key: string) => {
+    // 객체 업로드 됐는지 확인할 presignedGetUrl
+    const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
+    // 요청 횟수 추적
+    let attempts = 0;
+    // 10초마다 요청하기 위해 setInterval 사용
+    const interval = setInterval(async () => {
+      const exists = await isExist(presignedGetURL);
+
+      if (exists) {
+        // aws lambda가 처리를 완료했다면 completed로 상태 변경
+        await modifyRecordedShortsStatus(processedShortsS3key, "COMPLETED");
+        clearInterval(interval); // 객체가 생성되면 요청 중단
+        setLoadPath(complete);
+        setFfmpegLog("완성!");
+        setTimeout(handleCloseModal, 1000);
+      } else {
+        attempts++;
+        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
+        // 12번(1분) 요청 후 중단
+        if (attempts >= 12) {
+          // 람다 처리 실패했다면 failed로 상태 변경
+          await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
+          clearInterval(interval);
+          setLoadPath(uncomplete);
+          setFfmpegLog("동영상 처리 실패");
+          setTimeout(handleCloseModal, 3000);
+        }
+      }
+    }, 5000); // 5초 (5000ms) 간격으로 요청
+  };
+
+  const isExist = async (presignedGetURL: string) => {
+    try {
+      await axios.get(presignedGetURL);
+      return true; // 객체 존재함
+    } catch (error: any) {
+      console.error(error.data);
+      return false;
     }
   };
 
   // 타이머
   useEffect(() => {
     if (recording) {
+      setShow(true);
+      setLoadPath(camera);
+      setFfmpegLog(resolutionText || "녹화 준비 중...");
       // 녹화 시작 버튼을 눌렀을 때
       const intervalId = setInterval(() => {
         setTimer((prevTimer) => {
           if (prevTimer <= 1) {
+            handleCloseModal();
             clearInterval(intervalId); // 인터벌 종료
             startRecording(); // 녹화 시작
             return initialTimer; // 로컬스토리지에 저장된 타이머값으로 초기화
@@ -290,6 +298,9 @@ const ChallengePage = () => {
     const constraints: MediaStreamConstraints = {
       video: {
         aspectRatio: 9 / 16,
+        // 이상적인 해상도 값
+        width: { ideal: 810 },
+        height: { ideal: 1440 },
       },
       audio: false,
     };
@@ -366,7 +377,7 @@ const ChallengePage = () => {
   useEffect(() => {
     switch (btn) {
       case "visible":
-        console.log("record");
+        //console.log("record");
         if (state === "READY") {
           showCancelButton();
         } else {
@@ -374,29 +385,29 @@ const ChallengePage = () => {
         }
         break;
       case "timer":
-        console.log("timer");
+        //console.log("timer");
         if (state === "READY") {
           changeTimer();
         }
         break;
       case "save":
-        console.log("save");
+        //console.log("save");
         if (state === "READY") break;
         handleShowModal();
         break;
       case "record":
         if (state == "RECORD") break;
-        console.log("flip");
+        //console.log("flip");
         setIsFlipped(!isFlipped);
         break;
       case "learn":
         if (state == "RECORD") break;
-        console.log("learn");
+        //console.log("learn");
         goToLearnMode();
         break;
       case "rslt":
         if (state == "RECORD") break;
-        console.log("result");
+        //console.log("result");
         goToResult();
         break;
     }
@@ -546,7 +557,6 @@ const UserContainer = styled.div`
 const UserVideoContainer = styled.video`
   position: relative;
   display: flex;
-
   object-fit: cover;
   transform: scaleX(-1);
 `;

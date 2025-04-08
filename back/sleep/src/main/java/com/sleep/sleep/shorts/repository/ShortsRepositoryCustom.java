@@ -1,5 +1,6 @@
 package com.sleep.sleep.shorts.repository;
 
+import com.sleep.sleep.shorts.dto.RecordedShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsDto;
 import com.sleep.sleep.shorts.dto.ShortsStatsDto;
 import com.sleep.sleep.shorts.dto.TriedShortsDto;
@@ -11,11 +12,13 @@ import java.util.Optional;
 @Repository
 public interface ShortsRepositoryCustom {
 
-    Optional<List<ShortsDto>> findShortsList();
+    List<ShortsDto> findShortsList();
 
-    Optional<List<ShortsDto>> findPopularShortsList();
+    List<ShortsDto> findPopularShortsList();
 
-    Optional<List<TriedShortsDto>> findTriedShortsList(int memberIndex);
+    List<TriedShortsDto> findTriedShortsList(int memberIndex);
 
     Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex);
+
+    List<RecordedShortsDto> findRecordedShortsDtoList(int memberIndex);
 }

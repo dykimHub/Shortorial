@@ -71,6 +71,7 @@ export function btn_with_landmark_challenge(
         record_count = 0;
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
+        useMotionDetectionStore.getState().setSaveCount(0);
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
         rslt_count = 0;
@@ -92,6 +93,7 @@ export function btn_with_landmark_challenge(
         record_count = 0;
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
+        useMotionDetectionStore.getState().setSaveCount(0);
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
         rslt_count = 0;
@@ -113,6 +115,7 @@ export function btn_with_landmark_challenge(
         record_count++;
         useMotionDetectionStore.getState().setRecordCount((record_count / SMALL_COUNT) * 100);
         save_count = 0;
+        useMotionDetectionStore.getState().setSaveCount(0);
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
         rslt_count = 0;
@@ -131,6 +134,7 @@ export function btn_with_landmark_challenge(
         timer_count = 0;
         record_count = 0;
         save_count++;
+        useMotionDetectionStore.getState().setSaveCount((save_count / SMALL_COUNT) * 100);
         learn_count = 0;
         rslt_count = 0;
       }
@@ -150,6 +154,7 @@ export function btn_with_landmark_challenge(
         record_count = 0;
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
+        useMotionDetectionStore.getState().setSaveCount(0);
         learn_count++;
         useMotionDetectionStore.getState().setLearnCount((learn_count / SMALL_COUNT) * 100);
         rslt_count = 0;
@@ -171,6 +176,7 @@ export function btn_with_landmark_challenge(
         record_count = 0;
         useMotionDetectionStore.getState().setRecordCount(0);
         save_count = 0;
+        useMotionDetectionStore.getState().setSaveCount(0);
         learn_count = 0;
         useMotionDetectionStore.getState().setLearnCount(0);
         rslt_count++;
@@ -186,6 +192,7 @@ export function btn_with_landmark_challenge(
     record_count = 0;
     useMotionDetectionStore.getState().setRecordCount(0);
     save_count = 0;
+    useMotionDetectionStore.getState().setSaveCount(0);
     learn_count = 0;
     useMotionDetectionStore.getState().setLearnCount(0);
     rslt_count = 0;
@@ -408,7 +415,7 @@ export const createPoseLandmarker = async () => {
     runningMode: "VIDEO",
     numPoses: 2,
   }).then((res) => {
-    console.log("초기화 완");
+    //console.log("초기화 완");
     return res;
   });
 };
@@ -453,7 +460,7 @@ export async function predictWebcam(
       if (!before_handmarker) {
         if (landmark[18].visibility > 0.5) {
           before_handmarker = landmark[18];
-          console.log("설정완");
+          //console.log("설정완");
         }
       } else {
         curr_handmarker = landmark[18];
@@ -521,7 +528,7 @@ export async function predictWebcamChallenge(
       if (!before_handmarker) {
         if (landmark[18].visibility > 0.5) {
           before_handmarker = landmark[18];
-          console.log("설정완");
+          //console.log("설정완");
         }
       } else {
         curr_handmarker = landmark[18];

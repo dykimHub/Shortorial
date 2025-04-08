@@ -1,7 +1,7 @@
 name: Backend CI # develop에 모인 코드들로 빌드 시도
 
 on:
-  push:
+  pull_request:
     branches: ["develop"]
     paths-ignore:
       - "front/**"
@@ -27,9 +27,10 @@ jobs:
           cd back/sleep
           chmod +x ./gradlew  
           ./gradlew build -x test
-        env: # 깃헙 secret에 저장한 환경 변수 활용
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        env: # 깃헙 secret에 저장한 환경 변수 활용s
+          MYSQL_URL: ${{ secrets.MYSQL_URL }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
