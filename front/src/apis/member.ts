@@ -12,7 +12,7 @@ export interface MemberInfo {
 export function getDuplicateCheck(cate: string, input: string) {
   try {
     const response = axios.get(REST_MEMBER_URL + `/check/${cate}/${input}`).then((res) => {
-      return res.data.dupCheck;
+      return res.data;
     });
     return response;
   } catch (error) {
