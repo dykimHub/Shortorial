@@ -31,7 +31,7 @@ public class ShortsController {
 
     @Operation(summary = "특정 쇼츠 조회")
     @GetMapping("/{shortsId}")
-    public ResponseEntity<ShortsDto> findShorts(@PathVariable int shortsId) {
+    public ResponseEntity<ShortsDto> findShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int shortsId) {
         ShortsDto shortsDto = shortsService.findShortsDto(shortsId);
         return ResponseEntity.ok()
                 .body(shortsDto);
@@ -40,7 +40,7 @@ public class ShortsController {
 
     @Operation(summary = "쇼츠 목록 조회")
     @GetMapping
-    public ResponseEntity<List<ShortsDto>> findShortList() {
+    public ResponseEntity<List<ShortsDto>> findShortList(@RequestHeader("Authorization") String accessToken) {
         List<ShortsDto> shortsDtoList = shortsService.findShortsList();
         return ResponseEntity.ok()
                 .body(shortsDtoList);
@@ -49,7 +49,7 @@ public class ShortsController {
 
     @Operation(summary = "쇼츠를 인기순으로 조회")
     @GetMapping("/rank")
-    public ResponseEntity<List<ShortsDto>> findPopularShorts() {
+    public ResponseEntity<List<ShortsDto>> findPopularShorts(@RequestHeader("Authorization") String accessToken) {
         List<ShortsDto> shortRankingList = shortsService.findPopularShortsList();
         return ResponseEntity.ok()
                 .body(shortRankingList);
@@ -102,8 +102,9 @@ public class ShortsController {
 
     @Operation(summary = "회원이 녹화한 쇼츠의 S3 상태 변경")
     @PutMapping("/recorded")
-    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestBody ModifyingStatusDto modifyingStatusDto) {
-        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(modifyingStatusDto);
+    public ResponseEntity<SuccessResponse> modifyRecordedShortsStatus(@RequestHeader("Authorization") String accessToken,
+                                                                      @RequestBody ModifyingStatusDto modifyingStatusDto) {
+        SuccessResponse successResponse = recordedShortsService.modifyRecordedShortsStatus(accessToken, modifyingStatusDto);
         return ResponseEntity.ok()
                 .body(successResponse);
     }
@@ -127,7 +128,7 @@ public class ShortsController {
     @Operation(summary = "회원이 녹화한 쇼츠 삭제")
     @DeleteMapping("/recorded/{recordedShortsId}")
     public ResponseEntity<SuccessResponse> deleteRecordedShorts(@RequestHeader("Authorization") String accessToken, @PathVariable int recordedShortsId) {
-        SuccessResponse successResponse = recordedShortsService.deleteRecordedShorts(recordedShortsId);
+        SuccessResponse successResponse = recordedShortsService.deleteRecordedShorts(accessToken, recordedShortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
     }
