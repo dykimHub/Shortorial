@@ -50,11 +50,19 @@ export async function addRecordedShorts(shortsId: number, metadata: Record<strin
 // 녹화한 쇼츠 상태 변화
 export async function modifyRecordedShortsStatus(s3key: string, status: string) {
   try {
-    //const token = "Bearer " + localStorage.getItem("accessToken");
-    const res = await axios.put(`${REST_RECORDED_SHORTS_URL}`, {
-      recordedShortsS3key: s3key,
-      status: status,
-    });
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.put(
+      `${REST_RECORDED_SHORTS_URL}`,
+      {
+        recordedShortsS3key: s3key,
+        status: status,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);

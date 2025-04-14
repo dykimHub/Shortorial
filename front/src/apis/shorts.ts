@@ -5,7 +5,12 @@ const REST_SHORTS_URL = "/api/shorts";
 // 쇼츠 리스트 조회
 export const getShortsList = async () => {
   try {
-    const res = await axios.get(REST_SHORTS_URL);
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(REST_SHORTS_URL, {
+      headers: {
+        Authorization: token,
+      },
+    });
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);
@@ -15,7 +20,12 @@ export const getShortsList = async () => {
 // 특정 쇼츠 조회
 export const getShortsInfo = async (shortsId: string) => {
   try {
-    const res = await axios.get(`${REST_SHORTS_URL}/${shortsId}`);
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(`${REST_SHORTS_URL}/${shortsId}`, {
+      headers: {
+        Authorization: token,
+      },
+    });
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);
@@ -25,7 +35,12 @@ export const getShortsInfo = async (shortsId: string) => {
 // 인기순 쇼츠 조회
 export async function getTopRankingShorts() {
   try {
-    const res = await axios.get(`${REST_SHORTS_URL}/rank`);
+    const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(`${REST_SHORTS_URL}/rank`, {
+      headers: {
+        Authorization: token,
+      },
+    });
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);
@@ -36,7 +51,6 @@ export async function getTopRankingShorts() {
 export async function getCounting() {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
-
     const res = await axios.get(`${REST_SHORTS_URL}/stats`, {
       headers: {
         Authorization: token,
