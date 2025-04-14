@@ -27,7 +27,7 @@ public class TriedShorts {
     @CreationTimestamp
     @Column(nullable = false)
     private OffsetDateTime triedShortsDate; // 시도한 시간
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shorts_id")
     private Shorts shorts; // 시도한 쇼츠 객체
     @ManyToOne(fetch = FetchType.LAZY) // 회원 정보는 필요할 때만 조회
@@ -40,8 +40,9 @@ public class TriedShorts {
         this.member = member;
     }
 
-    public void updateTriedShortsDate() {
+    public TriedShorts updateTriedShortsDate() {
         this.triedShortsDate = OffsetDateTime.now(ZoneOffset.UTC);
+        return this;
     }
 
 }
