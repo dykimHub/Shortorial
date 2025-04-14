@@ -44,7 +44,8 @@ public class SecurityConfig {
                                         "/api/member/join",
                                         "/api/member/login",
                                         "/api/member/check/**",
-                                        "/api/member/reissue"
+                                        "/api/member/reissue",
+                                        "/api/shorts/health-check"
                                 ).permitAll()
                                 // 그 외 나머지 요청은 인증 필요
                                 .anyRequest().authenticated()
