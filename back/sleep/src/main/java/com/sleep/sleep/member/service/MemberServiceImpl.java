@@ -107,7 +107,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public MemberInfoDto getMemberInfo(String accessToken) {
-        String username = jwtTokenUtil.getUsername(resolveToken(accessToken));
+        String username = getMemberId(accessToken);
         Member member = findByMemberId(username);
 
         return MemberInfoDto.builder()

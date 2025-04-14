@@ -13,9 +13,11 @@ import com.sleep.sleep.shorts.repository.ShortsRepository;
 import com.sleep.sleep.shorts.repository.TriedShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -51,22 +53,22 @@ public class TriedShortsServiceImpl implements TriedShortsService {
     @Transactional
     @Override
     public SuccessResponse addTriedShorts(String accessToken, int shortsId) {
-        Member member = memberService.findByMemberId(memberService.getMemberId(accessToken));
-        Shorts shorts = shortsService.findShorts(shortsId);
+        int memberIndex = memberService.getMemberIndex(accessToken);
+        Optional<TriedShorts> triedShorts = triedShortsRepository.findTriedShorts(memberIndex, shortsId);
 
-        TriedShorts triedShorts = triedShortsRepository.findTriedShorts(member.getMemberIndex(), shorts.getShortsId())
-                .map(ts -> { // 이미 존재한다면
-                    ts.updateTriedShortsDate(); // 시도한 날짜를 업데이트
-                    return ts;
-                })
-                .orElseGet( // 존재하지 않는다면
-                        () -> TriedShorts.builder()
-                                .member(member)
-                                .shorts(shorts)
-                                .build() // 새로운 TriedShorts 객체 생성
-                );
+        if (triedShorts.isPresent()) { // 이미 시도한 쇼츠라면
+            triedShorts.get().updateTriedShortsDate(); // 날짜 업데이트(영속성 컨텍스트에 올라왔으므로 save 생략 가능)
+        } else { // 새롭게 시도한 쇼츠라면
+            Member member = memberService.findByMemberId(memberService.getMemberId(accessToken));
+            Shorts shorts = shortsService.findShorts(shortsId);
+            triedShortsRepository.save( // 새로운 TriedShorts 객체 만들어서 저장
+                    TriedShorts.builder()
+                            .member(member)
+                            .shorts(shorts)
+                            .build()
+            );
+        }
 
-        triedShortsRepository.save(triedShorts); // 시도한 쇼츠 DB에 저장
         return SuccessResponse.of("회원이 시도한 쇼츠에 추가되었습니다.");
     }
 
