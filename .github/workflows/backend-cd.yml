@@ -34,23 +34,29 @@ jobs:
       - name: Build and Push Docker Image
         id: build-image
         run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/shortorial-be:${{ github.sha }}
+          IMAGE=${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}
           docker buildx build -t $IMAGE --push back/sleep
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      # 5. AWS OIDC로 인증 (IAM Role과 GitHub 연결)
+      # 5. AWS OIDC로 인증 (추정할 IAM Role과 GitHub 연결)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ap-northeast-2
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubTokenECSRole
 
-      # 6. task-definition-base.json에 이미지와 환경변수 값 치환하여 task-definition.json 생성
+      # jq는 JSON 데이터를 수정하고 변환할 수 있는 CLI 도구
+      # 6-1. jq 안에서 사용할 변수 정의 (이미지 경로와 GitHub Secrets 값들을 --arg로 전달)
+      #      - --arg 옵션 bash 변수(Github Actions Secret 등)를 jq 내부 변수로 전달
+      #      - 예: secrets.ACCESS_KEY → --arg ACCESS_KEY "$ACCESS_KEY" → jq 내부에서 $ACCESS_KEY로 사용 가능
+      # 6-2. 작은따옴표(')로 jq 스크립트 블록 시작
+      # 6-3. task-definition-base.json 파일에서 필요한 값 치환
+      #      - executionRoleArn: ECS 실행 역할 ARN 설정
+      #      - containerDefinitions[0].image: 컨테이너에 사용할 도커 이미지로 치환
+      #      - containerDefinitions[0].environment: 환경변수 dummy 값을 실제 값으로 치환
+      # 6-4. 값이 치환된 task-definition-base.json 파일을 task-definition.json 파일로 생성
       - name: Build ECS task definition with jq
         run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/shortorial-be:${{ github.sha }}
-
-          jq --arg img "$IMAGE" \
+          jq --arg img "${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}" \
             --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
             --arg MYSQL_URL "${{ secrets.MYSQL_URL }}" \
             --arg MYSQL_USER "${{ secrets.MYSQL_USER }}" \
@@ -71,13 +77,17 @@ jobs:
           (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY
           ' .aws/task-definition-base.json > task-definition.json
 
-      # 7. ECS에 task 정의 등록
+      # 7. AWS CLI 명령 중 register-task-definition 활용하여 새로운 TASK 등록
+      # 기존과 같은 family라면 revision을 자동으로 하나 올려서 새로 등록
+      # https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/cli_ecs_code_examples.html
       - name: Register ECS Task Definition
         run: |
           aws ecs register-task-definition \
             --cli-input-json file://task-definition.json
 
-      # 8. ECS 서비스에 최신 revision 반영하여 롤링 배포
+      # 8-1. 해당 family 이름(shortorial-be-task)의 최신 revision을 자동으로 조회
+      # 8-2. revision 추출(쿼리)하고 텍스트로 바꿔서 REVISION 변수에 저장
+      # 8-3. 최신 revision을 사용해 ECS 서비스 업데이트 (롤링 배포 실행)
       - name: Deploy to Amazon ECS
         run: |
           REVISION=$(aws ecs describe-task-definition \
