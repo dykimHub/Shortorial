@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["develop"]
     paths-ignore:
-      - "front/**"
+      - "front/**" # 프론트엔드 코드 변경은 무시
 
 jobs:
   build:
@@ -17,20 +17,21 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: "17"
-          distribution: "temurin"
+          distribution: "temurin" # open jdk 배포판
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build with Gradle # 빌드 수행
+        working-directory: back/sleep
         run: | # 여러 줄이면 추가
-          cd back/sleep
-          chmod +x ./gradlew  
+          cd back/sleep  
           ./gradlew build -x test
-        env: # 깃헙 secret에 저장한 환경 변수 활용s
+        env: # 깃헙 secret에 저장한 환경 변수 활용
           MYSQL_URL: ${{ secrets.MYSQL_URL }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          JWT_SECRET: ${{secrets.JWT_SECRET}}
