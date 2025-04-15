@@ -62,7 +62,7 @@ jobs:
           '
           .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
           .containerDefinitions[0].image = $img |
-          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")      ).value = $VITE_HOME_URL |
+          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")      ).value = $VITE_HOME_URL 
           ' .aws/fe-task-definition-base.json > fe-task-definition.json
 
       # 7. AWS CLI 명령으로 task definition 등록
@@ -84,5 +84,5 @@ jobs:
           aws ecs update-service \
             --cluster Shortorial \
             --service shortorial-fe-svc \
-            --task-definition shortorial-be-task:${register-task.outputs.revision} \
+            --task-definition shortorial-fe-task:${{ steps.register-task.outputs.revision }} \
             --force-new-deployment
