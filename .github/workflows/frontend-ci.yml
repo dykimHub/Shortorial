@@ -4,26 +4,29 @@ on:
   pull_request:
     branches: ["develop"]
     paths-ignore:
-      - "back/**"
+      - "back/**" # 백엔드 코드 변경 무시
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # 코드 체크아웃
+      # 코드 체크아웃
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # 노드 버전 20
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 의존성 설치
+      # CI/CD 환경에서는 npm i 대신 ci가 적합
       - name: Install Dependencies
-        run: |
-          cd front
-          npm i
+        working-directory: front
+        run: npm ci
 
+      # 프로젝트 빌드드
       - name: Build Project
-        run: |
-          cd front 
-          npm run build
+        working-directory: front
+        run: npm run build
