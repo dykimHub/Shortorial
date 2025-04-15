@@ -21,7 +21,7 @@ public class S3Controller {
 
     @Operation(summary = "S3 key를 활용하여 Presigned GET URL을 생성")
     @GetMapping("/get")
-    public ResponseEntity<String> generatePresignedGetURL(@RequestParam("s3key") String s3key) {
+    public ResponseEntity<String> generatePresignedGetURL(@RequestHeader("Authorization") String accessToken, @RequestParam("s3key") String s3key) {
         String presignedGetURL = s3AsyncService.generatePresignedGetURL(s3key, Duration.ofMinutes(10));
         return ResponseEntity.ok()
                 .body(presignedGetURL);

@@ -1,12 +1,12 @@
-import {AxiosResponse} from "axios";
+import { AxiosResponse } from "axios";
 
-export function getAccessToken(): string{
-    const token = localStorage.getItem("accessToken");
-    if(token) return token;
-    else return "";
+export function getAccessToken(): string {
+  const token = localStorage.getItem("accessToken");
+  if (token) return token;
+  else return "";
 }
 
-export function setAccessToken(data: AxiosResponse){
-    const accessToken = data.data.accessToken.accessToken || "";
-    localStorage.setItem("accessToken",accessToken);
+export function setAccessToken(res: AxiosResponse) {
+  const accessToken = res.data.accessToken || "";
+  localStorage.setItem("accessToken", accessToken);
 }

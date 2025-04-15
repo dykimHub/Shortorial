@@ -20,7 +20,6 @@ import com.sleep.sleep.shorts.repository.ShortsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -79,13 +78,15 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
      * 녹화된 쇼츠의 상태를 업데이트 합니다.
      * AWS S3 PUT 성공 / 실패, AWS Lambda 처리 성공 / 실패했을 때 호출됩니다.
      *
+     * @param accessToken
      * @param modifyingStatusDto 녹화된 쇼츠의 S3 key와 업로드 상태가 담긴 ModifyingStatusDto 객체
      * @return status 컬럼을 업데이트했다면 SuccessResponse 객체 반환
      * @throws CustomException status 컬럼 업데이트에 실패했다면 예외 처리
      */
     @Transactional
     @Override
-    public SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto) {
+    public SuccessResponse modifyRecordedShortsStatus(String accessToken, ModifyingStatusDto modifyingStatusDto) {
+        int memberIndex = memberService.getMemberIndex(accessToken);
         int result = recordedShortsRepository.modifyRecordedShortsStatus(modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
         if (result < 1) throw new CustomException(ExceptionCode.RECORDED_SHORTS_UPDATE_FAILED);
         log.info("Modifying Status: s3key={}, status={}", modifyingStatusDto.getRecordedShortsS3key(), modifyingStatusDto.getStatus());
@@ -130,12 +131,14 @@ public class RecordedShortsServiceImpl implements RecordedShortsService {
     /**
      * RecordedShorts 객체의 삭제를 시도하면 is_deleted 열을 1로 변환함
      *
+     * @param accessToken
      * @param recordedShortsId 삭제할 RecordedShorts 객체의 recordedShortsId
      * @return 삭제에 성공하면 SuccessResponse 객체를 반환함
      */
     @Transactional
     @Override
-    public SuccessResponse deleteRecordedShorts(int recordedShortsId) {
+    public SuccessResponse deleteRecordedShorts(String accessToken, int recordedShortsId) {
+        int memberIndex = memberService.getMemberIndex(accessToken);
         int result = recordedShortsRepository.deleteByRecordedShortsId(recordedShortsId);
         if (result < 1)
             throw new CustomException(ExceptionCode.RECORDED_SHORTS_NOT_FOUND);

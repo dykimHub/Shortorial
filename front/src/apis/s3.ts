@@ -69,7 +69,9 @@ const REST_S3_URL = "/api/s3";
 
 export async function getPresignedGetURL(s3key: string) {
   try {
+    const token = "Bearer " + localStorage.getItem("accessToken");
     const res = await axios.get(`${REST_S3_URL}/get`, {
+      headers: { Authorization: token },
       params: { s3key },
     });
 

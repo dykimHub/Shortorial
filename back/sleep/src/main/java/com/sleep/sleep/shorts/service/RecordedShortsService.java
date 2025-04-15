@@ -12,12 +12,12 @@ import java.util.List;
 public interface RecordedShortsService {
     S3PutResponseDTO addRecordedShorts(String accessToken, S3PutRequestDTO s3PutRequestDTO);
 
-    SuccessResponse modifyRecordedShortsStatus(ModifyingStatusDto modifyingStatusDto);
+    SuccessResponse modifyRecordedShortsStatus(String accessToken, ModifyingStatusDto modifyingStatusDto);
 
     SuccessResponse modifyRecordedShortsTitle(String accessToken, ModifyingTitleDto modifyingTitleDto);
 
     List<RecordedShortsDto> findRecordedShortsDtoList(String accessToken);
 
-    SuccessResponse deleteRecordedShorts(int recordedShortsId);
+    SuccessResponse deleteRecordedShorts(String accessToken, int recordedShortsId);
 
 }
