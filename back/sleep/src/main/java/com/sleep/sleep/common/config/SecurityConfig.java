@@ -59,14 +59,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 모든 도메인 허용
-        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+        // 명시된 도메인만 허용
+        corsConfiguration.setAllowedOriginPatterns(List.of("https://www.shortorial.site"));
         // 모든 HTTP 메서드 허용
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // 모든 요청 헤더 허용
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        // 인증 정보 포함한 요청 허용
-        corsConfiguration.setAllowCredentials(true);
+        // 인증 정보 포함한 요청 허용(쿠키 사용할 때 필요)
+        // corsConfiguration.setAllowCredentials(true);
         // 브라우저 안전 확인 요청(preflight) 결과를 1시간 동안 캐시
         corsConfiguration.setMaxAge(3600L);
         // 위 설정을 모든 경로에 적용
