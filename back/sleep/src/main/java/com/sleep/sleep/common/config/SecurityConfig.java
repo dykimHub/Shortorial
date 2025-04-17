@@ -2,6 +2,7 @@ package com.sleep.sleep.common.config;
 
 import com.sleep.sleep.common.JWT.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,8 +23,9 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Value("${cors.allowed-origin}")
+    private List<String> origin;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -60,7 +62,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         // 명시된 도메인만 허용
-        corsConfiguration.setAllowedOriginPatterns(List.of("https://www.shortorial.site"));
+        corsConfiguration.setAllowedOriginPatterns(origin);
         // 모든 HTTP 메서드 허용
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // 모든 요청 헤더 허용
