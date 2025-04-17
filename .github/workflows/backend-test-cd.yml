@@ -102,5 +102,5 @@ jobs:
           aws ecs update-service \
             --cluster Shortorial \
             --service shortorial-test-be-svc \
-            --task-definition shortorial-test-be-task:${register-task.outputs.revision} \
+            --task-definition shortorial-test-be-task:${{ steps.register-task.outputs.revision }} \
             --force-new-deployment
