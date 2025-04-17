@@ -22,7 +22,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build with Gradle # 빌드 수행
+      - name: Build with Gradle 
         working-directory: back/sleep
         run: |
           chmod +x ./gradlew
