@@ -24,7 +24,7 @@ jobs:
 
       - name: Build with Gradle # 빌드 수행
         working-directory: back/sleep
-        run: ./gradlew build
+        run: chmod +x ./gradlew build
         env: # 깃헙 secret에 저장한 환경 변수 활용
           MYSQL_URL: ${{ secrets.MYSQL_URL_TEST }}
           MYSQL_USER: ${{ secrets.MYSQL_USER_TEST }}
