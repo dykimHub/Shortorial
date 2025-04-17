@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: sleep
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_URL}:3306/dance?serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: none
+    hikari:
+      idle-timeout: 300000
+      max-lifetime: 1800000
+    properties:
+      hibernate:
+        format_sql: false
+    show_sql: false
+    defer-datasource-initialization: false
+  sql:
+    init:
+      mode: never
+  output:
+    ansi.enabled: always
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+  data:
+    redis:
+      host: ${REDIS_URL}
+      port: 6379
+cloud:
+  aws:
+    s3:
+      bucket: shortorial
+    stack:
+      auto: false
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: ${ACCESS_KEY}
+      secret-key: ${SECRET_KEY}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+cors:
+  allowed-origin: ${VITE_HOME_URL}

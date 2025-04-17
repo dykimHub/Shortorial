@@ -2,7 +2,7 @@ name: Backend CD # release 브랜치로 머지된 코드 자동 배포
 
 on:
   push:
-    branches: ["main"] # main 브랜치에 push 될 때만 실행
+    branches: ["release-*"] # release-* 브랜치에 push 될 때만 실행
     paths-ignore:
       - "front/**" # 프론트 파일 변경은 감지 안 함
 
@@ -59,17 +59,17 @@ jobs:
         run: |
           jq --arg img "${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}" \
             --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
-            --arg MYSQL_URL "${{ secrets.MYSQL_URL }}" \
-            --arg MYSQL_USER "${{ secrets.MYSQL_USER }}" \
-            --arg MYSQL_PASSWORD "${{ secrets.MYSQL_PASSWORD }}" \
-            --arg REDIS_URL "${{ secrets.REDIS_URL }}" \
-            --arg JWT_SECRET "${{ secrets.JWT_SECRET }}" \
+            --arg MYSQL_URL "${{ secrets.MYSQL_URL_TEST }}" \
+            --arg MYSQL_USER "${{ secrets.MYSQL_USER_TEST }}" \
+            --arg MYSQL_PASSWORD "${{ secrets.MYSQL_PASSWORD_TEST }}" \
+            --arg REDIS_URL "${{ secrets.REDIS_URL_TEST }}" \
+            --arg JWT_SECRET "${{ secrets.JWT_SECRET_TEST }}" \
             --arg ACCESS_KEY "${{ secrets.ACCESS_KEY }}" \
             --arg SECRET_KEY "${{ secrets.SECRET_KEY }}" \
-            --arg VITE_HOME_URL "${{ secrets.VITE_HOME_URL }}" \
-            --arg SPRING_PROFILE "prod"
+            --arg VITE_HOME_URL "${{ secrets.VITE_HOME_URL_TEST }}" \
+            --arg SPRING_PROFILE "test" \
           '
-          .family = "shortorial-be-task"
+          .family = "shortorial-test-be-task"
           .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
           .containerDefinitions[0].image = $img |
           (.containerDefinitions[0].environment[] | select(.name == "MYSQL_URL")      ).value = $MYSQL_URL |
@@ -78,10 +78,10 @@ jobs:
           (.containerDefinitions[0].environment[] | select(.name == "REDIS_URL")      ).value = $REDIS_URL |
           (.containerDefinitions[0].environment[] | select(.name == "JWT_SECRET")     ).value = $JWT_SECRET |
           (.containerDefinitions[0].environment[] | select(.name == "ACCESS_KEY")     ).value = $ACCESS_KEY |
-          (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY
-          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")     ).value = $VITE_HOME_URL
+          (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY |
+          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")     ).value = $VITE_HOME_URL |
           (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE
-          ' .aws/be-task-definition-base.json > be-task-definition.json
+          ' .aws/be-task-definition-base.json > test-be-task-definition.json
 
       # 7. AWS CLI 명령으로 task definition 등록
       #    - 동일한 family 이름이면 revision이 자동으로 증가됨
@@ -91,7 +91,7 @@ jobs:
         id: register-task
         run: |
           RESPONSE=$(aws ecs register-task-definition \
-          --cli-input-json file://be-task-definition.json)
+          --cli-input-json file://test-be-task-definition.json)
 
           REVISION=$(echo "$RESPONSE" | jq -r '.taskDefinition.revision')
           echo "revision=$REVISION" >> $GITHUB_OUTPUT
@@ -101,6 +101,6 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster Shortorial \
-            --service shortorial-be-svc \
-            --task-definition shortorial-be-task:${{ steps.register-task.outputs.revision}} \
+            --service shortorial-test-be-svc \
+            --task-definition shortorial-test-be-task:${register-task.outputs.revision} \
             --force-new-deployment
