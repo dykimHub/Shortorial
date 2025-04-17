@@ -1,4 +1,4 @@
-name: Backend CD # release 브랜치로 머지된 코드 자동 배포
+name: Test Backend CD # release 브랜치로 머지된 코드 자동 배포
 
 on:
   push:
@@ -69,7 +69,7 @@ jobs:
             --arg VITE_HOME_URL "${{ secrets.VITE_HOME_URL_TEST }}" \
             --arg SPRING_PROFILE "test" \
           '
-          .family = "shortorial-test-be-task"
+          .family = "shortorial-test-be-task" |
           .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
           .containerDefinitions[0].image = $img |
           (.containerDefinitions[0].environment[] | select(.name == "MYSQL_URL")      ).value = $MYSQL_URL |
