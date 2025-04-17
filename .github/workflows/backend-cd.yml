@@ -78,9 +78,10 @@ jobs:
           (.containerDefinitions[0].environment[] | select(.name == "REDIS_URL")      ).value = $REDIS_URL |
           (.containerDefinitions[0].environment[] | select(.name == "JWT_SECRET")     ).value = $JWT_SECRET |
           (.containerDefinitions[0].environment[] | select(.name == "ACCESS_KEY")     ).value = $ACCESS_KEY |
-          (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY
-          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")     ).value = $VITE_HOME_URL
-          (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE
+          (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY |
+          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")     ).value = $VITE_HOME_URL |
+          (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE |
+          (.containerDefinitions[0].logConfiguration.options."awslogs-group") = "/ecs/shortorial-be-task"
           ' .aws/be-task-definition-base.json > be-task-definition.json
 
       # 7. AWS CLI 명령으로 task definition 등록
