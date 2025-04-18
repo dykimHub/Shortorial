@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["develop"]
     paths-ignore:
-      - "back/**" # 백엔드 코드 변경 무시
+      - "back/**" # 백엔드 파일 변경은 감지 안 함
 
 jobs:
   build:
@@ -26,7 +26,7 @@ jobs:
         working-directory: front
         run: npm ci
 
-      # 프로젝트 빌드드
+      # 프로젝트 빌드
       - name: Build Project
         working-directory: front
         run: npm run build
