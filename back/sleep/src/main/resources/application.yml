@@ -46,3 +46,6 @@ cloud:
 
 jwt:
   secret: ${JWT_SECRET}
+
+cors:
+  allowed-origin: "*"
