@@ -61,7 +61,7 @@ jobs:
             --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
             --arg VITE_HOME_URL "https://www.shortorial.site" \
           '
-          .family = "shortorial-fe-task"
+          .family = "shortorial-fe-task" |
           .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
           .containerDefinitions[0].image = $img |
           (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")      ).value = $VITE_HOME_URL |
