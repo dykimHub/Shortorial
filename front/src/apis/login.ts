@@ -17,6 +17,8 @@ export async function postLogin(id: string, password: string) {
     //로그인한 회원의 id 반환
     return parseJwt(getAccessToken()).sub;
   } catch (error) {
+    console.log(error);
+
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.status + "");
     }
