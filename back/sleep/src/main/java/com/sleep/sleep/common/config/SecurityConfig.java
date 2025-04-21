@@ -26,6 +26,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     @Value("${cors.allowed-origin}")
     private List<String> origin;
+    @Value("${spring.profiles.active}")
+    private String profile;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -42,15 +44,28 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 허용(다른 도메인/포트 요청 허용)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Spring Security는 디폴트로 세션을 사용하는데 JWT 사용하므로 무상태(세션 생성X)
                 .authorizeHttpRequests(
-                        auth -> auth.requestMatchers( // 회원가입, 로그인, 중복 체크, 토큰 재발급은 로그인 없이 접근 가능
-                                        "/api/member/join",
-                                        "/api/member/login",
-                                        "/api/member/check/**",
-                                        "/api/member/reissue",
-                                        "/api/shorts/health-check"
-                                ).permitAll()
-                                // 그 외 나머지 요청은 인증 필요
-                                .anyRequest().authenticated()
+                        auth -> {
+                            // 회원가입, 로그인, 중복 체크, 토큰 재발급은 로그인 없이 접근 가능
+                            auth.requestMatchers(
+                                    "/api/member/join",
+                                    "/api/member/login",
+                                    "/api/member/check/**",
+                                    "/api/member/reissue",
+                                    "/api/shorts/health-check"
+                            ).permitAll();
+
+                            // 테스트 환경일 경우 Swagger 접근 허용
+                            if (profile.equals("test")) {
+                                auth.requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html"
+                                ).permitAll();
+                            }
+                            
+                            // 그 외 나머지 요청은 인증 필요
+                            auth.anyRequest().authenticated();
+                        }
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 등록(Spring Security 기본 인증 필터 전에 실행)
 
