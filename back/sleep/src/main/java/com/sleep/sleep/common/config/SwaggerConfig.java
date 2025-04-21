@@ -6,11 +6,17 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class SwaggerConfig {
+    @Value("${cors.allowed-origin}")
+    private List<String> origins;
 
     @Bean
     public OpenAPI openAPI() {
@@ -28,6 +34,7 @@ public class SwaggerConfig {
                         .title("댄싱 API")
                         .description("우린 춤을 출거에요")
                         .version("1.0.0"))
+                .servers(origins.stream().map(origin -> new Server().url(origin)).toList())
                 .addSecurityItem(securityRequirement)
                 .components(new io.swagger.v3.oas.models.Components()
                         .addSecuritySchemes("bearerAuth", securityScheme));

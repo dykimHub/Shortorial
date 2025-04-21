@@ -25,7 +25,7 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     @Value("${cors.allowed-origin}")
-    private List<String> origin;
+    private List<String> origins;
     @Value("${spring.profiles.active}")
     private String profile;
 
@@ -57,9 +57,9 @@ public class SecurityConfig {
                             // 테스트 환경일 경우 Swagger 접근 허용
                             if (profile.equals("test")) {
                                 auth.requestMatchers(
+                                        "/v3/api-docs",
                                         "/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-ui/**"
                                 ).permitAll();
                             }
                             
@@ -77,7 +77,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         // 명시된 도메인만 허용
-        corsConfiguration.setAllowedOriginPatterns(origin);
+        corsConfiguration.setAllowedOriginPatterns(origins);
         // 모든 HTTP 메서드 허용
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // 모든 요청 헤더 허용
