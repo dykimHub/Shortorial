@@ -67,21 +67,21 @@ jobs:
             --arg SECRET_KEY "${{ secrets.SECRET_KEY }}" \
             --arg VITE_HOME_URL "${{ secrets.VITE_HOME_URL_TEST }}" \
             --arg SPRING_PROFILE "test" \
-          '
-          .family = "shortorial-test-be-task" |
-          .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
-          .containerDefinitions[0].image = $img |
-          (.containerDefinitions[0].environment[] | select(.name == "MYSQL_URL")      ).value = $MYSQL_URL |
-          (.containerDefinitions[0].environment[] | select(.name == "MYSQL_USER")     ).value = $MYSQL_USER |
-          (.containerDefinitions[0].environment[] | select(.name == "MYSQL_PASSWORD") ).value = $MYSQL_PASSWORD |
-          (.containerDefinitions[0].environment[] | select(.name == "REDIS_URL")      ).value = $REDIS_URL |
-          (.containerDefinitions[0].environment[] | select(.name == "JWT_SECRET")     ).value = $JWT_SECRET |
-          (.containerDefinitions[0].environment[] | select(.name == "ACCESS_KEY")     ).value = $ACCESS_KEY |
-          (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY |
-          (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")     ).value = $VITE_HOME_URL |
-          (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE |
-          (.containerDefinitions[0].logConfiguration.options."awslogs-group") = "/ecs/shortorial-test-be-task"
-          ' .aws/be-task-definition-base.json > test-be-task-definition.json
+            '
+            .family = "shortorial-test-be-task" |
+            .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
+            .containerDefinitions[0].image = $img |
+            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_URL")      ).value = $MYSQL_URL |
+            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_USER")     ).value = $MYSQL_USER |
+            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_PASSWORD") ).value = $MYSQL_PASSWORD |
+            (.containerDefinitions[0].environment[] | select(.name == "REDIS_URL")      ).value = $REDIS_URL |
+            (.containerDefinitions[0].environment[] | select(.name == "JWT_SECRET")     ).value = $JWT_SECRET |
+            (.containerDefinitions[0].environment[] | select(.name == "ACCESS_KEY")     ).value = $ACCESS_KEY |
+            (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY |
+            (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")  ).value = $VITE_HOME_URL |
+            (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE |
+            (.containerDefinitions[0].logConfiguration.options."awslogs-group") = "/ecs/shortorial-test-be-task"
+            ' .aws/be-task-definition-base.json > test-be-task-definition.json
 
       # 7. AWS CLI 명령으로 task definition 등록
       #    - 동일한 family 이름이면 revision이 자동으로 증가됨
