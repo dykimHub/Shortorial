@@ -34,8 +34,8 @@ jobs:
       - name: Build and Push Docker Image
         id: build-image
         run: |
-          IMAGE=${{ secrets.DOCKER_REPO }}/shortorial-fe:${{ github.sha }}
-          docker buildx build -t $IMAGE --push front
+          IMAGE=${{ secrets.DOCKER_REPO }}/shortorial-fe
+          docker buildx build --push -t $IMAGE:${{ github.sha }} -t $IMAGE:latest front
 
       # 5. AWS OIDC로 인증 (추정할 IAM Role과 GitHub 연결)
       - name: Configure AWS credentials
