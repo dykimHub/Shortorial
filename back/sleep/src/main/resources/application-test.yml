@@ -15,7 +15,7 @@ spring:
       max-lifetime: 1800000
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
     show_sql: false
     defer-datasource-initialization: false
   sql:
@@ -48,3 +48,8 @@ jwt:
 
 cors:
   allowed-origin: ${VITE_HOME_URL}
+
+logging:
+  level:
+    root: DEBUG
+    org.hibernate.SQL: DEBUG
