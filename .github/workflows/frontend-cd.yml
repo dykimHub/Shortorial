@@ -39,7 +39,7 @@ jobs:
       # 6-4. 값이 치환된 fe-task-definition-base.json 파일을 fe-task-definition.json 파일로 생성
       - name: Build ECS task definition with jq
         run: |
-          jq --arg img "${{ secrets.DOCKER_REPO }}/shortorial-fe:latest" \
+          jq --arg img "${{ secrets.DOCKER_REPO }}/shortorial-fe:1.0.0" \
             --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
             --arg VITE_HOME_URL "https://www.shortorial.site" \
           '
