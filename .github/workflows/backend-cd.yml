@@ -19,71 +19,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 5. AWS OIDC로 인증 (추정할 IAM Role과 GitHub 연결)
+      # 2. AWS OIDC로 인증 (추정할 IAM Role과 GitHub 연결)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ap-northeast-2
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubTokenECSRole
 
-      # jq는 JSON 데이터를 수정하고 변환할 수 있는 CLI 도구
-      # 6-1. jq 안에서 사용할 변수 정의 (이미지 경로와 GitHub Secrets 값들을 --arg로 전달)
-      #      - --arg 옵션 bash 변수(Github Actions Secret 등)를 jq 내부 변수로 전달
-      #      - 예: secrets.ACCESS_KEY → --arg ACCESS_KEY "$ACCESS_KEY" → jq 내부에서 $ACCESS_KEY로 사용 가능
-      # 6-2. 작은따옴표(')로 jq 스크립트 블록 시작
-      # 6-3. task-definition-base.json 파일에서 필요한 값 치환
-      #      - family: ECS Task Family 지정
-      #      - executionRoleArn: ECS 실행 역할 ARN 설정
-      #      - containerDefinitions[0].image: 컨테이너에 사용할 도커 이미지로 치환
-      #      - containerDefinitions[0].environment: 환경변수 dummy 값을 실제 값으로 치환
-      # 6-4. 값이 치환된 be-task-definition-base.json 파일을 be-task-definition.json 파일로 생성
-      - name: Build ECS task definition with jq
-        run: |
-          jq --arg img "${{ secrets.DOCKER_REPO }}/shortorial-be:1.0.0" \
-            --arg AWS_ACCOUNT_ID "${{ secrets.AWS_ACCOUNT_ID }}" \
-            --arg MYSQL_URL "${{ secrets.MYSQL_URL }}" \
-            --arg MYSQL_USER "${{ secrets.MYSQL_USER }}" \
-            --arg MYSQL_PASSWORD "${{ secrets.MYSQL_PASSWORD }}" \
-            --arg REDIS_URL "${{ secrets.REDIS_URL }}" \
-            --arg JWT_SECRET "${{ secrets.JWT_SECRET }}" \
-            --arg ACCESS_KEY "${{ secrets.ACCESS_KEY }}" \
-            --arg SECRET_KEY "${{ secrets.SECRET_KEY }}" \
-            --arg VITE_HOME_URL "${{ secrets.VITE_HOME_URL }}" \
-            --arg SPRING_PROFILE "prod" \
-            '
-            .family = "shortorial-be-task" |
-            .executionRoleArn = "arn:aws:iam::\($AWS_ACCOUNT_ID):role/ecsTaskExecutionRole" |
-            .containerDefinitions[0].image = $img |
-            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_URL")      ).value = $MYSQL_URL |
-            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_USER")     ).value = $MYSQL_USER |
-            (.containerDefinitions[0].environment[] | select(.name == "MYSQL_PASSWORD") ).value = $MYSQL_PASSWORD |
-            (.containerDefinitions[0].environment[] | select(.name == "REDIS_URL")      ).value = $REDIS_URL |
-            (.containerDefinitions[0].environment[] | select(.name == "JWT_SECRET")     ).value = $JWT_SECRET |
-            (.containerDefinitions[0].environment[] | select(.name == "ACCESS_KEY")     ).value = $ACCESS_KEY |
-            (.containerDefinitions[0].environment[] | select(.name == "SECRET_KEY")     ).value = $SECRET_KEY |
-            (.containerDefinitions[0].environment[] | select(.name == "VITE_HOME_URL")  ).value = $VITE_HOME_URL |
-            (.containerDefinitions[0].environment[] | select(.name == "SPRING_PROFILES_ACTIVE")).value = $SPRING_PROFILE |
-            (.containerDefinitions[0].logConfiguration.options."awslogs-group") = "/ecs/shortorial-be-task"
-            ' .aws/be-task-definition-base.json > be-task-definition.json
+      # 3. ECS Task Family에서 가장 최신 Revision을 조회하고 이미지 버전만 변경하여 새로운 Revision 생성
+      - name: Render Task Definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: shortorial-be-task
+          container-name: shortorial-be-task
+          image: ${{ secrets.DOCKER_REPO }}/shortorial-be:1.0.1
 
-      # 7. AWS CLI 명령으로 task definition 등록
-      #    - 동일한 family 이름이면 revision이 자동으로 증가됨
-      #    - 등록 응답에서 최신 revision을 추출하여 step 출력값으로 저장
-      #    - 참고: https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/cli_ecs_code_examples.html
-      - name: Register ECS Task Definition
-        id: register-task
-        run: |
-          RESPONSE=$(aws ecs register-task-definition \
-          --cli-input-json file://be-task-definition.json)
-
-          REVISION=$(echo "$RESPONSE" | jq -r '.taskDefinition.revision')
-          echo "revision=$REVISION" >> $GITHUB_OUTPUT
-
-      # 8. 최신 revision(register-task step 출력 값)을 사용해 ECS 서비스 업데이트
+      # 4. 최신 Revision으로 등록 후 서비스 업데이트
       - name: Deploy to Amazon ECS
-        run: |
-          aws ecs update-service \
-            --cluster Shortorial \
-            --service shortorial-be-svc \
-            --task-definition shortorial-be-task:${{ steps.register-task.outputs.revision}} \
-            --force-new-deployment
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: shortorial-be-svc
+          cluster: Shortorial
+          wait-for-service-stability: true
