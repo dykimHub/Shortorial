@@ -43,16 +43,24 @@ jobs:
           aws-region: ap-northeast-2
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubTokenECSRole
 
-      # 6.ECS Task Family에서 가장 최신 Revision을 조회하고 이미지 버전만 변경하여 새로운 Revision 생성
+      # 6. ECS Task Family에서 가장 최신 Revision을 조회하여 임시 파일로 저장
+      - name: Get latest task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition shortorial-test-be-task \
+            --query taskDefinition \
+            --output json > task-def.json
+
+      # 7.이미지 버전만 변경하여 새로운 Revision 생성
       - name: Render Task Definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: shortorial-test-be-task
+          task-definition: task-def.json
           container-name: shortorial-be-task
           image: ${{ secrets.DOCKER_REPO }}/shortorial-be:${{ github.sha }}
 
-      # 7. 최신 Revision으로 등록 후 서비스 업데이트
+      # 8. 최신 Revision으로 등록 후 서비스 업데이트
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -60,3 +68,7 @@ jobs:
           service: shortorial-test-be-svc
           cluster: Shortorial
           wait-for-service-stability: true
+
+      # 9. 임시 파일 삭제
+      - name: Cleanup
+        run: rm -f task-def.json
