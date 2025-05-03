@@ -49,7 +49,7 @@ public class ShortsController {
 
     @Operation(summary = "쇼츠를 인기순으로 조회")
     @GetMapping("/rank")
-    public ResponseEntity<List<ShortsDto>> findPopularShorts(@RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<List<ShortsDto>> findPopularShorts() {
         List<ShortsDto> shortRankingList = shortsService.findPopularShortsList();
         return ResponseEntity.ok()
                 .body(shortRankingList);
@@ -88,7 +88,6 @@ public class ShortsController {
         SuccessResponse successResponse = triedShortsService.deleteTriedShorts(accessToken, shortsId);
         return ResponseEntity.ok()
                 .body(successResponse);
-
     }
 
     @Operation(summary = "회원이 녹화한 쇼츠에 추가")
