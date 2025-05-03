@@ -84,6 +84,14 @@ const LandingPage = () => {
           {`별다른 기기 부착 없이 카메라로 모션을 인식하여 멀리서도 버튼 조작이 가능해요.`}
         </p>
       </Section>
+      <Section {...ForthSectionScroll}>
+        <h1 className="sectionTitle">촬영에서 편집까지</h1>
+        <p className="subTitle">{`연습한 그 자리에서 바로 촬영해볼까요?\n챌린지한 노래는 저희가 입혀드립니다!`}</p>
+        <ImageContainer>
+          <ServiceImg src={serviceMotionGif3} alt="" />
+          <DeviceImg src={deviceLandscape} alt="" />
+        </ImageContainer>
+      </Section>
       <Section {...ThirdSectionScroll}>
         <h1 className="sectionTitle">인기 챌린지를 한눈에</h1>
         <p className="subTitle">지금 유행하는 다양한 댄스 챌린지에 도전해보세요.</p>
@@ -106,14 +114,6 @@ const LandingPage = () => {
             onClick={() => navigate("/main")}
           />
         </CTAButtonContainer>*/}
-      </Section>
-      <Section {...ForthSectionScroll}>
-        <h1 className="sectionTitle">촬영에서 업로드까지</h1>
-        <p className="subTitle">{`연습한 그 자리에서 바로 촬영하고\nSNS에 공유해보세요.`}</p>
-        <ImageContainer>
-          <ServiceImg src={serviceMotionGif3} alt="" />
-          <DeviceImg src={deviceLandscape} alt="" />
-        </ImageContainer>
       </Section>
       <CenterSection {...LastSectionScroll}>
         <h1 className="sectionTitle bg">{`춤 출 준비 되셨나요?`}</h1>

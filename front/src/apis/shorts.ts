@@ -35,12 +35,8 @@ export const getShortsInfo = async (shortsId: string) => {
 // 인기순 쇼츠 조회
 export async function getTopRankingShorts() {
   try {
-    const token = "Bearer " + localStorage.getItem("accessToken");
-    const res = await axios.get(`${REST_SHORTS_URL}/rank`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    //const token = "Bearer " + localStorage.getItem("accessToken");
+    const res = await axios.get(`${REST_SHORTS_URL}/rank`);
     return res.data;
   } catch (error: any) {
     console.error(error.response.data);
