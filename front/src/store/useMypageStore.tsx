@@ -7,7 +7,7 @@ interface MyPageStore {
 }
 
 const useMypageStore = create<MyPageStore>((set) => ({
-  countings: { triedShortsNum: 0, recordedShortsNum: 0, uploadedShortsNum: 0 },
+  countings: { triedShortsNum: 0, recordedShortsNum: 0, unRecordedShortsTitle: "" },
   setCountings: (data: Countings) => set({ countings: data }),
 }));
 export default useMypageStore;
