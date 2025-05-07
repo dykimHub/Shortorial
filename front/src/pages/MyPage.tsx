@@ -8,6 +8,7 @@ import UploadList from "../components/mypage/UploadList";
 import TryList from "../components/mypage/TryList";
 import useMypageStore from "../store/useMypageStore";
 import message from "../assets/mypage/message.png";
+import { MusicNote } from "@mui/icons-material";
 
 export default function MyPage() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -50,21 +51,26 @@ export default function MyPage() {
         <ProfileContainer>
           <MessageContainer>
             <Message src={message} />
-            {memberInfo?.memberNickname}님,{" "}
+            {memberInfo?.memberNickname} 님,{" "}
             {counting.triedShortsNum === 0 && counting.recordedShortsNum === 0 ? (
               <>
                 환영합니다. <br />
-                숏토리얼이 첫 챌린지를 응원할게요! 🌟 <br />
+                숏토리얼이 첫 챌린지를 응원할게요! 🌟
               </>
             ) : counting.unRecordedShortsTitle ? (
               <>
-                {counting.unRecordedShortsTitle} 챌린지를 연습 중이시네요! <br />
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <MusicNote />
+                  {counting.unRecordedShortsTitle} 챌린지를 연습 중이시네요!
+                </span>
                 연습한 만큼 촬영해 보시는 건 어떠세요? 🙂
               </>
             ) : (
               <>
-                연습한 챌린지를 모두 촬영하셨네요! 🎉 <br />
-                다른 챌린지도 둘러보실래요?
+                <span>
+                  연습한 챌린지를 모두 촬영하셨네요! 🎉 <br />
+                  다른 챌린지도 둘러보실래요?
+                </span>
               </>
             )}
           </MessageContainer>
@@ -176,8 +182,8 @@ const MessageContainer = styled.div`
 `;
 
 const Message = styled.img`
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   margin: 10px;
 `;
 
