@@ -18,7 +18,7 @@ public interface ShortsRepositoryCustom {
 
     List<TriedShortsDto> findTriedShortsList(int memberIndex);
 
-    Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex);
+    ShortsStatsDto findShortsStatsDto(int memberIndex);
 
     List<RecordedShortsDto> findRecordedShortsDtoList(int memberIndex);
 }

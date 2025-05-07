@@ -83,8 +83,8 @@ public class ShortsServiceImpl implements ShortsService {
     @Override
     public ShortsStatsDto findShortsStats(String accessToken) {
         int memberIndex = memberService.getMemberIndex(accessToken);
-        return shortsRepository.findShortsStatsDto(memberIndex)
-                .orElseThrow(() -> new CustomException(ExceptionCode.SHORTS_STATS_NOT_FOUND));
+        return shortsRepository.findShortsStatsDto(memberIndex);
+
     }
 
     /**
