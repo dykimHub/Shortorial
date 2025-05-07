@@ -4,7 +4,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sleep.sleep.member.entity.QMember;
 import com.sleep.sleep.s3.constants.S3Status;
 import com.sleep.sleep.shorts.dto.*;
 import com.sleep.sleep.shorts.entity.QRecordedShorts;
@@ -13,7 +12,6 @@ import com.sleep.sleep.shorts.entity.QTriedShorts;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
@@ -112,27 +110,50 @@ public class ShortsRepositoryCustomImpl implements ShortsRepositoryCustom {
     }
 
     /**
-     * 1. tried_shorts에서 해당 member index를 조회하고 count하는 서브쿼리를 보냄
-     * 2. recorded_shorts에서 해당 member index를 조회하고 count하는 서브쿼리를 보냄
-     * 3. recorded_shorts에서 해당 member index에 youtubeURL이 null이 아닌 행을 조회하고 count하는 서브쿼리를 보냄
+     * 회원의 숏폼 통계 정보를 조회합니다.
+     *
+     * 1. tried_shorts에서 해당 memberIndex로 연습한 숏폼 개수를 조회
+     * 2. recorded_shorts에서 해당 memberIndex로 녹화한 숏폼 개수를 조회
+     * 3. tried_shorts 중 아직 recorded_shorts에 없는 최신 숏폼의 제목을 조회
      *
      * @param memberIndex 특정 회원 번호
      */
     @Override
-    public Optional<ShortsStatsDto> findShortsStatsDto(int memberIndex) {
-        QMember qMember = QMember.member;
+    public ShortsStatsDto findShortsStatsDto(int memberIndex) {
+        QTriedShorts qTriedShorts = QTriedShorts.triedShorts;
         QRecordedShorts qRecordedShorts = QRecordedShorts.recordedShorts;
 
-        return Optional.ofNullable(queryFactory.select(new QShortsStatsDto(
-                        qMember.triedShortsList.size(),
-                        qMember.recordedShortsList.size(),
-                        JPAExpressions.select(qRecordedShorts.count().intValue())
+        Long triedShortsNum = queryFactory.select(qTriedShorts.count())
+                .from(qTriedShorts)
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex))
+                .fetchOne();
+
+        Long recordedShortsNum = queryFactory.select(qRecordedShorts.count())
+                .from(qRecordedShorts)
+                .where(qRecordedShorts.member.memberIndex.eq(memberIndex))
+                .fetchOne();
+
+        String unRecordedShortsTitle = queryFactory.select(qTriedShorts.shorts.shortsMusicTitle)
+                .from(qTriedShorts)
+                .where(qTriedShorts.member.memberIndex.eq(memberIndex)
+                        .and(JPAExpressions
+                                .selectOne()
                                 .from(qRecordedShorts)
-                                .where(qRecordedShorts.member.memberIndex.eq(memberIndex)
-                                        .and(qRecordedShorts.recordedShortsYoutubeURL.isNotNull()))))
-                .from(qMember)
-                .where(qMember.memberIndex.eq(memberIndex))
-                .fetchOne());
+                                .where(
+                                        qRecordedShorts.shorts.shortsId.eq(qTriedShorts.shorts.shortsId)
+                                                .and(qRecordedShorts.member.memberIndex.eq(memberIndex))
+                                                .and(qRecordedShorts.status.eq(S3Status.COMPLETED))
+                                )
+                                .notExists()))
+                .orderBy(qTriedShorts.triedShortsDate.desc())
+                .limit(1)
+                .fetchOne();
+
+        return ShortsStatsDto.builder()
+                .triedShortsNum(triedShortsNum.intValue())
+                .recordedShortsNum(recordedShortsNum.intValue())
+                .unRecordedShortsTitle(unRecordedShortsTitle)
+                .build();
 
     }
 
