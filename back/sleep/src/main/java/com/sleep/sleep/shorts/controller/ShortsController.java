@@ -56,7 +56,7 @@ public class ShortsController {
 
     }
 
-    @Operation(summary = "회원 쇼츠 통계(시도한 쇼츠, 녹화한 쇼츠, 업로드한 쇼츠)")
+    @Operation(summary = "회원 쇼츠 통계 조회")
     @GetMapping("/stats")
     public ResponseEntity<ShortsStatsDto> findShortsStats(@RequestHeader("Authorization") String accessToken) {
         ShortsStatsDto shortsStatsDto = shortsService.findShortsStats(accessToken);

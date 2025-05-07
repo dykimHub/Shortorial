@@ -73,11 +73,10 @@ public class ShortsServiceImpl implements ShortsService {
     }
 
     /**
-     * 특정 회원의 시도한 쇼츠 개수, 녹화한 쇼츠 개수, 업로드한 쇼츠 개수를 ShortsStatsDto 객체로 반환함
+     * 특정 회원의 시도한 쇼츠 개수, 녹화한 쇼츠 개수, 시도했지만 녹화하지 않은 쇼츠 제목을 ShortsStatsDto 객체로 반환함
      *
      * @param accessToken 로그인한 회원의 토큰
      * @return ShortsStatsDto 객체
-     * @throws CustomException 회원의 쇼츠 통계를 불러올 수 없음
      */
     @Transactional
     @Override

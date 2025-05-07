@@ -54,7 +54,7 @@ export default function Profile() {
           <div>완료</div>
         </ProfileNumContainer>
         <ProfileNumContainer key="youtubeUrl">
-          <div className="number">{counting?.uploadedShortsNum}</div>
+          <div className="number">{counting?.uploadedShorts}</div>
           <div>게시</div>
         </ProfileNumContainer>
       </ProfilRightContainer>
