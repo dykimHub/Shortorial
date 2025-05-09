@@ -24,10 +24,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    @Value("${cors.allowed-origin}")
-    private List<String> origins;
     @Value("${spring.profiles.active}")
     private String profile;
+    @Value("${cors.allowed-origin}")
+    private List<String> origins;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -45,17 +45,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Spring Security는 디폴트로 세션을 사용하는데 JWT 사용하므로 무상태(세션 생성X)
                 .authorizeHttpRequests(
                         auth -> {
-                            // 회원가입, 로그인, 중복 체크, 토큰 재발급은 로그인 없이 접근 가능
+                            // 회원가입, 로그인, 중복 체크, 토큰 재발급, 인기 쇼츠는 로그인 없이 접근 가능
                             auth.requestMatchers(
+                                    "/api/shorts/health-check",
                                     "/api/member/join",
                                     "/api/member/login",
                                     "/api/member/check/**",
                                     "/api/member/reissue",
-                                    "/api/shorts/health-check"
+                                    "/api/shorts/rank"
                             ).permitAll();
 
                             // 테스트 환경일 경우 Swagger 접근 허용
-                            if (profile.equals("test")) {
+                            if (profile.equals("test") || profile.equals("local")) {
                                 auth.requestMatchers(
                                         "/v3/api-docs",
                                         "/v3/api-docs/**",
@@ -89,6 +90,7 @@ public class SecurityConfig {
         // 위 설정을 모든 경로에 적용
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
+
         return source;
     }
 

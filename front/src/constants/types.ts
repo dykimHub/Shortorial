@@ -57,7 +57,7 @@ export interface TryShorts {
 export interface Countings {
   triedShortsNum: number;
   recordedShortsNum: number;
-  uploadedShortsNum: number;
+  unRecordedShortsTitle: string;
 }
 
 export interface ModifyingTitle {

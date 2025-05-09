@@ -1,9 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { Edit, EditOff, Close, Download } from "@mui/icons-material";
+import { Edit, EditOff, Close, Download, MusicNote } from "@mui/icons-material";
 import { updateTitle, deleteShorts } from "../../apis/recordedshorts";
 import { UploadShorts } from "../../constants/types";
-import { MusicNote } from "@mui/icons-material";
 import moment from "moment";
 
 interface UploadComponentProps {
