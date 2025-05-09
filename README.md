@@ -44,14 +44,14 @@ _2차 리팩토링_
 
 <img src="assets/18_리팩토링_서비스아키텍처.png" />
 
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">Backend</th>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">Frontend</th>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">Database</th>
+    <th>Backend</th>
+    <th>Frontend</th>
+    <th>Database</th>
   </tr>
   <tr>
-    <td style="border-right:1px solid gray;">
+    <td>
       <img src="https://img.shields.io/badge/spring%20boot-%236DB33F.svg?style=for-the-badge&logo=springboot&logoColor=white">
       <img src="https://img.shields.io/badge/Spring%20Data%20JPA-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white">
       <img src="https://img.shields.io/badge/Spring%20Security-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white"> 
@@ -59,7 +59,7 @@ _2차 리팩토링_
       <img src=https://img.shields.io/badge/QueryDSL-007ACC.svg?style=for-the-badge&logo=&logoColor=white>
       <img src="https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white">
     </td>
-    <td style="border-right:1px solid gray;">
+    <td>
       <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=React&logoColor=black">
       <img src="https://img.shields.io/badge/MediaPipe-00BFA5?style=for-the-badge&logo=mediapipe&logoColor=white">
       <img src="https://img.shields.io/badge/Typescript-3178C6?style=for-the-badge&logo=Typescript&logoColor=white"> 
@@ -68,20 +68,20 @@ _2차 리팩토링_
       <img src="https://img.shields.io/badge/MediaRecorder-FF5722?style=for-the-badge&logo=html5&logoColor=white">
       <img src="https://img.shields.io/badge/Canvas%20API-2E8B57?style=for-the-badge&logo=html5&logoColor=white">
     </td>
-    <td style="border-right:1px solid gray;">
+    <td>
       <img src="https://img.shields.io/badge/MySQL-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white">
       <img src="https://img.shields.io/badge/Redis-DC382D.svg?style=for-the-badge&logo=redis&logoColor=white">
     </td>
   </tr>
 </table>
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">Infra</th>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">DevTool</th>
-    <th style="border-right:1px solid gray; padding-right:10px; text-align:center;">Others</th>
+    <th>Infra</th>
+    <th>DevTool</th>
+    <th>Others</th>
   </tr>
   <tr>
-    <td style="border-right:1px solid gray;">
+    <td>
       <img src="https://img.shields.io/badge/Docker-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white">
       <img src="https://img.shields.io/badge/Nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white">
       <img src="https://img.shields.io/badge/FFmpeg-007808.svg?style=for-the-badge&logo=ffmpeg&logoColor=white">
@@ -91,14 +91,14 @@ _2차 리팩토링_
       <img src="https://img.shields.io/badge/AWS%20Lambda-F58536.svg?style=for-the-badge&logo=awslambda&logoColor=white">
       <img src="https://img.shields.io/badge/Route%2053-6A34D1.svg?style=for-the-badge&logo=amazonroute53&logoColor=white">
     </td>
-    <td style="border-right:1px solid gray">
+    <td>
       <img src="https://img.shields.io/badge/GitHub-181717.svg?style=for-the-badge&logo=github&logoColor=white">
       <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF.svg?style=for-the-badge&logo=githubactions&logoColor=white">
       <img src="https://img.shields.io/badge/OpenAPI-85EA2D.svg?style=for-the-badge&logo=swagger&logoColor=black">
       <img src="https://img.shields.io/badge/IntelliJ%20IDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white">
       <img src="https://img.shields.io/badge/Visual%20Studio%20Code-007ACC?style=for-the-badge&logo=&logoColor=white">
     </td>
-    <td style="border-right:1px solid gray;">
+    <td>
       <img src="https://img.shields.io/badge/Figma-F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white">
       <img src="https://img.shields.io/badge/Draw.io-F08705.svg?style=for-the-badge&logo=diagramsdotnet&logoColor=white">
       <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=Notion&logoColor=white">
@@ -111,10 +111,10 @@ _2차 리팩토링_
 
 # 💖 서비스 화면 및 기능 상세
 
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="text-align: center;">랜딩 페이지</th>
-    <th style="text-align: center;">메인 페이지</th>
+    <th>랜딩 페이지</th>
+    <th>메인 페이지</th>
   </tr>
   <tr>
     <td><img src="assets/3_랜딩페이지.gif"></td>
@@ -131,14 +131,14 @@ _2차 리팩토링_
     </td>
   </tr>
 </table>
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="text-align: center;">연습 모드 - 1</th>
-    <th style="text-align: center;">연습 모드 - 2</th>
+    <th>연습 모드 - 1</th>
+    <th>연습 모드 - 2</th>
   </tr>
   <tr>
-    <td><img src="assets/5_연습페이지.png"></td>
-    <td><img src="assets/7_연습모드_제스처.gif"></td>
+    <td><img src="assets/5_연습페이지.png" width="1080"></td>
+    <td><img src="assets/7_연습모드_제스처.gif" width="1080"></td>
   </tr>
   <tr>
     <td>
@@ -153,14 +153,14 @@ _2차 리팩토링_
     </td>
   </tr>
 </table>
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="text-align: center;">챌린지 모드 - 1</th>
-    <th style="text-align: center;">챌린지 모드 - 2</th>
+    <th>챌린지 모드 - 1</th>
+    <th>챌린지 모드 - 2</th>
   </tr>
   <tr>
-    <td><img src="assets/10_챌린지모드_버튼.png" width="100%"></td>
-    <td><img src="assets/11_챌린지모드_녹화.gif" width="100%"></td>
+    <td><img src="assets/10_챌린지모드_버튼.png" width="1080"></td>
+    <td><img src="assets/11_챌린지모드_녹화.gif" width="1080"></td>
   </tr>
   <tr>
     <td>
@@ -173,12 +173,11 @@ _2차 리팩토링_
       - Lambda는 S3 업로드 이벤트를 감지해 숏폼 오디오(노래)를 사용자 영상에 합성하고, 최종 영상을 S3에 업로드합니다.
     </td>
   </tr>
-  
 </table>
-<table style="table-layout: fixed; width: 100%; border-collapse: collapse;">
+<table>
   <tr>
-    <th style="text-align: center;">마이 페이지</th>
-    <th style="text-align: center;">마이 페이지</th>
+    <th>마이 페이지 - 1</th>
+    <th>마이 페이지 - 2</th>
   </tr>
   <tr>
     <td><img src="assets/12_마이페이지_녹화.png"></td>
