@@ -5,6 +5,7 @@ on:
     branches: ["main"] # main 브랜치에 push 될 때만 실행
     paths-ignore:
       - "back/**" # 백엔드 파일 변경은 감지 안 함
+      - "README.md"
 
 permissions:
   id-token: write
