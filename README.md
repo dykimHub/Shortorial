@@ -117,8 +117,8 @@ _2차 리팩토링_
     <th>메인 페이지</th>
   </tr>
   <tr>
-    <td><img src="assets/3_랜딩페이지.gif" width="388.33" height="218.44"></td>
-    <td><img src="assets/4_메인페이지.gif" width="388.33" height="218.44"></td>
+    <td><img src="assets/3_랜딩페이지.gif" width="389"></td>
+    <td><img src="assets/4_메인페이지.gif" width="389">></td>
   </tr>
   <tr>
     <td>
@@ -137,8 +137,8 @@ _2차 리팩토링_
     <th>연습 모드 - 2</th>
   </tr>
   <tr>
-    <td><img src="assets/5_연습페이지.png" width="388.33" height="218.44"></td>
-    <td><img src="assets/7_연습모드_제스처.gif" width="388.33" height="218.44"></td>
+    <td><img src="assets/5_연습페이지.png" width="389"></td>
+    <td><img src="assets/7_연습모드_제스처.gif" width="389"></td>
   </tr>
   <tr>
     <td>
@@ -159,8 +159,8 @@ _2차 리팩토링_
     <th>챌린지 모드 - 2</th>
   </tr>
   <tr>
-    <td><img src="assets/10_챌린지모드_버튼.png" width="388.33" height="218.44"></td>
-    <td><img src="assets/11_챌린지모드_녹화.gif" width="388.33" height="218.44"></td>
+    <td><img src="assets/10_챌린지모드_버튼.png" width="389"></td>
+    <td><img src="assets/11_챌린지모드_녹화.gif" width="389"></td>
   </tr>
   <tr>
     <td>
