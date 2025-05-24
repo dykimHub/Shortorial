@@ -6,8 +6,8 @@ import {
   PlayArrow,
   Repeat,
   Videocam,
-  Visibility,
-  VisibilityOff,
+  //Visibility,
+  //VisibilityOff,
 } from "@mui/icons-material";
 import noRepeat from "/src/assets/icon/repeat-off.svg";
 import { useNavigate, useParams } from "react-router-dom";
@@ -579,14 +579,14 @@ const LearnPage = () => {
                     progress={challengeCount}
                     isVisible={state === "PAUSE"}
                   />
-                  <VideoMotionButton
+                  {/* <VideoMotionButton
                     id="canvasBtn"
                     icon={isCanvas ? <VisibilityOff /> : <Visibility />}
                     toolTip={isCanvas ? "가이드 해제" : "가이드 표시"}
                     progress={canvasCount}
                     isVisible={state === "PAUSE"}
                     onClick={canvasSetting}
-                  />
+                  /> */}
                 </FoldList>
               </VideoMotionButtonList>
               {state === "READY" && <Timer>{timer}</Timer>}

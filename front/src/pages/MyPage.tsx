@@ -60,8 +60,7 @@ export default function MyPage() {
             ) : counting.unRecordedShortsTitle ? (
               <>
                 <span style={{ display: "inline-flex", alignItems: "center" }}>
-                  <MusicNote />
-                  {counting.unRecordedShortsTitle} 챌린지를 연습 중이시네요!
+                  🎵 {counting.unRecordedShortsTitle} 챌린지를 연습 중이시네요!
                 </span>
                 연습한 만큼 촬영해 보시는 건 어떠세요? 🙂
               </>
