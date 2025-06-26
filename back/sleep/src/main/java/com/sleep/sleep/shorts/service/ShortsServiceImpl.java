@@ -192,7 +192,7 @@ public class ShortsServiceImpl implements ShortsService {
     public SuccessResponse addRecordedShorts(String accessToken, String recordedShortsS3Key) {
         Member member = memberService.findMemberEntity(accessToken);
 
-        String recordedShortsTitle = recordedShortsS3Key.split("/")[1];
+        String recordedShortsTitle = recordedShortsS3Key.split("/")[2];
         String recordedShortsS3URL = s3Service.findS3URL(recordedShortsS3Key);
 
         RecordedShorts recordedShorts = RecordedShorts.builder()

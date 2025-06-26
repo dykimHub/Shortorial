@@ -90,7 +90,7 @@ public class S3ServiceImpl implements S3Service {
 
         // 랜덤으로 파일 이름(제목)을 생성하고 회원 아이디(폴더명)에 붙임
         UUID uuid = UUID.randomUUID();
-        String fileName = member.getMemberId() + "/" + uuid;
+        String fileName = "prev/" + member.getMemberId() + "/" + uuid;
 
         // 파일의 InputStream을 s3에 업로드
         amazonS3.putObject(new PutObjectRequest(bucketName, fileName, file.getInputStream(), objectMetadata));

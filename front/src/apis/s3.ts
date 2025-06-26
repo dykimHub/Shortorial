@@ -25,7 +25,7 @@ export async function getS3Blob(shortsS3Key: string) {
   }
 }
 
-// S3에 녹화 쇼츠 업로드
+// S3에 녹화 쇼츠 업로드 후 DB에 녹화 쇼츠 업로드
 export async function uploadShortsToS3(blob: Blob) {
   try {
     const token = "Bearer " + localStorage.getItem("accessToken");
@@ -43,6 +43,7 @@ export async function uploadShortsToS3(blob: Blob) {
     return uploadShortsToDB(res.data);
   } catch (error: any) {
     console.error(error.response.data);
+    throw error;
   }
 }
 
