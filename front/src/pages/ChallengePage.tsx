@@ -1,12 +1,8 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import LoadingModalComponent from "../components/modal/LoadingModalComponent";
-import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
-import { NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { useBtnStore, useMotionDetectionStore } from "../store/useMotionStore";
-import VideoMotionButton from "../components/button/VideoMotionButton";
+import { axios } from "../utils/axios";
+// 아이콘
 import {
   Flip,
   RadioButtonChecked,
@@ -16,92 +12,110 @@ import {
   Save,
   Movie,
 } from "@mui/icons-material";
-import { getShortsInfo } from "../apis/shorts";
-import { getPresignedGetURL } from "../apis/s3";
-import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
 import camera from "../assets/challenge/camera.png";
 import StarEffect from "../components/style/StarEffect";
+// 타입 및 함수
+import LoadingModalComponent from "../components/modal/LoadingModalComponent";
+import VideoMotionButton from "../components/button/VideoMotionButton";
 import { Shorts } from "../constants/types";
-import { axios } from "../utils/axios";
+import { getShortsInfo } from "../apis/shorts";
+import { getPresignedGetURL } from "../apis/s3";
+import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
+// 모션
+import { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
+import { useBtnStore, useMotionDetectionStore } from "../store/useMotionStore";
 
 const ChallengePage = () => {
   const navigate = useNavigate();
   const params = useParams();
-
+  // 비디오
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
-
-  const [short, setShort] = useState<Shorts | null>(null);
+  const [shorts, setShorts] = useState<Shorts | null>(null);
+  // 웹캠
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [danceVideoPath, setDanceVideoPath] = useState<string>("");
-
-  const [show, setShow] = useState(false);
+  enum ChallengeState {
+    READY = "READY",
+    RECORD = "RECORD",
+    UPLOADED = "UPLOADED",
+    COMPLETED = "COMPLETED",
+    FAILD = "FAILED",
+  }
+  const [state, setState] = useState<ChallengeState>(ChallengeState.READY);
   const [recording, setRecording] = useState(false); // 녹화 진행
-  const initialTimer = parseInt(localStorage.getItem("timer") || "3");
-  const [timer, setTimer] = useState<number>(initialTimer); // 타이머
+  // 버튼
+  const [timer, setTimer] = useState<number>(parseInt(localStorage.getItem("timer") ?? "3")); // 타이머
+  const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  // 모달
+  const [show, setShow] = useState(false);
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
   const [ffmpegLog, setFfmpegLog] = useState(""); // 동영상 상태
   const [resolutionText, setResolutionText] = useState<string | null>(null); // 해상도
-
   const videoResolutionRef = useRef<{ width: number; height: number }>({
+    // 초기 해상도
     width: 405,
     height: 720,
   });
-
-  const [isFlipped, setIsFlipped] = useState<boolean>(false);
-
-  type LearnState = "RECORD" | "READY";
-  const [state, setState] = useState<LearnState>("READY");
   // 모션 인식 카운트
   const { btn, setBtn } = useBtnStore();
   const { visibleCount, timerCount, recordCount, learnCount, resultCount, saveCount } =
     useMotionDetectionStore();
 
-  const loadDanceVideo = async () => {
-    // 댄스비디오 s3 url
-    const thisShort = await getShortsInfo(`${params.shortsId}`);
-    setShort(thisShort);
-    if (thisShort) {
-      setDanceVideoPath(thisShort.shortsS3URL); // 쇼츠 s3 링크
-    } else {
-      alert("새로고침 해주세요.");
-    }
+  // 사용자가 클릭한 쇼츠 조회
+  const loadDanceVideo = async () => setShorts(await getShortsInfo(`${params.shortsId}`));
+
+  // 녹화 시작 버튼
+  // 1. 타이머 카운트
+  const handleStartCountdown = () => {
+    let count = timer;
+    const intervalId = setInterval(() => {
+      if (count <= 1) {
+        clearInterval(intervalId);
+        setTimer(timer);
+        startRecording();
+      } else {
+        setTimer((prev) => prev - 1);
+        count -= 1;
+      }
+    }, 1000);
+  };
+
+  // 타이머 버튼
+  const changeTimer = () => {
+    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
+    localStorage.setItem("timer", nextTimer.toString());
+    setTimer(nextTimer);
+  };
+
+  // 연습모드 버튼
+  const goToLearnMode = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    if (shorts) navigate(`/learn/${shorts.shortsId}`);
+  };
+
+  // 마이페이지 버튼
+  const goToResult = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    navigate("/mypage");
   };
 
   const handleShowModal = () => {
     setShow(true); // 모달 열기
     stopRecording();
   };
-
   const handleCloseModal = () => setShow(false);
   const showRecordButton = () => setRecording(false);
   // 녹화 시작 버튼 눌리면 녹화 준비 시작
   const showCancelButton = () => prepareRecording();
 
-  const goToLearnMode = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    if (short) navigate(`/learn/${short.shortsId}`);
-  };
-
-  const goToResult = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    navigate("/mypage");
-  };
-
-  const changeTimer = () => {
-    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
-
-    localStorage.setItem("timer", nextTimer.toString());
-    setTimer(nextTimer);
-  };
-
   const cancelRecording = () => {
-    setState("READY");
+    setState(ChallengeState.READY);
     showRecordButton();
     if (danceVideoRef.current) {
       danceVideoRef.current.pause();
@@ -136,7 +150,7 @@ const ChallengePage = () => {
     const ctx = canvas.getContext("2d")!;
     const { width, height } = videoResolutionRef.current;
     // 모션인식 상태 변경
-    setState("RECORD");
+    setState(ChallengeState.RECORD);
 
     canvas.width = width;
     canvas.height = height;
@@ -177,8 +191,8 @@ const ChallengePage = () => {
   };
 
   const s3Upload = async (blob: Blob) => {
-    if (!short) {
-      alert("원본 쇼츠에 문제가 생겼습니다.");
+    if (!shorts) {
+      alert("현재 쇼츠에 오류가 있습니다.");
       throw new Error("원본 쇼츠가 존재하지 않습니다.");
     }
 
@@ -188,11 +202,11 @@ const ChallengePage = () => {
       // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
       // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
       const metadata = {
-        song: btoa(String.fromCharCode(...new TextEncoder().encode(short.shortsS3key))),
+        song: btoa(String.fromCharCode(...new TextEncoder().encode(shorts.shortsS3key))),
       };
 
       // s3에 객체를 업로드할 수 있는 presignedputurl 및 lambda 처리 완료됐다고 가정하고 생성한 s3key 받음
-      const result = await addRecordedShorts(short.shortsId, metadata);
+      const result = await addRecordedShorts(shorts.shortsId, metadata);
       processedShortsS3key = result.processedShortsS3key;
 
       // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
@@ -204,7 +218,7 @@ const ChallengePage = () => {
       });
 
       // S3 Put 요청에 성공하면 uploaded 상태로 변경
-      await modifyRecordedShortsStatus(processedShortsS3key, "UPLOADED");
+      await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.UPLOADED);
 
       setLoadPath(loading);
       setFfmpegLog("음악 삽입...");
@@ -213,12 +227,12 @@ const ChallengePage = () => {
       await check(processedShortsS3key);
     } catch (error: any) {
       // s3 업로드 실패했다면 failed로 상태 변경
-      await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
+      await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
       console.error("s3 업로드 실패", error.data);
     } finally {
-      setState("READY");
+      setState(ChallengeState.READY);
     }
   };
 
@@ -233,7 +247,7 @@ const ChallengePage = () => {
 
       if (exists) {
         // aws lambda가 처리를 완료했다면 completed로 상태 변경
-        await modifyRecordedShortsStatus(processedShortsS3key, "COMPLETED");
+        await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.COMPLETED);
         clearInterval(interval); // 객체가 생성되면 요청 중단
         setLoadPath(complete);
         setFfmpegLog("완성!");
@@ -244,7 +258,7 @@ const ChallengePage = () => {
         // 12번(1분) 요청 후 중단
         if (attempts >= 12) {
           // 람다 처리 실패했다면 failed로 상태 변경
-          await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
+          await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
           clearInterval(interval);
           setLoadPath(uncomplete);
           setFfmpegLog("동영상 처리 실패");
@@ -378,7 +392,7 @@ const ChallengePage = () => {
     switch (btn) {
       case "visible":
         //console.log("record");
-        if (state === "READY") {
+        if (state === ChallengeState.READY) {
           showCancelButton();
         } else {
           cancelRecording();
@@ -386,27 +400,27 @@ const ChallengePage = () => {
         break;
       case "timer":
         //console.log("timer");
-        if (state === "READY") {
+        if (state === ChallengeState.READY) {
           changeTimer();
         }
         break;
       case "save":
         //console.log("save");
-        if (state === "READY") break;
+        if (state === ChallengeState.READY) break;
         handleShowModal();
         break;
       case "record":
-        if (state == "RECORD") break;
+        if (state == ChallengeState.RECORD) break;
         //console.log("flip");
         setIsFlipped(!isFlipped);
         break;
       case "learn":
-        if (state == "RECORD") break;
+        if (state == ChallengeState.RECORD) break;
         //console.log("learn");
         goToLearnMode();
         break;
       case "rslt":
-        if (state == "RECORD") break;
+        if (state == ChallengeState.RECORD) break;
         //console.log("result");
         goToResult();
         break;
@@ -423,7 +437,7 @@ const ChallengePage = () => {
 
       <VideoContainer
         ref={danceVideoRef}
-        src={danceVideoPath}
+        src={shorts?.shortsS3URL}
         playsInline
         onEnded={handleShowModal}
         className={isFlipped ? "flip" : ""}
@@ -432,7 +446,7 @@ const ChallengePage = () => {
 
       <UserContainer id="dom">
         <UserVideoContainer ref={userVideoRef} autoPlay playsInline></UserVideoContainer>
-        {state === "READY" ? (
+        {state === ChallengeState.READY ? (
           <Timer>{timer}</Timer>
         ) : (
           <RecordingComponent>
@@ -441,7 +455,7 @@ const ChallengePage = () => {
           </RecordingComponent>
         )}
         <VideoMotionButtonList>
-          {state === "READY" ? (
+          {state === ChallengeState.READY ? (
             <div className="foldList">
               <VideoMotionButton
                 icon={<RadioButtonChecked />}
@@ -449,7 +463,7 @@ const ChallengePage = () => {
                 onClick={showCancelButton}
                 id="visible"
                 progress={visibleCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<TimerRounded />}
@@ -457,7 +471,7 @@ const ChallengePage = () => {
                 onClick={changeTimer}
                 id="timer"
                 progress={timerCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<Flip />}
@@ -465,7 +479,7 @@ const ChallengePage = () => {
                 onClick={() => setIsFlipped(!isFlipped)}
                 id="record"
                 progress={recordCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<Movie />}
@@ -473,7 +487,7 @@ const ChallengePage = () => {
                 onClick={goToResult}
                 id="rslt"
                 progress={resultCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<DirectionsRun />}
@@ -481,7 +495,7 @@ const ChallengePage = () => {
                 onClick={goToLearnMode}
                 id="learn"
                 progress={learnCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
             </div>
           ) : (
@@ -492,7 +506,7 @@ const ChallengePage = () => {
                 onClick={cancelRecording}
                 id="visible"
                 progress={visibleCount}
-                isVisible={state === "RECORD"}
+                isVisible={state === ChallengeState.RECORD}
               />
               <VideoMotionButton
                 icon={<Save />}
@@ -500,7 +514,7 @@ const ChallengePage = () => {
                 onClick={handleShowModal}
                 id="save"
                 progress={saveCount}
-                isVisible={state === "RECORD"}
+                isVisible={state === ChallengeState.RECORD}
               />
             </div>
           )}
