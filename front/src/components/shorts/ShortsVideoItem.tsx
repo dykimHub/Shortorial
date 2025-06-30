@@ -76,7 +76,7 @@ const ShortsVideoItem = ({
                 <MusicNote fontSize="small" />
                 {shortsInfo.shortsMusicTitle}
               </div>
-              {/* <div className="detail">챌린저 {shortsInfo.shortsChallengerNum}명</div> */}
+              <div className="detail">🕺챌린저 {shortsInfo.shortsChallengerNum}명</div>
             </DetailsContainer>
           </VideoContainer>
         )

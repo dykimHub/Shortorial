@@ -37,9 +37,16 @@ const ChallengePage = () => {
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
   const [shorts, setShorts] = useState<Shorts | null>(null);
-  // 웹캠
+  // MediaRecorder 설정
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const options = {
+    audioBitsPerSecond: 128000,
+    videoBitsPerSecond: 2500000,
+    // H.264(비디오) + AAC(오디오) 코덱의 MP4
+    mimeType: "video/mp4;codecs=avc1.64003E,mp4a.40.2",
+  };
+  // 상태 관리
   enum ChallengeState {
     READY = "READY",
     RECORD = "RECORD",
@@ -87,9 +94,11 @@ const ChallengePage = () => {
     let count = timer;
     const intervalId = setInterval(() => {
       if (count <= 1) {
+        setShow(false); // 모달 닫기
         clearInterval(intervalId);
-        setTimer(timer);
-        startRecording();
+        setState(ChallengeState.RECORD); // 버튼 목록 전환
+        setTimer(timer); // 타이머 초기화
+        startRecording(); // 녹화 시작
       } else {
         setTimer((prev) => prev - 1);
         count -= 1;
@@ -99,7 +108,6 @@ const ChallengePage = () => {
   // 3. 캔버스 준비
   const startRecording = () => {
     // 캔버스 생성
-    createCanvas();
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d")!;
     const { width, height } = videoResolutionRef.current;
@@ -112,7 +120,7 @@ const ChallengePage = () => {
       // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
       const outputStream = canvas.captureStream();
       // 변환된 스트림을 MediaRecorder로 녹화
-      const recorder = new MediaRecorder(outputStream);
+      const recorder = new MediaRecorder(outputStream, options);
       // 스트림 조각을 넣을 배열
       const chunks: BlobPart[] = [];
       // 스트림 데이터가 쌓이면 배열에 추가
@@ -121,7 +129,7 @@ const ChallengePage = () => {
       // mediaRecorder?.stop() 트리거
       recorder.onstop = async () => {
         // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
-        const userVideoBlob = new Blob(chunks, { type: "video/mp4" });
+        const userVideoBlob = new Blob(chunks, { type: recorder.mimeType });
         // s3에 업로드
         await s3Upload(userVideoBlob);
       };
@@ -268,7 +276,7 @@ const ChallengePage = () => {
         setTimeout(handleCloseModal, 1000);
       } else {
         attempts++;
-        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
+        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/12)`);
         // 12번(1분) 요청 후 중단
         if (attempts >= 12) {
           // 람다 처리 실패했다면 failed로 상태 변경
@@ -296,12 +304,11 @@ const ChallengePage = () => {
   const before_handmarker: NormalizedLandmark | null = null;
   const curr_handmarker: NormalizedLandmark | null = null;
 
-  // camera가 있을 HTML
+  // 웹캠 초기화
   const setInit = useCallback(async () => {
     const constraints: MediaStreamConstraints = {
       video: {
-        aspectRatio: 9 / 16,
-        // 이상적인 해상도 값
+        aspectRatio: 9 / 16, // 9 : 16 비율
         width: { ideal: 608 },
         height: { ideal: 1080 }, // 1080p
       },
@@ -309,13 +316,15 @@ const ChallengePage = () => {
     };
 
     try {
-      // 카메라 불러오기
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-      // userVideoRef를 참조하고 있는 DOM에 넣기
+      const mediaRecorder = new MediaRecorder(stream, options);
+
+      setStream(stream);
+      setMediaRecorder(mediaRecorder);
+
       if (userVideoRef.current) {
-        userVideoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
+        userVideoRef.current.srcObject = stream;
         userVideoRef.current.addEventListener("loadeddata", () => {
           predictWebcamChallenge(
             "challenge",
@@ -327,9 +336,9 @@ const ChallengePage = () => {
           );
         });
       }
-    } catch (error) {
-      alert("카메라 접근을 허용해주세요.");
-      console.log(error);
+    } catch (error: any) {
+      alert("카메라 권한을 허용해주세요.");
+      console.error("MediaRecorder 설정 실패:", error);
     }
   }, []);
 
