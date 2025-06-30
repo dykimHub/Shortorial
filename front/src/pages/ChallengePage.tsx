@@ -79,6 +79,7 @@ const ChallengePage = () => {
       return;
     }
 
+    // 스트림에서 해상도 추출
     const { width = 405, height = 720 } = stream.getVideoTracks()[0].getSettings();
     videoResolutionRef.current = { width, height };
 
@@ -96,8 +97,9 @@ const ChallengePage = () => {
       if (count <= 1) {
         setShow(false); // 모달 닫기
         clearInterval(intervalId);
-        setState(ChallengeState.RECORD); // 버튼 목록 전환
         setTimer(timer); // 타이머 초기화
+
+        setState(ChallengeState.RECORD); // 버튼 목록 전환
         startRecording(); // 녹화 시작
       } else {
         setTimer((prev) => prev - 1);
@@ -105,51 +107,39 @@ const ChallengePage = () => {
       }
     }, 1000);
   };
-  // 3. 캔버스 준비
+  // 3. 녹화
   const startRecording = () => {
-    // 캔버스 생성
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
+    // 스트림에서 해상도 추출
     const { width, height } = videoResolutionRef.current;
-
-    canvas.width = width;
-    canvas.height = height;
-    ctx.imageSmoothingEnabled = false;
+    // 캔버스 및 2D 컨텍스트 생성
+    const { canvas, ctx } = createCanvas(width, height);
 
     try {
-      // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
+      // canvas에 그려지는 내용을 실시간 스트림으로 캡처
       const outputStream = canvas.captureStream();
-      // 변환된 스트림을 MediaRecorder로 녹화
+      // 이 스트림을 받아서 녹화할 MediaRecorder 생성
       const recorder = new MediaRecorder(outputStream, options);
-      // 스트림 조각을 넣을 배열
+      // MediaRecorder가 조각 데이터를 생성할 때마다 chunks에 저장
       const chunks: BlobPart[] = [];
-      // 스트림 데이터가 쌓이면 배열에 추가
       recorder.ondataavailable = (e) => chunks.push(e.data);
 
-      // mediaRecorder?.stop() 트리거
+      // mediaRecorder?.stop() 트리거 -> 녹화 중단
       recorder.onstop = async () => {
-        // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
+        // chunks를 하나의 Blob으로 합쳐 비디오 생성
         const userVideoBlob = new Blob(chunks, { type: recorder.mimeType });
-        // s3에 업로드
+        // S3에 비디오 저장
         await s3Upload(userVideoBlob);
       };
 
-      // 녹화 시작되면
+      // 녹화 시작
       recorder.start();
       setMediaRecorder(recorder);
-      danceVideoRef.current?.play(); // 댄스 비디오 시작
-
-      // 프레임을 실시간으로 캔버스에 그리기
-      function drawFrame() {
-        if (!userVideoRef.current) return;
-        ctx.save(); // 현재 캔버스 상태 저장
-        ctx.scale(-1, 1); // 캔버스 좌우 반전하여 거울 모드 적용
-        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 반전된 상태로 비디오 프레임 그리기기
-        ctx.restore(); // 캔버스 상태 복구
-        requestAnimationFrame(drawFrame); // 다음 프레임을 요청하여 반복 실행
+      // 댄스 비디오 시작
+      danceVideoRef.current?.play();
+      // 실시간 프레임을 캔버스에 그림
+      if (userVideoRef.current && ctx) {
+        drawFrameLoop(ctx, userVideoRef.current, width, height);
       }
-
-      drawFrame();
     } catch (error) {
       console.log(error);
       alert("녹화를 다시 시작해 주세요.");
@@ -208,6 +198,38 @@ const ChallengePage = () => {
     setTimeout(() => {
       setShow(false);
     }, 2000);
+  };
+
+  // CanvasRenderingContext 2D -> 캔버스에 그림을 그릴 수 있게 해주는 도구 생성
+  const createCanvas = (width: number, height: number) => {
+    // DOM 요소 생성
+    const canvas = document.createElement("canvas");
+    // 2D 그리기용 context 객체(캔버스에 그림, 도형, 텍스트, 이미지 등을 그릴 수 있는 붓 역할)
+    const ctx = canvas.getContext("2d");
+    // 캔버스 해상도
+    canvas.width = width;
+    canvas.height = height;
+    if (ctx) ctx.imageSmoothingEnabled = false;
+    return { canvas, ctx };
+  };
+  // video 요소의 프레임을 실시간으로 캔버스에 반영(초당 약 60프레임 그림)
+  const drawFrameLoop = (
+    ctx: CanvasRenderingContext2D,
+    video: HTMLVideoElement,
+    width: number,
+    height: number
+  ) => {
+    // 내부 재귀 함수: 매 프레임마다 비디오 화면을 캔버스에 그림
+    const drawFrame = () => {
+      ctx.save(); // 현재 캔버스 상태 저장
+      ctx.scale(-1, 1); // 좌우 반전
+      ctx.drawImage(video, -width, 0, width, height); // 프레임 그리기
+      ctx.restore(); // 캔버스 복구
+
+      // 다음 프레임 요청
+      requestAnimationFrame(drawFrame);
+    };
+    drawFrame();
   };
 
   // S3에 사용자 비디오 업로드
@@ -417,11 +439,6 @@ const ChallengePage = () => {
         break;
     }
   }, [btn]);
-
-  // state 변화 감지
-  useEffect(() => {
-    setBtnInfo();
-  }, [state]);
 
   return (
     <ChallengeContainer>
