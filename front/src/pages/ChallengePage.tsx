@@ -48,7 +48,6 @@ const ChallengePage = () => {
     FAILD = "FAILED",
   }
   const [state, setState] = useState<ChallengeState>(ChallengeState.READY);
-  const [recording, setRecording] = useState(false); // 녹화 진행
   // 버튼
   const [timer, setTimer] = useState<number>(parseInt(localStorage.getItem("timer") ?? "3")); // 타이머
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
@@ -56,12 +55,7 @@ const ChallengePage = () => {
   const [show, setShow] = useState(false);
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
   const [ffmpegLog, setFfmpegLog] = useState(""); // 동영상 상태
-  const [resolutionText, setResolutionText] = useState<string | null>(null); // 해상도
-  const videoResolutionRef = useRef<{ width: number; height: number }>({
-    // 초기 해상도
-    width: 405,
-    height: 720,
-  });
+  const videoResolutionRef = useRef({ width: 405, height: 720 }); // 해상도
   // 모션 인식 카운트
   const { btn, setBtn } = useBtnStore();
   const { visibleCount, timerCount, recordCount, learnCount, resultCount, saveCount } =
@@ -71,7 +65,24 @@ const ChallengePage = () => {
   const loadDanceVideo = async () => setShorts(await getShortsInfo(`${params.shortsId}`));
 
   // 녹화 시작 버튼
-  // 1. 타이머 카운트
+  // 1. 녹화 준비
+  const prepareRecording = () => {
+    if (!stream) {
+      alert("카메라 접근을 허용해주세요.");
+      return;
+    }
+
+    const { width = 405, height = 720 } = stream.getVideoTracks()[0].getSettings();
+    videoResolutionRef.current = { width, height };
+
+    // 모달에 해상도 표시
+    setLoadPath(camera);
+    setFfmpegLog(`녹화 해상도: ${width}x${height}`);
+
+    handleStartCountdown();
+    setShow(true);
+  };
+  // 2. 카운트 다운
   const handleStartCountdown = () => {
     let count = timer;
     const intervalId = setInterval(() => {
@@ -85,87 +96,34 @@ const ChallengePage = () => {
       }
     }, 1000);
   };
-
-  // 타이머 버튼
-  const changeTimer = () => {
-    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
-    localStorage.setItem("timer", nextTimer.toString());
-    setTimer(nextTimer);
-  };
-
-  // 연습모드 버튼
-  const goToLearnMode = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    if (shorts) navigate(`/learn/${shorts.shortsId}`);
-  };
-
-  // 마이페이지 버튼
-  const goToResult = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    navigate("/mypage");
-  };
-
-  const handleShowModal = () => {
-    setShow(true); // 모달 열기
-    stopRecording();
-  };
-  const handleCloseModal = () => setShow(false);
-  const showRecordButton = () => setRecording(false);
-  // 녹화 시작 버튼 눌리면 녹화 준비 시작
-  const showCancelButton = () => prepareRecording();
-
-  const cancelRecording = () => {
-    setState(ChallengeState.READY);
-    showRecordButton();
-    if (danceVideoRef.current) {
-      danceVideoRef.current.pause();
-      danceVideoRef.current.currentTime = 0;
-    }
-  };
-
-  const stopRecording = () => {
-    setLoadPath(loading);
-    setFfmpegLog("동영상 저장...");
-    cancelRecording();
-    mediaRecorder?.stop(); // recorder.onstop() 실행
-  };
-
-  const prepareRecording = () => {
-    if (!stream) {
-      alert("카메라 접근을 허용해주세요.");
-      return;
-    }
-
-    const [track] = stream.getVideoTracks();
-    const { width = 405, height = 720 } = track.getSettings();
-    videoResolutionRef.current = { width, height };
-
-    setResolutionText(`녹화 해상도: ${width}x${height}`);
-    setRecording(true); // recording 상태 변경 → useEffect 작동 트리거
-  };
-
+  // 3. 캔버스 준비
   const startRecording = () => {
     // 캔버스 생성
+    createCanvas();
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d")!;
     const { width, height } = videoResolutionRef.current;
-    // 모션인식 상태 변경
-    setState(ChallengeState.RECORD);
 
     canvas.width = width;
     canvas.height = height;
     ctx.imageSmoothingEnabled = false;
 
     try {
-      const outputStream = canvas.captureStream(); // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
-      const recorder = new MediaRecorder(outputStream); // 변환된 스트림을 MediaRecorder로 녹화
-      const chunks: BlobPart[] = []; // 스트림 조각을 넣을 배열
-      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 데이터가 쌓이면 배열에 추가
+      // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
+      const outputStream = canvas.captureStream();
+      // 변환된 스트림을 MediaRecorder로 녹화
+      const recorder = new MediaRecorder(outputStream);
+      // 스트림 조각을 넣을 배열
+      const chunks: BlobPart[] = [];
+      // 스트림 데이터가 쌓이면 배열에 추가
+      recorder.ondataavailable = (e) => chunks.push(e.data);
 
-      // 녹화 중지되면
+      // mediaRecorder?.stop() 트리거
       recorder.onstop = async () => {
-        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
-        await s3Upload(userVideoBlob); // s3에 업로드
+        // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
+        const userVideoBlob = new Blob(chunks, { type: "video/mp4" });
+        // s3에 업로드
+        await s3Upload(userVideoBlob);
       };
 
       // 녹화 시작되면
@@ -190,6 +148,61 @@ const ChallengePage = () => {
     }
   };
 
+  // 타이머 버튼
+  const changeTimer: () => void = () => {
+    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
+    localStorage.setItem("timer", nextTimer.toString());
+    setTimer(nextTimer);
+  };
+
+  // 연습모드 버튼
+  const goToLearnMode = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    if (shorts) navigate(`/learn/${shorts.shortsId}`);
+  };
+
+  // 마이페이지 버튼
+  const goToResult = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    navigate("/mypage");
+  };
+
+  // 녹화 취소 버튼
+  const cancelRecording = () => {
+    // 버튼 목록 전환
+    setState(ChallengeState.READY);
+    // 비디오 초기화
+    if (danceVideoRef.current) {
+      danceVideoRef.current.pause();
+      danceVideoRef.current.currentTime = 0;
+    }
+  };
+
+  // 녹화 저장 버튼
+  // 1. 모달 열기
+  const handleShowModal = () => {
+    setLoadPath(loading);
+    setFfmpegLog("동영상 저장...");
+    setShow(true);
+
+    // 비디오 초기화
+    if (danceVideoRef.current) {
+      danceVideoRef.current.pause();
+      danceVideoRef.current.currentTime = 0;
+    }
+
+    // recorder.onstop() 실행
+    mediaRecorder?.stop();
+  };
+  // 2. 모달 닫기
+  const handleCloseModal = () => {
+    setState(ChallengeState.READY);
+    setTimeout(() => {
+      setShow(false);
+    }, 2000);
+  };
+
+  // S3에 사용자 비디오 업로드
   const s3Upload = async (blob: Blob) => {
     if (!shorts) {
       alert("현재 쇼츠에 오류가 있습니다.");
@@ -236,6 +249,7 @@ const ChallengePage = () => {
     }
   };
 
+  // 비디오 상태 추척 함수
   const check = async (processedShortsS3key: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
     const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
@@ -278,31 +292,6 @@ const ChallengePage = () => {
     }
   };
 
-  // 타이머
-  useEffect(() => {
-    if (recording) {
-      setShow(true);
-      setLoadPath(camera);
-      setFfmpegLog(resolutionText || "녹화 준비 중...");
-      // 녹화 시작 버튼을 눌렀을 때
-      const intervalId = setInterval(() => {
-        setTimer((prevTimer) => {
-          if (prevTimer <= 1) {
-            handleCloseModal();
-            clearInterval(intervalId); // 인터벌 종료
-            startRecording(); // 녹화 시작
-            return initialTimer; // 로컬스토리지에 저장된 타이머값으로 초기화
-          }
-          return prevTimer - 1; // timer에 저장된 값에서 1을 뺌
-        });
-      }, 1000); // 1초에 한번씩
-
-      return () => {
-        clearInterval(intervalId);
-      };
-    }
-  }, [recording]);
-
   const lastWebcamTime = -1;
   const before_handmarker: NormalizedLandmark | null = null;
   const curr_handmarker: NormalizedLandmark | null = null;
@@ -313,15 +302,16 @@ const ChallengePage = () => {
       video: {
         aspectRatio: 9 / 16,
         // 이상적인 해상도 값
-        width: { ideal: 810 },
-        height: { ideal: 1440 },
+        width: { ideal: 608 },
+        height: { ideal: 1080 }, // 1080p
       },
-      audio: false,
+      audio: false, // 오디오 녹음 안 함
     };
 
     try {
       // 카메라 불러오기
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+
       // userVideoRef를 참조하고 있는 DOM에 넣기
       if (userVideoRef.current) {
         userVideoRef.current.srcObject = mediaStream;
@@ -383,53 +373,46 @@ const ChallengePage = () => {
     };
   }, []);
 
+  // state 변화 감지
   useEffect(() => {
     setBtnInfo();
   }, [state]);
 
-  // 모션인식 설정
+  // btn 변화 감지
   useEffect(() => {
     switch (btn) {
       case "visible":
-        //console.log("record");
-        if (state === ChallengeState.READY) {
-          showCancelButton();
-        } else {
-          cancelRecording();
-        }
+        //console.log("visible");
+        if (state === ChallengeState.READY) prepareRecording();
+        else cancelRecording();
         break;
       case "timer":
         //console.log("timer");
-        if (state === ChallengeState.READY) {
-          changeTimer();
-        }
+        if (state === ChallengeState.READY) changeTimer();
         break;
       case "save":
         //console.log("save");
-        if (state === ChallengeState.READY) break;
-        handleShowModal();
+        if (state !== ChallengeState.READY) handleShowModal();
         break;
       case "record":
-        if (state == ChallengeState.RECORD) break;
         //console.log("flip");
-        setIsFlipped(!isFlipped);
+        if (state !== ChallengeState.RECORD) setIsFlipped(!isFlipped);
         break;
       case "learn":
-        if (state == ChallengeState.RECORD) break;
         //console.log("learn");
-        goToLearnMode();
+        if (state !== ChallengeState.RECORD) goToLearnMode();
         break;
       case "rslt":
-        if (state == ChallengeState.RECORD) break;
         //console.log("result");
-        goToResult();
+        if (state !== ChallengeState.RECORD) goToResult();
         break;
     }
   }, [btn]);
 
+  // state 변화 감지
   useEffect(() => {
     setBtnInfo();
-  }, []);
+  }, [state]);
 
   return (
     <ChallengeContainer>
@@ -460,7 +443,7 @@ const ChallengePage = () => {
               <VideoMotionButton
                 icon={<RadioButtonChecked />}
                 toolTip="녹화"
-                onClick={showCancelButton}
+                onClick={() => prepareRecording()}
                 id="visible"
                 progress={visibleCount}
                 isVisible={state === ChallengeState.READY}
