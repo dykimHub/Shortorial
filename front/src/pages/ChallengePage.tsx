@@ -13,10 +13,14 @@ import {
 } from "@mui/icons-material";
 import recordingImg from "../assets/challenge/recording.svg";
 import StarEffect from "../components/style/StarEffect";
+import loading from "../assets/challenge/loading.gif";
+import complete from "../assets/challenge/complete.svg";
+import uncomplete from "../assets/challenge/uncomplete.svg";
 // 타입 및 함수
 import { getShortsInfo } from "../apis/shorts";
+import { getS3Blob, uploadShortsToS3 } from "../apis/s3";
 import { Shorts } from "../constants/types";
-import { startRecordingHandler } from "../utils/ffmpegUtils";
+import { addAudioToVideo, extractAudio, flipUserVideo } from "../utils/ffmpegUtils";
 import LoadingModalComponent from "../components/modal/LoadingModalComponent";
 import VideoMotionButton from "../components/button/VideoMotionButton";
 // 모션
@@ -76,24 +80,66 @@ const ChallengePage = () => {
     setState(ChallengeState.RECORD);
     // 녹화 진행
     if (shorts?.shortsS3Key) {
-      await startRecordingHandler({
-        shortsS3Key: shorts.shortsS3Key,
-        mediaRecorder,
-        danceVideoRef,
-        setFfmpegLog,
-        setLoadPath,
-        onStopEnd: handleCloseModal,
-      });
+      await startRecordingHandler(shorts.shortsS3Key);
+    }
+  };
+  // 3. 녹화 중지 명령 대기
+  const startRecordingHandler = async (shortsS3Key: string) => {
+    if (!mediaRecorder) throw new Error();
+
+    try {
+      const chunks: BlobPart[] = [];
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+
+      // mediaRecorder.stop() 트리거
+      mediaRecorder.onstop = async () => {
+        // 쇼츠, 사용자 비디오 블롭 변환
+        const shortsBlob = await getS3Blob(shortsS3Key);
+        const userBlob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        // 비디오 처리
+        await extractAudio({ shortsBlob, setFfmpegLog });
+        await addAudioToVideo({ userBlob, setFfmpegLog });
+        const finalVideo: Blob = await flipUserVideo({ setFfmpegLog });
+        await s3Upload(finalVideo);
+
+        handleCloseModal();
+      };
+
+      // MediaRecorder 실행
+      mediaRecorder.start();
+      // 쇼츠 실행
+      if (danceVideoRef.current) danceVideoRef.current.play();
+    } catch (e) {
+      console.error(e);
+      alert("녹화 도중 오류가 발생했습니다. 다시 시도해 주세요.");
+    }
+  };
+
+  // 4. 최종 비디오 S3 업로드
+  const s3Upload = async (finalBlob: Blob) => {
+    try {
+      await uploadShortsToS3(finalBlob);
+
+      setLoadPath(complete);
+      setFfmpegLog("저장 완료");
+    } catch (error) {
+      setLoadPath(uncomplete);
+      setFfmpegLog("저장 실패");
+      console.error("s3 upload fail", error);
     }
   };
 
   // 저장 버튼
-  // 1. 모달 열기 & 저장 시작
+  // 1. 모달 열기
   const handleShowModal = async () => {
     if (mediaRecorder) {
-      // ffmpegUtil의 onstop 실행
+      // mediaRecorder.onstop 실행
       mediaRecorder.stop();
       setShow(true);
+      setFfmpegLog("처리 준비...");
+      setLoadPath(loading);
+
+      // 비디오 초기화
       if (danceVideoRef.current) {
         danceVideoRef.current.pause();
         danceVideoRef.current.currentTime = 0;
@@ -127,17 +173,6 @@ const ChallengePage = () => {
     navigate("/mypage");
   };
 
-  // const stopRecording = () => {
-  //   setLoadPath(loading);
-  //   setFfmpegLog("동영상 저장...");
-  //   cancelRecording();
-  //   mediaRecorder?.stop(); // recorder.onstop() 실행
-  // };
-
-  //const handleCloseModal = () => setShow(false);
-  //const showRecordButton = () => setRecording(false);
-  //const showCancelButton = () => setRecording(true); // 타이머 useEffect 시작
-
   // 녹화 취소 버튼
   const cancelRecording = () => {
     // 버튼 목록 전환
@@ -149,18 +184,20 @@ const ChallengePage = () => {
     }
   };
 
+  // 모션 인식 설정
   const lastWebcamTime = -1;
   const before_handmarker: NormalizedLandmark | null = null;
   const curr_handmarker: NormalizedLandmark | null = null;
 
+  // 웹캠 초기화
   const setInit = useCallback(async () => {
     const constraints: MediaStreamConstraints = {
       video: {
-        aspectRatio: 9 / 16,
+        aspectRatio: 9 / 16, // 9 : 16 비율
         width: { ideal: 608 },
         height: { ideal: 1080 }, // 1080p
       },
-      audio: false,
+      audio: false, // 오디오 녹음 안 함
     };
 
     try {
@@ -180,7 +217,6 @@ const ChallengePage = () => {
 
       if (userVideoRef.current) {
         userVideoRef.current.srcObject = stream;
-
         userVideoRef.current.addEventListener("loadeddata", () => {
           predictWebcamChallenge(
             "challenge",
@@ -198,14 +234,33 @@ const ChallengePage = () => {
     }
   }, []);
 
+  // 화면 크기 계산
+  const initVideoSize = (videoRef: React.RefObject<HTMLVideoElement>) => {
+    if (videoRef.current) {
+      switch (screen.orientation.type) {
+        case "landscape-primary":
+        case "landscape-secondary":
+          videoRef.current.height = window.innerHeight;
+          videoRef.current.width = Math.floor((window.innerHeight * 9) / 16);
+          break;
+        case "portrait-primary":
+        case "portrait-secondary":
+          videoRef.current.width = window.innerWidth;
+          videoRef.current.height = Math.floor((window.innerWidth * 16) / 9);
+      }
+    }
+  };
+
+  // state 변화 감지
   useEffect(() => {
     setBtnInfo();
   }, [state]);
 
-  // 모션인식 설정
+  // btn 변화 감지
   useEffect(() => {
     switch (btn) {
       case "visible":
+        //console.log("visible");
         if (state === ChallengeState.READY) handleStartCountdown();
         else cancelRecording();
         break;
@@ -232,11 +287,11 @@ const ChallengePage = () => {
     }
   }, [btn]);
 
-  // 최초 설정
+  // 초기 실행
   useEffect(() => {
     loadDanceVideo();
-
     setInit();
+
     initVideoSize(danceVideoRef);
     initVideoSize(userVideoRef);
 
@@ -253,25 +308,6 @@ const ChallengePage = () => {
       window.removeEventListener("orientationchange", handleOrientationChange);
     };
   }, []);
-
-  // 비디오 크기 초기화
-  const initVideoSize = (videoRef: React.RefObject<HTMLVideoElement>) => {
-    if (videoRef.current) {
-      switch (screen.orientation.type) {
-        case "landscape-primary":
-        case "landscape-secondary":
-          videoRef.current.height = window.innerHeight;
-          videoRef.current.width = Math.floor((window.innerHeight * 9) / 16);
-          //console.log(videoRef.current.height, videoRef.current.width);
-          break;
-        case "portrait-primary":
-        case "portrait-secondary":
-          videoRef.current.width = window.innerWidth;
-          videoRef.current.height = Math.floor((window.innerWidth * 16) / 9);
-        //console.log(videoRef.current.height, videoRef.current.width);
-      }
-    }
-  };
 
   return (
     <ChallengeContainer>
