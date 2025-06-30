@@ -1,28 +1,44 @@
-// ffmpegUtils.ts (MP4 인코딩 + 좌우 반전 반영 + 진행률 추적 유틸 추가)
+import { getS3Blob, uploadShortsToS3 } from "../apis/s3";
+import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
-import { getS3Blob } from "../apis/s3";
+import loading from "../assets/challenge/loading.gif";
+import complete from "../assets/challenge/complete.svg";
+import uncomplete from "../assets/challenge/uncomplete.svg";
 
-export const readBlobAsUint8Array = async (blob: Blob): Promise<Uint8Array> => {
+const ffmpeg = createFFmpeg({ log: false });
+
+enum Path {
+  danceVideo = "dance_video.mp4",
+  danceAudio = "dance_audio.aac",
+  userVideo = "user_video.mp4",
+  mergeVideo = "merge_vedio.mp4",
+  flipVideo = "flip_video.mp4",
+}
+
+// Blob → Uint8Array 변환
+export const readBlobAsUint8Array = async (blob: Blob) => {
   const buffer = await blob.arrayBuffer();
   return new Uint8Array(buffer);
 };
 
-export const writeBlobToFS = async (ffmpeg: any, filename: string, blob: Blob): Promise<void> => {
+// FFmpeg 가상 파일 시스템에 Blob 저장
+export const writeBlobToFS = async (filename: string, blob: Blob) => {
   const data = await readBlobAsUint8Array(blob);
   ffmpeg.FS("writeFile", filename, data);
 };
 
+// FFmpeg 명령 실행하며 진행률 출력
 export const runWithProgress = async (
-  ffmpeg: any,
   args: string[],
   label: string,
+  img: string,
   setFfmpegLog: (msg: string) => void,
-  setLoadPath: (path: string) => void,
-  loading: string
+  setLoadPath: (img: string) => void
 ) => {
+  setLoadPath(img);
+
   ffmpeg.setProgress(({ ratio }: { ratio: number }) => {
-    if (ratio >= 0 && ratio <= 1) {
-      setLoadPath(loading);
+    if (ratio > 0) {
       setFfmpegLog(`${label} ${Math.round(ratio * 100)}%\n`);
     }
   });
@@ -30,157 +46,160 @@ export const runWithProgress = async (
   await ffmpeg.run(...args);
 };
 
+// 녹화 종료 시 처리
 export const handleRecorderStop = async ({
-  chunks,
-  short,
-  ffmpeg,
+  shortsBlob,
+  userBlob,
   setFfmpegLog,
   setLoadPath,
-  loading,
-  addAudio,
 }: {
-  chunks: BlobPart[];
-  short: any;
-  ffmpeg: any;
+  shortsBlob: Blob;
+  userBlob: Blob;
   setFfmpegLog: (msg: string) => void;
-  setLoadPath: (path: string) => void;
-  loading: string;
-  addAudio: (blob: Blob) => Promise<void>;
+  setLoadPath: (img: string) => void;
 }) => {
-  let s3blob: Blob | null = null;
-  if (short) {
-    s3blob = await getS3Blob(short.shortsS3Key);
-  }
-
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-
-  const userVideoBlob = new Blob(chunks, { type: "video/webm" });
-
-  if (s3blob) {
-    await writeBlobToFS(ffmpeg, "danceVideo.mp4", s3blob);
-  }
+  await writeBlobToFS("dance_video.mp4", shortsBlob);
 
   await runWithProgress(
-    ffmpeg,
-    ["-i", "danceVideo.mp4", "-vn", "-c:a", "aac", "dance_audio.aac"],
+    ["-i", Path.danceVideo, "-vn", "-c:a", "copy", Path.danceAudio],
     "노래 추출...",
+    loading,
     setFfmpegLog,
-    setLoadPath,
-    loading
+    setLoadPath
   );
 
-  await addAudio(userVideoBlob);
+  await addAudioToVideo({ userBlob, setFfmpegLog, setLoadPath });
 };
 
+// 오디오를 사용자 비디오에 합성
 export const addAudioToVideo = async ({
-  ffmpeg,
-  userVideoBlob,
+  userBlob,
   setFfmpegLog,
   setLoadPath,
-  loading,
-  makeDownloadURL,
 }: {
-  ffmpeg: any;
-  userVideoBlob: Blob;
+  userBlob: Blob;
   setFfmpegLog: (msg: string) => void;
-  setLoadPath: (path: string) => void;
-  loading: string;
-  makeDownloadURL: (blob: Blob) => Promise<void>;
+  setLoadPath: (img: string) => void;
 }) => {
-  await writeBlobToFS(ffmpeg, "userVideo.webm", userVideoBlob);
+  await writeBlobToFS("user_video.mp4", userBlob);
 
   await runWithProgress(
-    ffmpeg,
-    ["-i", "userVideo.webm", "-c:v", "libx264", "-an", "-preset", "ultrafast", "userVideo.mp4"],
-    "포맷 변환 중...",
-    setFfmpegLog,
-    setLoadPath,
-    loading
-  );
-
-  await runWithProgress(
-    ffmpeg,
     [
       "-i",
-      "userVideo.mp4",
+      Path.userVideo,
       "-i",
-      "dance_audio.aac",
+      Path.danceAudio,
+      //"-map",
+      // "0:v:0", // 첫 번째 입력의 비디오만 사용
+      // "-map",
+      // "1:a:0", // 두 번째 입력의 오디오만 사용
       "-c:v",
-      "copy",
+      "copy", // 비디오 복사
       "-c:a",
-      "aac",
-      "-shortest",
-      "tempMerged.mp4",
+      "copy", // 오디오 복사
+      "-shortest", // 더 짧은 쪽에 맞춰서 자름
+      "user_merge_video.mp4",
     ],
-    "오디오 삽입 중...",
+    "오디오 합성 중...",
+    loading,
     setFfmpegLog,
-    setLoadPath,
-    loading
+    setLoadPath
   );
 
+  await flipUserVideo({ setFfmpegLog, setLoadPath });
+};
+
+export const flipUserVideo = async ({
+  setFfmpegLog,
+  setLoadPath,
+}: {
+  setFfmpegLog: (msg: string) => void;
+  setLoadPath: (img: string) => void;
+}) => {
   await runWithProgress(
-    ffmpeg,
-    ["-i", "tempMerged.mp4", "-vf", "hflip", "-preset", "ultrafast", "finalUserVideo.mp4"],
+    [
+      "-i",
+      Path.mergeVideo,
+      "-vf",
+      "hflip", // 좌우 반전
+      "-preset",
+      "fast", // 압축 줄여서 빠르게(용량 증가)
+      Path.flipVideo,
+    ],
     "좌우 반전 중...",
+    loading,
     setFfmpegLog,
-    setLoadPath,
-    loading
+    setLoadPath
   );
 
-  const data = ffmpeg.FS("readFile", "finalUserVideo.mp4");
+  const data = ffmpeg.FS("readFile", "user_flip_video.mp4");
   const finalBlob = new Blob([data.buffer], { type: "video/mp4" });
-  await makeDownloadURL(finalBlob);
+  await s3Upload({ finalBlob, setFfmpegLog, setLoadPath });
 };
 
 export const startRecordingHandler = async ({
-  stream,
-  setMediaRecorder,
-  short,
-  ffmpeg,
+  shortsS3Key,
+  mediaRecorder,
+  danceVideoRef,
   setFfmpegLog,
   setLoadPath,
-  loading,
-  addAudio,
-  danceVideoRef,
+  onStopEnd,
 }: {
-  stream: MediaStream | null;
-  setMediaRecorder: (r: MediaRecorder) => void;
-  short: any;
-  ffmpeg: any;
-  setFfmpegLog: (msg: string) => void;
-  setLoadPath: (path: string) => void;
-  loading: string;
-  addAudio: (blob: Blob) => Promise<void>;
+  shortsS3Key: string;
+  mediaRecorder: MediaRecorder | null;
   danceVideoRef: React.RefObject<HTMLVideoElement>;
+  setFfmpegLog: (msg: string) => void;
+  setLoadPath: (img: string) => void;
+  onStopEnd?: () => void;
 }) => {
-  if (!stream) {
-    alert("카메라 접근을 허용해주세요.");
-    return;
-  }
+  if (!mediaRecorder) return;
+
+  // FFmpeg 로드
+  if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
   try {
     const chunks: BlobPart[] = [];
-    const recorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
 
-    recorder.ondataavailable = (e) => chunks.push(e.data);
-    recorder.onstop = () =>
-      handleRecorderStop({
-        chunks,
-        short,
-        ffmpeg,
-        setFfmpegLog,
-        setLoadPath,
-        loading,
-        addAudio,
-      });
+    // MediaRecorder 중지
+    mediaRecorder.onstop = async () => {
+      setFfmpegLog("처리 준비...");
+      setLoadPath(loading);
+      const shortsBlob = await getS3Blob(shortsS3Key);
+      const userBlob = new Blob(chunks, { type: mediaRecorder.mimeType });
 
-    recorder.start();
-    setMediaRecorder(recorder);
+      await handleRecorderStop({ shortsBlob, userBlob, setFfmpegLog, setLoadPath });
+
+      if (onStopEnd) onStopEnd();
+    };
+
+    // MediaRecorder 실행
+    mediaRecorder.start();
+    // 쇼츠 실행
     if (danceVideoRef.current) danceVideoRef.current.play();
   } catch (e) {
     console.error(e);
-    alert("녹화를 다시 시작해 주세요.");
+    alert("녹화 도중 오류가 발생했습니다. 다시 시도해 주세요.");
+  }
+};
+
+// 오디오를 사용자 비디오에 합성
+export const s3Upload = async ({
+  finalBlob,
+  setFfmpegLog,
+  setLoadPath,
+}: {
+  finalBlob: Blob;
+  setFfmpegLog: (msg: string) => void;
+  setLoadPath: (img: string) => void;
+}) => {
+  try {
+    await uploadShortsToS3(finalBlob);
+    setLoadPath(complete);
+    setFfmpegLog("저장 완료");
+  } catch (error) {
+    setLoadPath(uncomplete);
+    setFfmpegLog("저장 실패");
+    console.error("s3 upload fail", error);
   }
 };

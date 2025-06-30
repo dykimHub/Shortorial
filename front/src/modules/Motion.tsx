@@ -521,7 +521,7 @@ export async function predictWebcamChallenge(
       if (!before_handmarker) {
         if (landmark[18].visibility > 0.5) {
           before_handmarker = landmark[18];
-          console.log("설정완");
+          //console.log("설정완");
         }
       } else {
         curr_handmarker = landmark[18];

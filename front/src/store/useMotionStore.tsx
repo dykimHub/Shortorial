@@ -67,33 +67,21 @@ export const useDomStore = create<DomState>((set) => ({
   flipSize: null,
   speedSize: null,
 
-  setDomSize: (newDomSize: DOMRect | null | undefined) =>
-    set({ domSize: newDomSize }),
+  setDomSize: (newDomSize: DOMRect | null | undefined) => set({ domSize: newDomSize }),
   setVisibleBtnSize: (newBtnSize: DOMRect | null | undefined) =>
     set({ visibleBtnSize: newBtnSize }),
-  setTimeBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ timerBtnSize: newBtnSize }),
-  setRecordBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ recordBtnSize: newBtnSize }),
-  setSaveBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ saveBtnSize: newBtnSize }),
-  setLearnBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ learnBtnSize: newBtnSize }),
-  setRsltBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ rsltBtnSize: newBtnSize }),
-  setCanvasBtnSize: (newBtnSize: DOMRect | null | undefined) =>
-    set({ canvasBtnSize: newBtnSize }),
+  setTimeBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ timerBtnSize: newBtnSize }),
+  setRecordBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ recordBtnSize: newBtnSize }),
+  setSaveBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ saveBtnSize: newBtnSize }),
+  setLearnBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ learnBtnSize: newBtnSize }),
+  setRsltBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ rsltBtnSize: newBtnSize }),
+  setCanvasBtnSize: (newBtnSize: DOMRect | null | undefined) => set({ canvasBtnSize: newBtnSize }),
 
-  setPlaySize: (newDomSize: DOMRect | null | undefined) =>
-    set({ playSize: newDomSize }),
-  setChallengeSize: (newDomSize: DOMRect | null | undefined) =>
-    set({ challengeSize: newDomSize }),
-  setRepeatSize: (newDomSize: DOMRect | null | undefined) =>
-    set({ repeatSize: newDomSize }),
-  setFlipSize: (newDomSize: DOMRect | null | undefined) =>
-    set({ flipSize: newDomSize }),
-  setSpeedSize: (newDomSize: DOMRect | null | undefined) =>
-    set({ speedSize: newDomSize }),
+  setPlaySize: (newDomSize: DOMRect | null | undefined) => set({ playSize: newDomSize }),
+  setChallengeSize: (newDomSize: DOMRect | null | undefined) => set({ challengeSize: newDomSize }),
+  setRepeatSize: (newDomSize: DOMRect | null | undefined) => set({ repeatSize: newDomSize }),
+  setFlipSize: (newDomSize: DOMRect | null | undefined) => set({ flipSize: newDomSize }),
+  setSpeedSize: (newDomSize: DOMRect | null | undefined) => set({ speedSize: newDomSize }),
 }));
 
 interface MotionDetection {
@@ -138,22 +126,16 @@ export const useMotionDetectionStore = create<MotionDetection>((set) => ({
   saveCount: 0,
   canvasCount: 0,
 
-  setVisibleCount: (newVisibleCount: number) =>
-    set({ visibleCount: newVisibleCount }),
+  setVisibleCount: (newVisibleCount: number) => set({ visibleCount: newVisibleCount }),
   setTimerCount: (newTimerCount: number) => set({ timerCount: newTimerCount }),
-  setRecordCount: (newRecordCount: number) =>
-    set({ recordCount: newRecordCount }),
+  setRecordCount: (newRecordCount: number) => set({ recordCount: newRecordCount }),
   setLearnCount: (newLearnCount: number) => set({ learnCount: newLearnCount }),
-  setResultCount: (newResultCount: number) =>
-    set({ resultCount: newResultCount }),
+  setResultCount: (newResultCount: number) => set({ resultCount: newResultCount }),
   setPlayCount: (newPlayCount: number) => set({ playCount: newPlayCount }),
-  setChallengeCount: (newChallengeCount: number) =>
-    set({ challengeCount: newChallengeCount }),
-  setRepeatCount: (newRepeatCount: number) =>
-    set({ repeatCount: newRepeatCount }),
+  setChallengeCount: (newChallengeCount: number) => set({ challengeCount: newChallengeCount }),
+  setRepeatCount: (newRepeatCount: number) => set({ repeatCount: newRepeatCount }),
   setFlipCount: (newFlipCount: number) => set({ flipCount: newFlipCount }),
   setSpeedCount: (newSpeedCount: number) => set({ speedCount: newSpeedCount }),
   setSaveCount: (newSaveCount: number) => set({ saveCount: newSaveCount }),
-  setCanvasCount: (newCanvasCount: number) =>
-    set({ canvasCount: newCanvasCount }),
+  setCanvasCount: (newCanvasCount: number) => set({ canvasCount: newCanvasCount }),
 }));
