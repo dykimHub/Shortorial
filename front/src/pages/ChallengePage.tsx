@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { axios } from "../utils/axios";
 // 아이콘
 import {
   Flip,
@@ -23,7 +22,7 @@ import LoadingModalComponent from "../components/modal/LoadingModalComponent";
 import VideoMotionButton from "../components/button/VideoMotionButton";
 import { Shorts } from "../constants/types";
 import { getShortsInfo } from "../apis/shorts";
-import { getPresignedGetURL } from "../apis/s3";
+import { getPresignedGetURL, s3Put, tryS3Get } from "../apis/s3";
 import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
 // 모션
 import { NormalizedLandmark } from "@mediapipe/tasks-vision";
@@ -115,7 +114,8 @@ const ChallengePage = () => {
     const { canvas, ctx } = createCanvas(width, height);
 
     try {
-      // canvas에 그려지는 내용을 실시간 스트림으로 캡처
+      // captureStream()은 브라우저가 주기적으로 캔버스의 현재 상태를 가져감
+      // 실시간 캔버스에 그려진 내용을 스트림으로 캡처
       const outputStream = canvas.captureStream();
       // 이 스트림을 받아서 녹화할 MediaRecorder 생성
       const recorder = new MediaRecorder(outputStream, options);
@@ -125,10 +125,14 @@ const ChallengePage = () => {
 
       // mediaRecorder?.stop() 트리거 -> 녹화 중단
       recorder.onstop = async () => {
+        // 캔버스 그리기 중단(drawFame() 예약 취소)
+        cancelAnimationFrame(animationId);
         // chunks를 하나의 Blob으로 합쳐 비디오 생성
         const userVideoBlob = new Blob(chunks, { type: recorder.mimeType });
         // S3에 비디오 저장
         await s3Upload(userVideoBlob);
+        // aws lambda가 처리를 완료했는지 조회
+        await checkVideoExists(processedShortsS3key);
       };
 
       // 녹화 시작
@@ -169,7 +173,9 @@ const ChallengePage = () => {
   const cancelRecording = () => {
     // 버튼 목록 전환
     setState(ChallengeState.READY);
-    // 비디오 초기화
+    // 캔버스 루프 중단
+    cancelAnimationFrame(animationId);
+    9; // 비디오 초기화
     if (danceVideoRef.current) {
       danceVideoRef.current.pause();
       danceVideoRef.current.currentTime = 0;
@@ -194,6 +200,7 @@ const ChallengePage = () => {
   };
   // 2. 모달 닫기
   const handleCloseModal = () => {
+    // 버튼 목록 전환
     setState(ChallengeState.READY);
     setTimeout(() => {
       setShow(false);
@@ -202,44 +209,45 @@ const ChallengePage = () => {
 
   // CanvasRenderingContext 2D -> 캔버스에 그림을 그릴 수 있게 해주는 도구 생성
   const createCanvas = (width: number, height: number) => {
-    // DOM 요소 생성
+    // 캔버스 DOM 요소 생성
     const canvas = document.createElement("canvas");
-    // 2D 그리기용 context 객체(캔버스에 그림, 도형, 텍스트, 이미지 등을 그릴 수 있는 붓 역할)
+    // 2D 그리기용 context 객체(붓 역할)
     const ctx = canvas.getContext("2d");
-    // 캔버스 해상도
+    // 캔버스 해상도 설정
     canvas.width = width;
     canvas.height = height;
     if (ctx) ctx.imageSmoothingEnabled = false;
     return { canvas, ctx };
   };
-  // video 요소의 프레임을 실시간으로 캔버스에 반영(초당 약 60프레임 그림)
+
+  // <video> 요소의 프레임을 실시간으로 캔버스에 그리기
+  let animationId: number;
   const drawFrameLoop = (
     ctx: CanvasRenderingContext2D,
     video: HTMLVideoElement,
     width: number,
     height: number
   ) => {
-    // 내부 재귀 함수: 매 프레임마다 비디오 화면을 캔버스에 그림
     const drawFrame = () => {
       ctx.save(); // 현재 캔버스 상태 저장
       ctx.scale(-1, 1); // 좌우 반전
-      ctx.drawImage(video, -width, 0, width, height); // 프레임 그리기
-      ctx.restore(); // 캔버스 복구
+      ctx.drawImage(video, -width, 0, width, height); // 캔버스에 비디오 프레임 그리기
+      ctx.restore(); // 이전 상태 복원
 
-      // 다음 프레임 요청
-      requestAnimationFrame(drawFrame);
+      // 브라우저에게 다음 프레임 직전에 drawFame() 실행을 예약
+      animationId = requestAnimationFrame(drawFrame);
     };
+    // 루프 시작(최초 호출)
     drawFrame();
   };
 
   // S3에 사용자 비디오 업로드
+  let processedShortsS3key = "";
   const s3Upload = async (blob: Blob) => {
     if (!shorts) {
       alert("현재 쇼츠에 오류가 있습니다.");
       throw new Error("원본 쇼츠가 존재하지 않습니다.");
     }
-
-    let processedShortsS3key = "";
 
     try {
       // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
@@ -253,75 +261,59 @@ const ChallengePage = () => {
       processedShortsS3key = result.processedShortsS3key;
 
       // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
-      await axios.put(result.presignedPutURL, blob, {
-        headers: {
-          "Content-Type": "video/mp4",
-          "x-amz-meta-song": metadata["song"],
-        },
-      });
-
+      await s3Put(result.presignedPutURL, blob, metadata);
+      setFfmpegLog("음악 삽입...");
       // S3 Put 요청에 성공하면 uploaded 상태로 변경
       await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.UPLOADED);
-
-      setLoadPath(loading);
-      setFfmpegLog("음악 삽입...");
-
-      // aws lambda가 처리를 완료했는지 조회
-      await check(processedShortsS3key);
     } catch (error: any) {
       // s3 업로드 실패했다면 failed로 상태 변경
       await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
+
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
+
       console.error("s3 업로드 실패", error.data);
-    } finally {
-      setState(ChallengeState.READY);
     }
   };
 
   // 비디오 상태 추척 함수
-  const check = async (processedShortsS3key: string) => {
+  const checkVideoExists = async (processedShortsS3key: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
     const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
     // 요청 횟수 추적
     let attempts = 0;
     // 10초마다 요청하기 위해 setInterval 사용
     const interval = setInterval(async () => {
-      const exists = await isExist(presignedGetURL);
+      const exists = await tryS3Get(presignedGetURL);
 
       if (exists) {
+        // 객체가 생성됐다면 요청 중단
+        clearInterval(interval);
         // aws lambda가 처리를 완료했다면 completed로 상태 변경
         await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.COMPLETED);
-        clearInterval(interval); // 객체가 생성되면 요청 중단
         setLoadPath(complete);
         setFfmpegLog("완성!");
-        setTimeout(handleCloseModal, 1000);
+
+        handleCloseModal();
       } else {
-        attempts++;
+        attempts++; // 요청 횟수 증가
         console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/12)`);
         // 12번(1분) 요청 후 중단
         if (attempts >= 12) {
           // 람다 처리 실패했다면 failed로 상태 변경
-          await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
           clearInterval(interval);
+
+          await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
           setLoadPath(uncomplete);
           setFfmpegLog("동영상 처리 실패");
-          setTimeout(handleCloseModal, 3000);
+
+          handleCloseModal();
         }
       }
     }, 5000); // 5초 (5000ms) 간격으로 요청
   };
 
-  const isExist = async (presignedGetURL: string) => {
-    try {
-      await axios.get(presignedGetURL);
-      return true; // 객체 존재함
-    } catch (error: any) {
-      console.error(error.data);
-      return false;
-    }
-  };
-
+  // 모션 인식 설정
   const lastWebcamTime = -1;
   const before_handmarker: NormalizedLandmark | null = null;
   const curr_handmarker: NormalizedLandmark | null = null;
@@ -383,27 +375,6 @@ const ChallengePage = () => {
     }
   };
 
-  // 초기 설정
-  useEffect(() => {
-    setInit(); // 카메라 초기화
-    loadDanceVideo(); // 댄스 비디오 로드
-    initVideoSize(danceVideoRef);
-    initVideoSize(userVideoRef);
-
-    const handleOrientationChange = () => {
-      setTimeout(() => {
-        initVideoSize(danceVideoRef);
-        initVideoSize(userVideoRef);
-      }, 200);
-    };
-
-    window.addEventListener("orientationchange", handleOrientationChange);
-
-    return () => {
-      window.removeEventListener("orientationchange", handleOrientationChange);
-    };
-  }, []);
-
   // state 변화 감지
   useEffect(() => {
     setBtnInfo();
@@ -439,6 +410,28 @@ const ChallengePage = () => {
         break;
     }
   }, [btn]);
+
+  // 초기 설정
+  useEffect(() => {
+    setInit(); // 카메라 초기화
+    loadDanceVideo(); // 댄스 비디오 로드
+
+    initVideoSize(danceVideoRef);
+    initVideoSize(userVideoRef);
+
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        initVideoSize(danceVideoRef);
+        initVideoSize(userVideoRef);
+      }, 200);
+    };
+
+    window.addEventListener("orientationchange", handleOrientationChange);
+
+    return () => {
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, []);
 
   return (
     <ChallengeContainer>
