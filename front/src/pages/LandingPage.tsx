@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import heroImg from "/src/assets/landing/hero.jpg";
-import deviceLandscape from "/src/assets/landing/device_landscape.png";
-// import serviceMotionGif from "/src/assets/landing/serviceMotion.gif";
+// import deviceLandscape from "/src/assets/landing/device_landscape.png";
 import serviceMotionGif1 from "/src/assets/landing/serviceMotion1.gif";
 import serviceMotionGif2 from "/src/assets/landing/serviceMotion2.gif";
 import serviceMotionGif3 from "/src/assets/landing/serviceMotion3.gif";
@@ -63,12 +62,10 @@ const LandingPage = () => {
       </HeroContainer>
       <Section {...FirstSectionScroll}>
         <h1 className="sectionTitle">{`숏토리얼과 함께라면 여기가 나만의 연습실`}</h1>
-        <p className="subTitle">
-          {`웹캠 또는 스마트폰 카메라 하나로\n언제 어디서나 챌린지를 연습해보세요.`}
-        </p>
+        <p className="subTitle">{`웹캠이 달린 기기 하나로\n언제 어디서나 챌린지를 연습해보세요.`}</p>
         <ImageContainer>
           <ServiceImg src={serviceMotionGif1} alt="" />
-          <DeviceImg src={deviceLandscape} alt="" />
+          {/* <DeviceImg src={deviceLandscape} alt="" /> */}
         </ImageContainer>
       </Section>
       <Section {...SecondSectionScroll}>
@@ -78,7 +75,7 @@ const LandingPage = () => {
         </div>
         <ImageContainer>
           <ServiceImg src={serviceMotionGif2} alt="" />
-          <DeviceImg src={deviceLandscape} alt="" />
+          {/* <DeviceImg src={deviceLandscape} alt="" /> */}
         </ImageContainer>
         <p className="text">
           {`별다른 기기 부착 없이 카메라로 모션을 인식하여 멀리서도 버튼 조작이 가능해요.`}
@@ -89,7 +86,7 @@ const LandingPage = () => {
         <p className="subTitle">{`연습한 그 자리에서 바로 촬영해볼까요?\n챌린지한 노래는 저희가 입혀드립니다!`}</p>
         <ImageContainer>
           <ServiceImg src={serviceMotionGif3} alt="" />
-          <DeviceImg src={deviceLandscape} alt="" />
+          {/* <DeviceImg src={deviceLandscape} alt="" /> */}
         </ImageContainer>
       </Section>
       <Section {...ThirdSectionScroll}>
@@ -161,6 +158,10 @@ const ServiceImg = styled.img`
 
 const ImageContainer = styled.div`
   position: relative;
+  width: 100%;
+  max-width: 700px;
+  aspect-ratio: 2 / 1;
+  margin: 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;

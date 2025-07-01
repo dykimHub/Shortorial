@@ -1,12 +1,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import LoadingModalComponent from "../components/modal/LoadingModalComponent";
-import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
-import { NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { useBtnStore, useMotionDetectionStore } from "../store/useMotionStore";
-import VideoMotionButton from "../components/button/VideoMotionButton";
+// 아이콘
 import {
   Flip,
   RadioButtonChecked,
@@ -16,302 +11,334 @@ import {
   Save,
   Movie,
 } from "@mui/icons-material";
-import { getShortsInfo } from "../apis/shorts";
-import { getPresignedGetURL } from "../apis/s3";
-import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
 import loading from "../assets/challenge/loading.gif";
 import complete from "../assets/challenge/complete.svg";
 import recordingImg from "../assets/challenge/recording.svg";
 import uncomplete from "../assets/challenge/uncomplete.svg";
 import camera from "../assets/challenge/camera.png";
 import StarEffect from "../components/style/StarEffect";
+// 타입 및 함수
+import LoadingModalComponent from "../components/modal/LoadingModalComponent";
+import VideoMotionButton from "../components/button/VideoMotionButton";
 import { Shorts } from "../constants/types";
-import { axios } from "../utils/axios";
+import { getShortsInfo } from "../apis/shorts";
+import { getPresignedGetURL, s3Put, tryS3Get } from "../apis/s3";
+import { addRecordedShorts, modifyRecordedShortsStatus } from "../apis/recordedshorts";
+// 모션
+import { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import { predictWebcamChallenge, setBtnInfo } from "../modules/Motion";
+import { useBtnStore, useMotionDetectionStore } from "../store/useMotionStore";
 
 const ChallengePage = () => {
   const navigate = useNavigate();
   const params = useParams();
-
+  // 비디오
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const danceVideoRef = useRef<HTMLVideoElement>(null);
-
-  const [short, setShort] = useState<Shorts | null>(null);
+  const [shorts, setShorts] = useState<Shorts | null>(null);
+  // MediaRecorder 설정
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [danceVideoPath, setDanceVideoPath] = useState<string>("");
-
+  const options = {
+    audioBitsPerSecond: 128000,
+    videoBitsPerSecond: 2500000,
+    // H.264(비디오) + AAC(오디오) 코덱의 MP4
+    mimeType: "video/mp4;codecs=avc1.64003E,mp4a.40.2",
+  };
+  // 상태 관리
+  enum ChallengeState {
+    READY = "READY",
+    RECORD = "RECORD",
+    UPLOADED = "UPLOADED",
+    COMPLETED = "COMPLETED",
+    FAILD = "FAILED",
+  }
+  const [state, setState] = useState<ChallengeState>(ChallengeState.READY);
+  // 버튼
+  const [timer, setTimer] = useState<number>(parseInt(localStorage.getItem("timer") ?? "3")); // 타이머
+  const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  // 모달
   const [show, setShow] = useState(false);
-  const [recording, setRecording] = useState(false); // 녹화 진행
-  const initialTimer = parseInt(localStorage.getItem("timer") || "3");
-  const [timer, setTimer] = useState<number>(initialTimer); // 타이머
   const [loadPath, setLoadPath] = useState(loading); // 로딩 이미지 경로
   const [ffmpegLog, setFfmpegLog] = useState(""); // 동영상 상태
-  const [resolutionText, setResolutionText] = useState<string | null>(null); // 해상도
-
-  const videoResolutionRef = useRef<{ width: number; height: number }>({
-    width: 405,
-    height: 720,
-  });
-
-  const [isFlipped, setIsFlipped] = useState<boolean>(false);
-
-  type LearnState = "RECORD" | "READY";
-  const [state, setState] = useState<LearnState>("READY");
+  const videoResolutionRef = useRef({ width: 405, height: 720 }); // 해상도
   // 모션 인식 카운트
   const { btn, setBtn } = useBtnStore();
   const { visibleCount, timerCount, recordCount, learnCount, resultCount, saveCount } =
     useMotionDetectionStore();
 
-  const loadDanceVideo = async () => {
-    // 댄스비디오 s3 url
-    const thisShort = await getShortsInfo(`${params.shortsId}`);
-    setShort(thisShort);
-    if (thisShort) {
-      setDanceVideoPath(thisShort.shortsS3URL); // 쇼츠 s3 링크
-    } else {
-      alert("새로고침 해주세요.");
-    }
-  };
+  // 사용자가 클릭한 쇼츠 조회
+  const loadDanceVideo = async () => setShorts(await getShortsInfo(`${params.shortsId}`));
 
-  const handleShowModal = () => {
-    setShow(true); // 모달 열기
-    stopRecording();
-  };
-
-  const handleCloseModal = () => setShow(false);
-  const showRecordButton = () => setRecording(false);
-  // 녹화 시작 버튼 눌리면 녹화 준비 시작
-  const showCancelButton = () => prepareRecording();
-
-  const goToLearnMode = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    if (short) navigate(`/learn/${short.shortsId}`);
-  };
-
-  const goToResult = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    navigate("/mypage");
-  };
-
-  const changeTimer = () => {
-    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
-
-    localStorage.setItem("timer", nextTimer.toString());
-    setTimer(nextTimer);
-  };
-
-  const cancelRecording = () => {
-    setState("READY");
-    showRecordButton();
-    if (danceVideoRef.current) {
-      danceVideoRef.current.pause();
-      danceVideoRef.current.currentTime = 0;
-    }
-  };
-
-  const stopRecording = () => {
-    setLoadPath(loading);
-    setFfmpegLog("동영상 저장...");
-    cancelRecording();
-    mediaRecorder?.stop(); // recorder.onstop() 실행
-  };
-
+  // 녹화 시작 버튼
+  // 1. 녹화 준비
   const prepareRecording = () => {
     if (!stream) {
       alert("카메라 접근을 허용해주세요.");
       return;
     }
 
-    const [track] = stream.getVideoTracks();
-    const { width = 405, height = 720 } = track.getSettings();
+    // 스트림에서 해상도 추출
+    const { width = 405, height = 720 } = stream.getVideoTracks()[0].getSettings();
     videoResolutionRef.current = { width, height };
 
-    setResolutionText(`녹화 해상도: ${width}x${height}`);
-    setRecording(true); // recording 상태 변경 → useEffect 작동 트리거
+    // 모달에 해상도 표시
+    setLoadPath(camera);
+    setFfmpegLog(`녹화 해상도: ${width}x${height}`);
+
+    handleStartCountdown();
+    setShow(true);
   };
+  // 2. 카운트 다운
+  const handleStartCountdown = () => {
+    let count = timer;
+    const intervalId = setInterval(() => {
+      if (count <= 1) {
+        setShow(false); // 모달 닫기
+        clearInterval(intervalId);
+        setTimer(timer); // 타이머 초기화
 
+        setState(ChallengeState.RECORD); // 버튼 목록 전환
+        startRecording(); // 녹화 시작
+      } else {
+        setTimer((prev) => prev - 1);
+        count -= 1;
+      }
+    }, 1000);
+  };
+  // 3. 녹화
   const startRecording = () => {
-    // 캔버스 생성
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
+    // 스트림에서 해상도 추출
     const { width, height } = videoResolutionRef.current;
-    // 모션인식 상태 변경
-    setState("RECORD");
-
-    canvas.width = width;
-    canvas.height = height;
-    ctx.imageSmoothingEnabled = false;
+    // 캔버스 및 2D 컨텍스트 생성
+    const { canvas, ctx } = createCanvas(width, height);
 
     try {
-      const outputStream = canvas.captureStream(); // 캔버스에서 초당 30개의 이미지를 캡처하여 비디오 스트림으로 변환
-      const recorder = new MediaRecorder(outputStream); // 변환된 스트림을 MediaRecorder로 녹화
-      const chunks: BlobPart[] = []; // 스트림 조각을 넣을 배열
-      recorder.ondataavailable = (e) => chunks.push(e.data); // 스트림 데이터가 쌓이면 배열에 추가
+      // captureStream()은 브라우저가 주기적으로 캔버스의 현재 상태를 가져감
+      // 실시간 캔버스에 그려진 내용을 스트림으로 캡처
+      const outputStream = canvas.captureStream();
+      // 이 스트림을 받아서 녹화할 MediaRecorder 생성
+      const recorder = new MediaRecorder(outputStream, options);
+      // MediaRecorder가 조각 데이터를 생성할 때마다 chunks에 저장
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
 
-      // 녹화 중지되면
+      // mediaRecorder?.stop() 트리거 -> 녹화 중단
       recorder.onstop = async () => {
-        const userVideoBlob = new Blob(chunks, { type: "video/mp4" }); // 여러 개의 Blob을 하나로 합쳐 최종 비디오 생성
-        await s3Upload(userVideoBlob); // s3에 업로드
+        // 캔버스 그리기 중단(drawFame() 예약 취소)
+        cancelAnimationFrame(animationId);
+        // chunks를 하나의 Blob으로 합쳐 비디오 생성
+        const userVideoBlob = new Blob(chunks, { type: recorder.mimeType });
+        // S3에 비디오 저장
+        await s3Upload(userVideoBlob);
+        // aws lambda가 처리를 완료했는지 조회
+        await checkVideoExists(processedShortsS3key);
       };
 
-      // 녹화 시작되면
+      // 녹화 시작
       recorder.start();
       setMediaRecorder(recorder);
-      danceVideoRef.current?.play(); // 댄스 비디오 시작
-
-      // 프레임을 실시간으로 캔버스에 그리기
-      function drawFrame() {
-        if (!userVideoRef.current) return;
-        ctx.save(); // 현재 캔버스 상태 저장
-        ctx.scale(-1, 1); // 캔버스 좌우 반전하여 거울 모드 적용
-        ctx.drawImage(userVideoRef.current, -width, 0, width, height); // 반전된 상태로 비디오 프레임 그리기기
-        ctx.restore(); // 캔버스 상태 복구
-        requestAnimationFrame(drawFrame); // 다음 프레임을 요청하여 반복 실행
+      // 댄스 비디오 시작
+      danceVideoRef.current?.play();
+      // 실시간 프레임을 캔버스에 그림
+      if (userVideoRef.current && ctx) {
+        drawFrameLoop(ctx, userVideoRef.current, width, height);
       }
-
-      drawFrame();
     } catch (error) {
       console.log(error);
       alert("녹화를 다시 시작해 주세요.");
     }
   };
 
-  const s3Upload = async (blob: Blob) => {
-    if (!short) {
-      alert("원본 쇼츠에 문제가 생겼습니다.");
-      throw new Error("원본 쇼츠가 존재하지 않습니다.");
+  // 타이머 버튼
+  const changeTimer: () => void = () => {
+    const nextTimer = timer == 3 ? 5 : timer == 5 ? 10 : 3;
+    localStorage.setItem("timer", nextTimer.toString());
+    setTimer(nextTimer);
+  };
+
+  // 연습모드 버튼
+  const goToLearnMode = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    if (shorts) navigate(`/learn/${shorts.shortsId}`);
+  };
+
+  // 마이페이지 버튼
+  const goToResult = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    navigate("/mypage");
+  };
+
+  // 녹화 취소 버튼
+  const cancelRecording = () => {
+    // 버튼 목록 전환
+    setState(ChallengeState.READY);
+    // 캔버스 루프 중단
+    cancelAnimationFrame(animationId);
+    9; // 비디오 초기화
+    if (danceVideoRef.current) {
+      danceVideoRef.current.pause();
+      danceVideoRef.current.currentTime = 0;
+    }
+  };
+
+  // 녹화 저장 버튼
+  // 1. 모달 열기
+  const handleShowModal = () => {
+    setLoadPath(loading);
+    setFfmpegLog("동영상 저장...");
+    setShow(true);
+
+    // 비디오 초기화
+    if (danceVideoRef.current) {
+      danceVideoRef.current.pause();
+      danceVideoRef.current.currentTime = 0;
     }
 
-    let processedShortsS3key = "";
+    // recorder.onstop() 실행
+    mediaRecorder?.stop();
+  };
+  // 2. 모달 닫기
+  const handleCloseModal = () => {
+    // 버튼 목록 전환
+    setState(ChallengeState.READY);
+    setTimeout(() => {
+      setShow(false);
+    }, 2000);
+  };
+
+  // CanvasRenderingContext 2D -> 캔버스에 그림을 그릴 수 있게 해주는 도구 생성
+  const createCanvas = (width: number, height: number) => {
+    // 캔버스 DOM 요소 생성
+    const canvas = document.createElement("canvas");
+    // 2D 그리기용 context 객체(붓 역할)
+    const ctx = canvas.getContext("2d");
+    // 캔버스 해상도 설정
+    canvas.width = width;
+    canvas.height = height;
+    if (ctx) ctx.imageSmoothingEnabled = false;
+    return { canvas, ctx };
+  };
+
+  // <video> 요소의 프레임을 실시간으로 캔버스에 그리기
+  let animationId: number;
+  const drawFrameLoop = (
+    ctx: CanvasRenderingContext2D,
+    video: HTMLVideoElement,
+    width: number,
+    height: number
+  ) => {
+    const drawFrame = () => {
+      ctx.save(); // 현재 캔버스 상태 저장
+      ctx.scale(-1, 1); // 좌우 반전
+      ctx.drawImage(video, -width, 0, width, height); // 캔버스에 비디오 프레임 그리기
+      ctx.restore(); // 이전 상태 복원
+
+      // 브라우저에게 다음 프레임 직전에 drawFame() 실행을 예약
+      animationId = requestAnimationFrame(drawFrame);
+    };
+    // 루프 시작(최초 호출)
+    drawFrame();
+  };
+
+  // S3에 사용자 비디오 업로드
+  let processedShortsS3key = "";
+  const s3Upload = async (blob: Blob) => {
+    if (!shorts) {
+      alert("현재 쇼츠에 오류가 있습니다.");
+      throw new Error("원본 쇼츠가 존재하지 않습니다.");
+    }
 
     try {
       // 원본 쇼츠 key를 사용자 쇼츠 메타데이터에 삽입
       // s3 메타데이터는 메타 데이터는 특수 문자 이슈 방지를 위해 Base64 인코딩함
       const metadata = {
-        song: btoa(String.fromCharCode(...new TextEncoder().encode(short.shortsS3key))),
+        song: btoa(String.fromCharCode(...new TextEncoder().encode(shorts.shortsS3key))),
       };
 
       // s3에 객체를 업로드할 수 있는 presignedputurl 및 lambda 처리 완료됐다고 가정하고 생성한 s3key 받음
-      const result = await addRecordedShorts(short.shortsId, metadata);
+      const result = await addRecordedShorts(shorts.shortsId, metadata);
       processedShortsS3key = result.processedShortsS3key;
 
       // 생성된 presignedurl과 "똑같은" 헤더로 aws에 put요청을 해야함
-      await axios.put(result.presignedPutURL, blob, {
-        headers: {
-          "Content-Type": "video/mp4",
-          "x-amz-meta-song": metadata["song"],
-        },
-      });
-
-      // S3 Put 요청에 성공하면 uploaded 상태로 변경
-      await modifyRecordedShortsStatus(processedShortsS3key, "UPLOADED");
-
-      setLoadPath(loading);
+      await s3Put(result.presignedPutURL, blob, metadata);
       setFfmpegLog("음악 삽입...");
-
-      // aws lambda가 처리를 완료했는지 조회
-      await check(processedShortsS3key);
+      // S3 Put 요청에 성공하면 uploaded 상태로 변경
+      await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.UPLOADED);
     } catch (error: any) {
       // s3 업로드 실패했다면 failed로 상태 변경
-      await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
+      await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
+
       setLoadPath(uncomplete);
       setFfmpegLog("동영상 처리 실패");
+
       console.error("s3 업로드 실패", error.data);
-    } finally {
-      setState("READY");
     }
   };
 
-  const check = async (processedShortsS3key: string) => {
+  // 비디오 상태 추척 함수
+  const checkVideoExists = async (processedShortsS3key: string) => {
     // 객체 업로드 됐는지 확인할 presignedGetUrl
     const presignedGetURL = await getPresignedGetURL(processedShortsS3key);
     // 요청 횟수 추적
     let attempts = 0;
     // 10초마다 요청하기 위해 setInterval 사용
     const interval = setInterval(async () => {
-      const exists = await isExist(presignedGetURL);
+      const exists = await tryS3Get(presignedGetURL);
 
       if (exists) {
+        // 객체가 생성됐다면 요청 중단
+        clearInterval(interval);
         // aws lambda가 처리를 완료했다면 completed로 상태 변경
-        await modifyRecordedShortsStatus(processedShortsS3key, "COMPLETED");
-        clearInterval(interval); // 객체가 생성되면 요청 중단
+        await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.COMPLETED);
         setLoadPath(complete);
         setFfmpegLog("완성!");
-        setTimeout(handleCloseModal, 1000);
+
+        handleCloseModal();
       } else {
-        attempts++;
-        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/6)`);
+        attempts++; // 요청 횟수 증가
+        console.log(`❌ 아직 객체가 존재하지 않음, 다시 확인... (${attempts}/12)`);
         // 12번(1분) 요청 후 중단
         if (attempts >= 12) {
           // 람다 처리 실패했다면 failed로 상태 변경
-          await modifyRecordedShortsStatus(processedShortsS3key, "FAILED");
           clearInterval(interval);
+
+          await modifyRecordedShortsStatus(processedShortsS3key, ChallengeState.FAILD);
           setLoadPath(uncomplete);
           setFfmpegLog("동영상 처리 실패");
-          setTimeout(handleCloseModal, 3000);
+
+          handleCloseModal();
         }
       }
     }, 5000); // 5초 (5000ms) 간격으로 요청
   };
 
-  const isExist = async (presignedGetURL: string) => {
-    try {
-      await axios.get(presignedGetURL);
-      return true; // 객체 존재함
-    } catch (error: any) {
-      console.error(error.data);
-      return false;
-    }
-  };
-
-  // 타이머
-  useEffect(() => {
-    if (recording) {
-      setShow(true);
-      setLoadPath(camera);
-      setFfmpegLog(resolutionText || "녹화 준비 중...");
-      // 녹화 시작 버튼을 눌렀을 때
-      const intervalId = setInterval(() => {
-        setTimer((prevTimer) => {
-          if (prevTimer <= 1) {
-            handleCloseModal();
-            clearInterval(intervalId); // 인터벌 종료
-            startRecording(); // 녹화 시작
-            return initialTimer; // 로컬스토리지에 저장된 타이머값으로 초기화
-          }
-          return prevTimer - 1; // timer에 저장된 값에서 1을 뺌
-        });
-      }, 1000); // 1초에 한번씩
-
-      return () => {
-        clearInterval(intervalId);
-      };
-    }
-  }, [recording]);
-
+  // 모션 인식 설정
   const lastWebcamTime = -1;
   const before_handmarker: NormalizedLandmark | null = null;
   const curr_handmarker: NormalizedLandmark | null = null;
 
-  // camera가 있을 HTML
+  // 웹캠 초기화
   const setInit = useCallback(async () => {
     const constraints: MediaStreamConstraints = {
       video: {
-        aspectRatio: 9 / 16,
-        // 이상적인 해상도 값
-        width: { ideal: 810 },
-        height: { ideal: 1440 },
+        aspectRatio: 9 / 16, // 9 : 16 비율
+        width: { ideal: 608 },
+        height: { ideal: 1080 }, // 1080p
       },
-      audio: false,
+      audio: false, // 오디오 녹음 안 함
     };
 
     try {
-      // 카메라 불러오기
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      // userVideoRef를 참조하고 있는 DOM에 넣기
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      const mediaRecorder = new MediaRecorder(stream, options);
+
+      setStream(stream);
+      setMediaRecorder(mediaRecorder);
+
       if (userVideoRef.current) {
-        userVideoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
+        userVideoRef.current.srcObject = stream;
         userVideoRef.current.addEventListener("loadeddata", () => {
           predictWebcamChallenge(
             "challenge",
@@ -323,9 +350,9 @@ const ChallengePage = () => {
           );
         });
       }
-    } catch (error) {
-      alert("카메라 접근을 허용해주세요.");
-      console.log(error);
+    } catch (error: any) {
+      alert("카메라 권한을 허용해주세요.");
+      console.error("MediaRecorder 설정 실패:", error);
     }
   }, []);
 
@@ -348,10 +375,47 @@ const ChallengePage = () => {
     }
   };
 
+  // state 변화 감지
+  useEffect(() => {
+    setBtnInfo();
+  }, [state]);
+
+  // btn 변화 감지
+  useEffect(() => {
+    switch (btn) {
+      case "visible":
+        //console.log("visible");
+        if (state === ChallengeState.READY) prepareRecording();
+        else cancelRecording();
+        break;
+      case "timer":
+        //console.log("timer");
+        if (state === ChallengeState.READY) changeTimer();
+        break;
+      case "save":
+        //console.log("save");
+        if (state !== ChallengeState.READY) handleShowModal();
+        break;
+      case "record":
+        //console.log("flip");
+        if (state !== ChallengeState.RECORD) setIsFlipped(!isFlipped);
+        break;
+      case "learn":
+        //console.log("learn");
+        if (state !== ChallengeState.RECORD) goToLearnMode();
+        break;
+      case "rslt":
+        //console.log("result");
+        if (state !== ChallengeState.RECORD) goToResult();
+        break;
+    }
+  }, [btn]);
+
   // 초기 설정
   useEffect(() => {
     setInit(); // 카메라 초기화
     loadDanceVideo(); // 댄스 비디오 로드
+
     initVideoSize(danceVideoRef);
     initVideoSize(userVideoRef);
 
@@ -369,61 +433,13 @@ const ChallengePage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    setBtnInfo();
-  }, [state]);
-
-  // 모션인식 설정
-  useEffect(() => {
-    switch (btn) {
-      case "visible":
-        //console.log("record");
-        if (state === "READY") {
-          showCancelButton();
-        } else {
-          cancelRecording();
-        }
-        break;
-      case "timer":
-        //console.log("timer");
-        if (state === "READY") {
-          changeTimer();
-        }
-        break;
-      case "save":
-        //console.log("save");
-        if (state === "READY") break;
-        handleShowModal();
-        break;
-      case "record":
-        if (state == "RECORD") break;
-        //console.log("flip");
-        setIsFlipped(!isFlipped);
-        break;
-      case "learn":
-        if (state == "RECORD") break;
-        //console.log("learn");
-        goToLearnMode();
-        break;
-      case "rslt":
-        if (state == "RECORD") break;
-        //console.log("result");
-        goToResult();
-        break;
-    }
-  }, [btn]);
-
-  useEffect(() => {
-    setBtnInfo();
-  }, []);
-
   return (
     <ChallengeContainer>
       <StarEffect numStars={80} />
 
       <VideoContainer
         ref={danceVideoRef}
-        src={danceVideoPath}
+        src={shorts?.shortsS3URL}
         playsInline
         onEnded={handleShowModal}
         className={isFlipped ? "flip" : ""}
@@ -432,7 +448,7 @@ const ChallengePage = () => {
 
       <UserContainer id="dom">
         <UserVideoContainer ref={userVideoRef} autoPlay playsInline></UserVideoContainer>
-        {state === "READY" ? (
+        {state === ChallengeState.READY ? (
           <Timer>{timer}</Timer>
         ) : (
           <RecordingComponent>
@@ -441,15 +457,15 @@ const ChallengePage = () => {
           </RecordingComponent>
         )}
         <VideoMotionButtonList>
-          {state === "READY" ? (
+          {state === ChallengeState.READY ? (
             <div className="foldList">
               <VideoMotionButton
                 icon={<RadioButtonChecked />}
                 toolTip="녹화"
-                onClick={showCancelButton}
+                onClick={() => prepareRecording()}
                 id="visible"
                 progress={visibleCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<TimerRounded />}
@@ -457,7 +473,7 @@ const ChallengePage = () => {
                 onClick={changeTimer}
                 id="timer"
                 progress={timerCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<Flip />}
@@ -465,7 +481,7 @@ const ChallengePage = () => {
                 onClick={() => setIsFlipped(!isFlipped)}
                 id="record"
                 progress={recordCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<Movie />}
@@ -473,7 +489,7 @@ const ChallengePage = () => {
                 onClick={goToResult}
                 id="rslt"
                 progress={resultCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
               <VideoMotionButton
                 icon={<DirectionsRun />}
@@ -481,7 +497,7 @@ const ChallengePage = () => {
                 onClick={goToLearnMode}
                 id="learn"
                 progress={learnCount}
-                isVisible={state === "READY"}
+                isVisible={state === ChallengeState.READY}
               />
             </div>
           ) : (
@@ -492,7 +508,7 @@ const ChallengePage = () => {
                 onClick={cancelRecording}
                 id="visible"
                 progress={visibleCount}
-                isVisible={state === "RECORD"}
+                isVisible={state === ChallengeState.RECORD}
               />
               <VideoMotionButton
                 icon={<Save />}
@@ -500,7 +516,7 @@ const ChallengePage = () => {
                 onClick={handleShowModal}
                 id="save"
                 progress={saveCount}
-                isVisible={state === "RECORD"}
+                isVisible={state === ChallengeState.RECORD}
               />
             </div>
           )}
